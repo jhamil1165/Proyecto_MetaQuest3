@@ -1244,6 +1244,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dicomFolderPath: C:\Users\Alejandra\Downloads\ct-lung-screening-nlst-series
+  axialImage: {fileID: 288385998}
+  coronalImage: {fileID: 1539709966}
+  sagittalImage: {fileID: 1257543029}
+  axialSlider: {fileID: 2086708968}
+  coronalSlider: {fileID: 435864326}
+  sagittalSlider: {fileID: 2057624280}
 --- !u!4 &1464006515
 Transform:
   m_ObjectHideFlags: 0
