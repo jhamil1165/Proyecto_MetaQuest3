@@ -26,6 +26,10 @@ public class MedicalMenuIntro : MonoBehaviour
     private MaterialPropertyBlock _mpb;
     private Coroutine _playing;
 
+    // Los graficos de UI usan CanvasRenderer, que NO hereda de Renderer, asi que el
+    // bucle de renderers no los toca. Un CanvasGroup es la forma correcta de atenuarlos.
+    private CanvasGroup _canvasGroup;
+
     private void Awake()
     {
         _targetScale = transform.localScale;
@@ -37,6 +41,7 @@ public class MedicalMenuIntro : MonoBehaviour
         _texts = GetComponentsInChildren<TMP_Text>(true);
         _textBaseAlphas = _texts.Select(t => t.alpha).ToArray();
         _mpb = new MaterialPropertyBlock();
+        _canvasGroup = GetComponent<CanvasGroup>();
     }
 
     private void OnEnable()
@@ -100,6 +105,8 @@ public class MedicalMenuIntro : MonoBehaviour
 
     private void SetVisualAlpha(float a)
     {
+        if (_canvasGroup != null) _canvasGroup.alpha = a;
+
         foreach (var r in _fadeRenderers)
         {
             r.GetPropertyBlock(_mpb);

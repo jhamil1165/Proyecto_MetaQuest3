@@ -13,6 +13,11 @@ public class MedicalMenuActions : MonoBehaviour
     [Header("Raíz del menú (para ExitMenu)")]
     [SerializeField] private GameObject menuRoot;
 
+    public enum InitialView { SoloMenu, Modelo3D, DICOM }
+
+    [Tooltip("Que se ve al arrancar la escena. SoloMenu deja todas las vistas ocultas.")]
+    [SerializeField] private InitialView initialView = InitialView.SoloMenu;
+
     [Header("Vistas")]
     [Tooltip("Objetos que se muestran al pulsar VER DICOM.")]
     [SerializeField] private GameObject[] dicomObjects;
@@ -22,6 +27,34 @@ public class MedicalMenuActions : MonoBehaviour
 
     [Tooltip("Objetos que se muestran al pulsar VER MODELO 3D.")]
     [SerializeField] private GameObject[] model3DObjects;
+
+    /// <summary>
+    /// Sin esto la escena arranca con TODAS las vistas visibles a la vez (el menú, los
+    /// órganos y la pantalla DICOM encimados), porque el cambio de vista solo ocurría
+    /// al pulsar un botón.
+    /// </summary>
+    private void Start()
+    {
+        switch (initialView)
+        {
+            case InitialView.Modelo3D:
+                ShowView(model3DObjects, "Modelo 3D (vista inicial)");
+                break;
+
+            case InitialView.DICOM:
+                ShowView(dicomObjects, "DICOM (vista inicial)");
+                break;
+
+            default:
+                // Sin esto la escena arranca con TODAS las vistas encimadas, porque el
+                // cambio de vista solo ocurria al pulsar un boton.
+                SetGroupActive(dicomObjects, false);
+                SetGroupActive(segmentationObjects, false);
+                SetGroupActive(model3DObjects, false);
+                Debug.Log("[MedicalViewer] Vista inicial: solo el menu.");
+                break;
+        }
+    }
 
     public void OpenDICOM()
     {

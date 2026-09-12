@@ -15,7 +15,7 @@ Shader "MedicalViewer/HoloPlatform"
     {
         Tags { "RenderType" = "Transparent" "Queue" = "Transparent" "RenderPipeline" = "UniversalPipeline" }
 
-        Blend SrcAlpha One   // additive: glows over passthrough instead of darkening it
+        Blend SrcAlpha OneMinusSrcAlpha   // alpha: funciona igual sobre fondo claro u oscuro
         ZWrite Off
         Cull Off             // readable from above and below
 
@@ -67,7 +67,7 @@ Shader "MedicalViewer/HoloPlatform"
                 float mask = 1.0 - smoothstep(_RingRadius, 1.0, d);
 
                 float a = saturate(ring + fill) * mask * _BaseColor.a;
-                return half4(_BaseColor.rgb * (ring + fill + 0.15), a);
+                return half4(_BaseColor.rgb, a);
             }
             ENDHLSL
         }

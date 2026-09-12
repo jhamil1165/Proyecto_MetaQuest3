@@ -9,7 +9,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Renderer))]
-[RequireComponent(typeof(XRSimpleInteractable))]
+[RequireComponent(typeof(XRBaseInteractable))]
 public class HoloHoverGlow : MonoBehaviour
 {
     [SerializeField] private float glowTarget = 1.5f;
@@ -18,7 +18,7 @@ public class HoloHoverGlow : MonoBehaviour
     private static readonly int HoverGlowId = Shader.PropertyToID("_HoverGlow");
 
     private Renderer _renderer;
-    private XRSimpleInteractable _interactable;
+    private XRBaseInteractable _interactable;
     private MaterialPropertyBlock _mpb;
     private float _current;
     private float _target;
@@ -26,7 +26,7 @@ public class HoloHoverGlow : MonoBehaviour
     private void Awake()
     {
         _renderer = GetComponent<Renderer>();
-        _interactable = GetComponent<XRSimpleInteractable>();
+        _interactable = GetComponent<XRBaseInteractable>();
         _mpb = new MaterialPropertyBlock();
     }
 

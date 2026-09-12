@@ -10,6 +10,7 @@ Shader "MedicalViewer/HoloGlassPanel"
         _RimColor("Rim Color", Color) = (0.6, 0.95, 1, 1)
         _RimPower("Rim Power", Range(0.5, 8)) = 2.5
         _RimIntensity("Rim Intensity", Range(0, 5)) = 1.2
+        _HoverColor("Hover / Select Color", Color) = (0.1, 0.45, 0.9, 1)
         _HoverGlow("Hover Glow (runtime)", Range(0, 3)) = 0
         _FadeAlpha("Fade Alpha (runtime, intro anim)", Range(0, 1)) = 1
     }
@@ -47,6 +48,7 @@ Shader "MedicalViewer/HoloGlassPanel"
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseColor;
                 float4 _RimColor;
+                float4 _HoverColor;
                 float _RimPower;
                 float _RimIntensity;
                 float _HoverGlow;
@@ -70,9 +72,13 @@ Shader "MedicalViewer/HoloGlassPanel"
                 float rim = pow(saturate(1.0 - saturate(dot(n, v))), _RimPower);
                 float glow = _RimIntensity + _HoverGlow;
 
+                // Mezclar (no sumar) permite bordes mas oscuros que el panel, que es
+                // lo unico que se ve sobre un fondo claro.
+                half3 rimCol = lerp(_RimColor.rgb, _HoverColor.rgb, saturate(_HoverGlow));
+
                 half4 col = _BaseColor;
-                col.rgb += _RimColor.rgb * rim * glow;
-                col.a = saturate(_BaseColor.a + rim * glow * 0.5 + _HoverGlow * 0.15);
+                col.rgb = lerp(col.rgb, rimCol, saturate(rim * glow));
+                col.a = saturate(_BaseColor.a + rim * glow * 0.35 + _HoverGlow * 0.12);
                 col.a *= _FadeAlpha; // driven by MedicalMenuIntro during the appear animation
                 return col;
             }

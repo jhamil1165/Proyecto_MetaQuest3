@@ -1548,7 +1548,7 @@ public static class MedicalViewerTools
         // Target: ~1.1 m wide seen from 1.8 m ~= 34 deg, the comfortable band for a
         // main menu in VR (wide enough to read, small enough not to need head turns).
         const float targetDistance = 1.8f;
-        const float targetAngularWidth = 34f;
+        const float targetAngularWidth = 50f;
         float targetWidth = 2f * targetDistance * Mathf.Tan(targetAngularWidth * 0.5f * Mathf.Deg2Rad);
 
         float factor = targetWidth / widthBefore;
@@ -1574,6 +1574,425 @@ public static class MedicalViewerTools
         System.IO.File.WriteAllText(OutDir + "step15_output.txt", sb.ToString());
         Debug.Log(sb.ToString());
         Debug.Log("STEP15_DONE");
+    }
+
+    [MenuItem("MedicalViewer/Step16 - Clinical White Mode")]
+    public static void Step16_ClinicalWhite()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        var sb = new StringBuilder();
+
+        // Blanco puro a 360 grados fatiga la vista en un headset mucho mas que una
+        // pagina blanca en un monitor. Este gris casi blanco se lee como blanco.
+        Color studio = new Color(0.941f, 0.941f, 0.949f);
+
+        GameObject centerEye = Find("CenterEyeAnchor");
+        if (centerEye != null && centerEye.TryGetComponent(out Camera cam))
+        {
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = studio;
+            EditorUtility.SetDirty(cam);
+            sb.AppendLine($"camera background -> {studio}");
+        }
+
+        RenderSettings.skybox = null;
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.72f, 0.73f, 0.75f); // luz de estudio, mas alta que antes
+        sb.AppendLine("ambient -> studio flat");
+
+        // El passthrough quedaria tapado por el fondo opaco: se apaga para no pagar
+        // su coste de composicion. Sigue en la escena, listo para reactivar.
+        GameObject passthrough = Find("[BuildingBlock] Passthrough");
+        if (passthrough != null)
+        {
+            passthrough.SetActive(false);
+            sb.AppendLine("[BuildingBlock] Passthrough -> DISABLED (tapado por el fondo opaco)");
+        }
+        var ovrManager = Object.FindObjectOfType<OVRManager>();
+        if (ovrManager != null)
+        {
+            ovrManager.isInsightPassthroughEnabled = false;
+            EditorUtility.SetDirty(ovrManager);
+            sb.AppendLine("OVRManager.isInsightPassthroughEnabled -> false");
+        }
+
+        // ---- Paleta invertida: paneles claros, texto oscuro, acento azul ----
+        Color accent = new Color(0.10f, 0.45f, 0.90f, 1f);
+        Shader glass = Shader.Find("MedicalViewer/HoloGlassPanel");
+
+        if (glass != null)
+        {
+            Material main = CreateOrReplaceMaterial("Assets/Materials/Holo/Mat_HoloPanel_Main.mat", glass,
+                new Color(0.988f, 0.988f, 0.996f, 0.94f),      // panel casi blanco, casi opaco
+                new Color(0.70f, 0.72f, 0.76f, 1f),            // borde gris fino
+                3.5f, 0.9f);
+            main.SetColor("_HoverColor", accent);
+            EditorUtility.SetDirty(main);
+
+            Material button = CreateOrReplaceMaterial("Assets/Materials/Holo/Mat_HoloPanel_Button.mat", glass,
+                new Color(0.960f, 0.965f, 0.976f, 0.85f),      // boton un tono por debajo del panel
+                new Color(0.76f, 0.78f, 0.82f, 1f),
+                3.5f, 0.7f);
+            button.SetColor("_HoverColor", accent);           // al apuntar, el borde vira a azul
+            EditorUtility.SetDirty(button);
+            sb.AppendLine("panel + boton -> claros con borde gris, hover azul");
+        }
+
+        Material tmp = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Holo/Mat_TMP_Holo.mat");
+        if (tmp != null)
+        {
+            if (tmp.HasProperty("_FaceColor")) tmp.SetColor("_FaceColor", new Color(0.16f, 0.18f, 0.21f, 1f));
+            if (tmp.HasProperty("_FaceDilate")) tmp.SetFloat("_FaceDilate", -0.05f);
+            if (tmp.HasProperty("_OutlineWidth")) tmp.SetFloat("_OutlineWidth", 0f);
+            // La sombra existia para separar texto blanco del passthrough; sobre panel
+            // claro solo ensucia los bordes de la letra.
+            tmp.DisableKeyword("UNDERLAY_ON");
+            if (tmp.HasProperty("_UnderlayColor")) tmp.SetColor("_UnderlayColor", new Color(0f, 0f, 0f, 0f));
+            EditorUtility.SetDirty(tmp);
+            sb.AppendLine("texto -> gris oscuro, sin sombra");
+        }
+
+        Material outline = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Holo/Mat_HoloOutline.mat");
+        if (outline != null)
+        {
+            outline.SetColor("_OutlineColor", accent); // un contorno blanco no se ve sobre blanco
+            EditorUtility.SetDirty(outline);
+            sb.AppendLine("outline de seleccion -> azul acento");
+        }
+
+        Material platform = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Holo/Mat_HoloPlatform.mat");
+        if (platform != null)
+        {
+            platform.SetColor("_BaseColor", new Color(0.55f, 0.58f, 0.63f, 0.30f)); // anillo gris suave
+            platform.SetFloat("_FillAlpha", 0.06f);
+            EditorUtility.SetDirty(platform);
+            sb.AppendLine("plataformas -> anillo gris tenue (alpha, ya no aditivo)");
+        }
+
+        AssetDatabase.SaveAssets();
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        EditorSceneManager.MarkSceneDirty(scene);
+        sb.AppendLine($"scene_saved={EditorSceneManager.SaveScene(scene)}");
+
+        System.IO.File.WriteAllText(OutDir + "step16_output.txt", sb.ToString());
+        Debug.Log(sb.ToString());
+        Debug.Log("STEP16_DONE");
+    }
+
+    [MenuItem("MedicalViewer/Step17 - Clean Menu Layout")]
+    public static void Step17_CleanMenuLayout()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        var sb = new StringBuilder();
+
+        GameObject menu = Find("Medical_Menu");
+        if (menu == null)
+        {
+            Debug.LogError("STEP17_FAILED Medical_Menu not found");
+            return;
+        }
+
+        // El titulo duplicado se superpone al original. Se desactiva, no se borra.
+        GameObject dupTitle = Find("Title_MedicalViewer (1)");
+        if (dupTitle != null && dupTitle.activeSelf)
+        {
+            dupTitle.SetActive(false);
+            sb.AppendLine("Title_MedicalViewer (1) -> DISABLED (duplicado superpuesto)");
+        }
+
+        string[][] rows =
+        {
+            new[] { "Button_DICOM_BG",        "Btn_DICOM" },
+            new[] { "Button_Segmentacion_BG", "Btn_Segmentacion" },
+            new[] { "Button_Modelo3D_BG",     "Btn_Modelo3D" },
+            new[] { "Button_Salir_BG",        "Btn_Salir" },
+        };
+
+        var bgs = new System.Collections.Generic.List<Transform>();
+        var texts = new System.Collections.Generic.List<Transform>();
+
+        foreach (var row in rows)
+        {
+            GameObject bg = Find(row[0]);
+            GameObject tx = Find(row[1]);
+            if (bg == null || tx == null)
+            {
+                sb.AppendLine($"[WARN] fila incompleta: {row[0]} / {row[1]}");
+                return;
+            }
+            bgs.Add(bg.transform);
+            texts.Add(tx.transform);
+        }
+
+        sb.AppendLine("ANTES:");
+        for (int i = 0; i < bgs.Count; i++)
+        {
+            sb.AppendLine($"  {bgs[i].name} pos={bgs[i].localPosition:F3} scale={bgs[i].localScale:F3}");
+        }
+
+        // Los TMP usan RectTransform con pivote propio, asi que su localPosition NO
+        // corresponde a donde se dibujan. Se miden los bounds reales y se convierten
+        // al espacio local del menu.
+        float minX = float.MaxValue, maxX = float.MinValue;
+        foreach (var t in texts)
+        {
+            if (!t.TryGetComponent(out Renderer r)) continue;
+
+            Vector3 lMin = menu.transform.InverseTransformPoint(r.bounds.min);
+            Vector3 lMax = menu.transform.InverseTransformPoint(r.bounds.max);
+            minX = Mathf.Min(minX, Mathf.Min(lMin.x, lMax.x));
+            maxX = Mathf.Max(maxX, Mathf.Max(lMin.x, lMax.x));
+        }
+
+        if (minX > maxX)
+        {
+            Debug.LogError("STEP17_FAILED no se pudieron medir los textos");
+            return;
+        }
+
+        float textWidth = maxX - minX;
+        float padX = textWidth * 0.10f;
+        float targetWidth = textWidth + padX * 2f;
+        float targetCentreX = (minX + maxX) * 0.5f;
+
+        // Espaciado vertical uniforme, conservando el rango que ya ocupaban.
+        float topY = bgs[0].localPosition.y;
+        float bottomY = bgs[bgs.Count - 1].localPosition.y;
+        float step = (topY - bottomY) / (bgs.Count - 1);
+
+        for (int i = 0; i < bgs.Count; i++)
+        {
+            Transform bg = bgs[i];
+            Transform tx = texts[i];
+
+            float newY = topY - step * i;
+            float deltaY = newY - bg.localPosition.y;
+
+            Undo.RecordObject(bg, "Clean menu layout");
+            Undo.RecordObject(tx, "Clean menu layout");
+
+            bg.localPosition = new Vector3(targetCentreX, newY, bg.localPosition.z);
+            bg.localScale = new Vector3(targetWidth, bg.localScale.y, bg.localScale.z);
+
+            // El texto se mueve lo mismo que su fondo para no romper su relacion vertical.
+            tx.localPosition = new Vector3(tx.localPosition.x, tx.localPosition.y + deltaY, tx.localPosition.z);
+
+            EditorUtility.SetDirty(bg);
+            EditorUtility.SetDirty(tx);
+        }
+
+        sb.AppendLine($"texto medido: ancho={textWidth:F3} centro_x={targetCentreX:F3}");
+        sb.AppendLine($"filas -> ancho uniforme={targetWidth:F3}, paso vertical={step:F3}");
+        sb.AppendLine("DESPUES:");
+        for (int i = 0; i < bgs.Count; i++)
+        {
+            sb.AppendLine($"  {bgs[i].name} pos={bgs[i].localPosition:F3} scale={bgs[i].localScale:F3}");
+        }
+
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        EditorSceneManager.MarkSceneDirty(scene);
+        sb.AppendLine($"scene_saved={EditorSceneManager.SaveScene(scene)}");
+
+        System.IO.File.WriteAllText(OutDir + "step17_output.txt", sb.ToString());
+        Debug.Log(sb.ToString());
+        Debug.Log("STEP17_DONE");
+    }
+
+    [MenuItem("MedicalViewer/Step18 - Restore + Relayout Menu")]
+    public static void Step18_RestoreAndRelayout()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        var sb = new StringBuilder();
+
+        // ---- 1. Restaurar los valores originales ----
+        // Step17 escribio scale.x = 0 en los cuatro fondos porque midio los TMP en modo
+        // batch, donde aun no tienen malla generada. Estos son los valores previos,
+        // tomados del log de ese mismo paso.
+        var original = new (string bg, Vector3 pos, Vector3 scale, string text, float textY)[]
+        {
+            ("Button_DICOM_BG",        new Vector3(-0.313f,  0.157f, -0.012f), new Vector3(0.300f, 0.050f, 1f), "Btn_DICOM",        -0.313f),
+            ("Button_Segmentacion_BG", new Vector3(-0.237f,  0.068f, -0.012f), new Vector3(0.450f, 0.050f, 1f), "Btn_Segmentacion", -0.400f),
+            ("Button_Modelo3D_BG",     new Vector3(-0.262f, -0.027f, -0.012f), new Vector3(0.400f, 0.050f, 1f), "Btn_Modelo3D",     -0.500f),
+            ("Button_Salir_BG",        new Vector3(-0.405f, -0.130f, -0.012f), new Vector3(0.100f, 0.050f, 1f), "Btn_Salir",        -0.600f),
+        };
+
+        var bgs = new System.Collections.Generic.List<Transform>();
+        var texts = new System.Collections.Generic.List<TMP_Text>();
+
+        foreach (var row in original)
+        {
+            GameObject bgGo = Find(row.bg);
+            GameObject txGo = Find(row.text);
+            if (bgGo == null || txGo == null)
+            {
+                Debug.LogError($"STEP18_FAILED falta {row.bg} o {row.text}");
+                return;
+            }
+
+            bgGo.transform.localPosition = row.pos;
+            bgGo.transform.localScale = row.scale;
+
+            var t = txGo.transform;
+            t.localPosition = new Vector3(t.localPosition.x, row.textY, t.localPosition.z);
+
+            EditorUtility.SetDirty(bgGo);
+            EditorUtility.SetDirty(txGo);
+
+            bgs.Add(bgGo.transform);
+            texts.Add(txGo.GetComponent<TMP_Text>());
+        }
+        sb.AppendLine("RESTAURADO a los valores previos a Step17");
+
+        // ---- 2. Intentar el layout limpio, ahora con malla forzada y validacion ----
+        float minX = float.MaxValue, maxX = float.MinValue;
+        foreach (var tmp in texts)
+        {
+            if (tmp == null) continue;
+
+            // Sin esto los bounds son degenerados en batch mode: TMP genera su malla
+            // de forma perezosa y en -nographics nunca llega a hacerlo.
+            tmp.ForceMeshUpdate();
+
+            Bounds b = tmp.textBounds;
+            if (b.size.x <= 0.0001f) continue;
+
+            Vector3 wMin = tmp.transform.TransformPoint(b.min);
+            Vector3 wMax = tmp.transform.TransformPoint(b.max);
+
+            GameObject menuGo = Find("Medical_Menu");
+            Vector3 lMin = menuGo.transform.InverseTransformPoint(wMin);
+            Vector3 lMax = menuGo.transform.InverseTransformPoint(wMax);
+
+            minX = Mathf.Min(minX, Mathf.Min(lMin.x, lMax.x));
+            maxX = Mathf.Max(maxX, Mathf.Max(lMin.x, lMax.x));
+        }
+
+        float measured = maxX - minX;
+        sb.AppendLine($"medicion de textos: ancho={measured:F4} (min={minX:F3} max={maxX:F3})");
+
+        // LA VALIDACION QUE FALTABA: si la medicion no es creible, no se escribe nada.
+        const float minCredibleWidth = 0.05f;
+        if (minX > maxX || measured < minCredibleWidth)
+        {
+            sb.AppendLine("MEDICION NO VALIDA -> no se toca el layout, se deja el original restaurado.");
+            sb.AppendLine("El ancho uniforme habra que ajustarlo a mano en el editor.");
+        }
+        else
+        {
+            float padX = measured * 0.10f;
+            float targetWidth = measured + padX * 2f;
+            float targetCentreX = (minX + maxX) * 0.5f;
+
+            float topY = bgs[0].localPosition.y;
+            float bottomY = bgs[bgs.Count - 1].localPosition.y;
+            float step = (topY - bottomY) / (bgs.Count - 1);
+
+            for (int i = 0; i < bgs.Count; i++)
+            {
+                float newY = topY - step * i;
+                float deltaY = newY - bgs[i].localPosition.y;
+
+                bgs[i].localPosition = new Vector3(targetCentreX, newY, bgs[i].localPosition.z);
+                bgs[i].localScale = new Vector3(targetWidth, bgs[i].localScale.y, bgs[i].localScale.z);
+
+                Transform tt = texts[i].transform;
+                tt.localPosition = new Vector3(tt.localPosition.x, tt.localPosition.y + deltaY, tt.localPosition.z);
+
+                EditorUtility.SetDirty(bgs[i]);
+                EditorUtility.SetDirty(texts[i]);
+            }
+            sb.AppendLine($"LAYOUT APLICADO ancho={targetWidth:F3} centro_x={targetCentreX:F3} paso={step:F3}");
+        }
+
+        sb.AppendLine("ESTADO FINAL:");
+        foreach (var bg in bgs)
+        {
+            sb.AppendLine($"  {bg.name} pos={bg.localPosition:F3} scale={bg.localScale:F3}");
+        }
+
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        EditorSceneManager.MarkSceneDirty(scene);
+        sb.AppendLine($"scene_saved={EditorSceneManager.SaveScene(scene)}");
+
+        System.IO.File.WriteAllText(OutDir + "step18_output.txt", sb.ToString());
+        Debug.Log(sb.ToString());
+        Debug.Log("STEP18_DONE");
+    }
+
+    [MenuItem("MedicalViewer/Step20 - Systems Card Follows 3D View")]
+    public static void Step20_SystemsFollowsView()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        var sb = new StringBuilder();
+
+        var actions = Object.FindObjectOfType<MedicalMenuActions>();
+        if (actions == null)
+        {
+            Debug.LogError("STEP20_FAILED MedicalMenuActions no encontrado");
+            return;
+        }
+
+        GameObject canvas = Find("Medical_Menu_UI");
+        Transform systemsCard = canvas != null ? canvas.transform.Find("Card_Systems") : null;
+        if (systemsCard == null)
+        {
+            Debug.LogError("STEP20_FAILED Card_Systems no encontrado (correr Step19 antes)");
+            return;
+        }
+
+        GameObject heart = Find("Heart");
+        GameObject stomach = Find("estomago_sin_render");
+
+        // El panel de sistemas controla los organos, asi que pertenece a la vista de
+        // Modelo 3D: aparece y desaparece con ella en vez de estar siempre encima.
+        var so = new SerializedObject(actions);
+        AssignArray(so, "model3DObjects", new[] { heart, stomach, systemsCard.gameObject }, sb);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(actions);
+
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        EditorSceneManager.MarkSceneDirty(scene);
+        sb.AppendLine("scene_saved=" + EditorSceneManager.SaveScene(scene));
+
+        System.IO.File.WriteAllText(OutDir + "step20_output.txt", sb.ToString());
+        Debug.Log(sb.ToString());
+        Debug.Log("STEP20_DONE");
+    }
+
+    [MenuItem("MedicalViewer/Step24 - Studio Background")]
+    public static void Step24_StudioBackground()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        var sb = new StringBuilder();
+
+        // Un blanco casi puro detras de tarjetas blancas las hace desaparecer: sin
+        // diferencia de valor no hay separacion, por mucha sombra que se ponga.
+        Color studio = new Color(0.894f, 0.906f, 0.921f); // #E4E7EB
+
+        GameObject centerEye = Find("CenterEyeAnchor");
+        if (centerEye != null && centerEye.TryGetComponent(out Camera cam))
+        {
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = studio;
+            EditorUtility.SetDirty(cam);
+            sb.AppendLine("fondo de camara -> #E4E7EB (gris medio)");
+        }
+        else
+        {
+            sb.AppendLine("[WARN] CenterEyeAnchor sin camara");
+        }
+
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.70f, 0.71f, 0.74f);
+        sb.AppendLine("ambient -> estudio neutro");
+
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        EditorSceneManager.MarkSceneDirty(scene);
+        sb.AppendLine("scene_saved=" + EditorSceneManager.SaveScene(scene));
+
+        System.IO.File.WriteAllText(OutDir + "step24_output.txt", sb.ToString());
+        Debug.Log(sb.ToString());
+        Debug.Log("STEP24_DONE");
     }
 
     private static Material CreateOrReplaceMaterial(string path, Shader shader, Color baseColor, Color rimColor, float rimPower, float rimIntensity)

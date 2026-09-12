@@ -10,7 +10,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 /// medical data from the Inspector.
 /// </summary>
 [DisallowMultipleComponent]
-[RequireComponent(typeof(XRSimpleInteractable))]
+[RequireComponent(typeof(XRBaseInteractable))]
 public class OrganSelectionInfo : MonoBehaviour
 {
     [SerializeField] private string organName = "ÓRGANO";
@@ -22,7 +22,7 @@ public class OrganSelectionInfo : MonoBehaviour
 
     private static readonly int OutlineAlphaId = Shader.PropertyToID("_OutlineAlpha");
 
-    private XRSimpleInteractable _interactable;
+    private XRBaseInteractable _interactable;
     private Renderer[] _renderers;
     private MaterialPropertyBlock _mpb;
     private float _current;
@@ -30,21 +30,23 @@ public class OrganSelectionInfo : MonoBehaviour
 
     private void Awake()
     {
-        _interactable = GetComponent<XRSimpleInteractable>();
+        _interactable = GetComponent<XRBaseInteractable>();
         _renderers = GetComponentsInChildren<Renderer>(true);
         _mpb = new MaterialPropertyBlock();
     }
 
     private void OnEnable()
     {
-        _interactable.selectEntered.AddListener(OnSelectEntered);
-        _interactable.selectExited.AddListener(OnSelectExited);
+        // Se usa hover, no select: con XRGrabInteractable "select" significa agarrar,
+        // y la ficha debe aparecer con solo apuntar el organo.
+        _interactable.hoverEntered.AddListener(OnHoverEntered);
+        _interactable.hoverExited.AddListener(OnHoverExited);
     }
 
     private void OnDisable()
     {
-        _interactable.selectEntered.RemoveListener(OnSelectEntered);
-        _interactable.selectExited.RemoveListener(OnSelectExited);
+        _interactable.hoverEntered.RemoveListener(OnHoverEntered);
+        _interactable.hoverExited.RemoveListener(OnHoverExited);
 
         if (OrganInfoPanelController.Instance != null)
         {
@@ -52,7 +54,7 @@ public class OrganSelectionInfo : MonoBehaviour
         }
     }
 
-    private void OnSelectEntered(SelectEnterEventArgs args)
+    private void OnHoverEntered(HoverEnterEventArgs args)
     {
         _target = 1f;
 
@@ -62,8 +64,10 @@ public class OrganSelectionInfo : MonoBehaviour
         }
     }
 
-    private void OnSelectExited(SelectExitEventArgs args)
+    private void OnHoverExited(HoverExitEventArgs args)
     {
+        if (_interactable.isSelected) return; // agarrado: mantener visible
+
         _target = 0f;
 
         if (OrganInfoPanelController.Instance != null)

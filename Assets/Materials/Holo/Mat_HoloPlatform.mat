@@ -25,9 +25,9 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _FillAlpha: 0.12
+    - _FillAlpha: 0.06
     - _RingRadius: 0.78
     - _RingWidth: 0.09
     m_Colors:
-    - _BaseColor: {r: 0.78, g: 0.92, b: 1, a: 0.55}
+    - _BaseColor: {r: 0.55, g: 0.58, b: 0.63, a: 0.3}
   m_BuildTextureStacks: []

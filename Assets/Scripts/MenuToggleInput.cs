@@ -12,6 +12,9 @@ public class MenuToggleInput : MonoBehaviour
 {
     [SerializeField] private GameObject menuRoot;
 
+    [Tooltip("Al reabrir el menu, recolocar el espacio delante del usuario.")]
+    [SerializeField] private WorkspaceRecenter recenter;
+
     private void Update()
     {
         if (menuRoot == null) return;
@@ -35,6 +38,10 @@ public class MenuToggleInput : MonoBehaviour
         }
         else
         {
+            // Recentrar ANTES de mostrarlo: si no, el menu aparece donde quedo la
+            // ultima vez, que puede ser detras del usuario.
+            if (recenter != null) recenter.Recenter();
+
             menuRoot.SetActive(true); // OnEnable dispara la animación de entrada
         }
     }
