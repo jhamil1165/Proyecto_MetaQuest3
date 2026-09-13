@@ -14811,7 +14811,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   menuRoot: {fileID: 237389749}
-  initialView: 0
+  initialView: 2
   dicomObjects:
   - {fileID: 1509131557}
   - {fileID: 2053271120}
