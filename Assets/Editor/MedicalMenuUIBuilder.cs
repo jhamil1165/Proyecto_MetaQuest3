@@ -361,7 +361,15 @@ public static class MedicalMenuUIBuilder
         // paneles acababan mirando 180° al lado contrario: se veían por detrás, con
         // el texto invertido. Ahora la raíz es la única que decide la orientación.
         Quaternion yaw = Quaternion.Euler(0f, angle, 0f);
-        rt.localPosition = yaw * Vector3.forward * ArcRadius;
+
+        // anchoredPosition3D, no localPosition: en un RectTransform la X/Y de
+        // localPosition es un valor derivado que Unity recalcula desde
+        // m_AnchoredPosition al recargar la escena. Escribirla parece funcionar hasta
+        // que cierras y vuelves a abrir, y entonces los paneles aparecen apilados en
+        // X=0 con la rotación correcta pero sin separación en el arco.
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition3D = yaw * Vector3.forward * ArcRadius;
         rt.localRotation = yaw;
         rt.localScale = Vector3.one * CanvasScale;
         return go;
