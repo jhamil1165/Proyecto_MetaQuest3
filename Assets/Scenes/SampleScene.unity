@@ -1043,7 +1043,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plane: axial
-  sliceCount: 267
+  sliceCount: 139
   display: {fileID: 775428752}
   slider: {fileID: 527814059}
   title: {fileID: 914240912}
@@ -5935,7 +5935,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 134 / 267
+  m_text: 70 / 139
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -7954,9 +7954,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 202579163}
   m_Direction: 0
   m_MinValue: 0
-  m_MaxValue: 266
+  m_MaxValue: 138
   m_WholeNumbers: 1
-  m_Value: 133
+  m_Value: 69
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -18666,7 +18666,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Cuerpo completo
+  m_text: "T\xF3rax y abdomen"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -25468,14 +25468,14 @@ MonoBehaviour:
   - {fileID: 73863000}
   - {fileID: 302801735}
   studies:
-  - folder: serie_cuerpo
-    label: Cuerpo completo
-    axial: 267
-    coronal: 512
-    sagittal: 512
   - folder: serie_toraxabdomen
     label: "T\xF3rax y abdomen"
     axial: 139
+    coronal: 512
+    sagittal: 512
+  - folder: serie_cuerpo
+    label: Cuerpo completo
+    axial: 267
     coronal: 512
     sagittal: 512
   organs:

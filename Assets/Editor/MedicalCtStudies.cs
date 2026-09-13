@@ -43,8 +43,10 @@ public static class MedicalCtStudies
     // coronal = filas y sagital = columnas de cada corte (512 x 512 en las dos).
     private static readonly StudyDef[] Studies =
     {
-        new StudyDef("serie_cuerpo", "Cuerpo completo", 267, 512, 512),
+        // Tórax y abdomen primero: es la serie que muestra el visor de referencia del
+        // grupo (su axial inicial es IMG0001, a la altura de los riñones).
         new StudyDef("serie_toraxabdomen", "Tórax y abdomen", 139, 512, 512),
+        new StudyDef("serie_cuerpo", "Cuerpo completo", 267, 512, 512),
     };
 
     [MenuItem("MedicalViewer/Step58 - Visor con las series DICOM")]
