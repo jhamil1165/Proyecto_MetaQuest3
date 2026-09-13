@@ -30,9 +30,33 @@ public class OrganSelectionInfo : MonoBehaviour
 
     private void Awake()
     {
-        _interactable = GetComponent<XRBaseInteractable>();
+        _interactable = ResolveInteractable();
         _renderers = GetComponentsInChildren<Renderer>(true);
         _mpb = new MaterialPropertyBlock();
+    }
+
+    /// <summary>
+    /// Un organo puede arrastrar mas de un interactable (por ejemplo un
+    /// XRSimpleInteractable antiguo junto al de agarre). GetComponent devolveria el
+    /// primero en el orden del componente, que puede ser uno desactivado, y entonces
+    /// nunca llegaria un solo evento de hover. Nos quedamos con el que de verdad esta
+    /// activo, dando preferencia al de agarre.
+    /// </summary>
+    private XRBaseInteractable ResolveInteractable()
+    {
+        var all = GetComponents<XRBaseInteractable>();
+
+        foreach (var i in all)
+        {
+            if (i.enabled && i is XRGrabInteractable) return i;
+        }
+
+        foreach (var i in all)
+        {
+            if (i.enabled) return i;
+        }
+
+        return all.Length > 0 ? all[0] : null;
     }
 
     private void OnEnable()
