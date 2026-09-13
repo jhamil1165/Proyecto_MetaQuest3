@@ -9,12 +9,36 @@ using UnityEngine.UI;
 ///
 /// Es como se revisa una TC en radiología: los tres cortes en paralelo, no uno
 /// cada vez. Sustituye al visor de plano único anterior.
+///
+/// Puede trabajar con dos fuentes. Las series DICOM reales (lista "studies") tienen
+/// prioridad; si está vacía se usan las capturas de Slicer por órgano (lista "organs").
 /// </summary>
 public class CTMultiPlaneViewer : MonoBehaviour
 {
+    /// <summary>
+    /// Una serie de TC convertida desde DICOM. Cada serie tiene su propio número de
+    /// cortes axiales, así que los recuentos van con la serie y no con la columna.
+    /// </summary>
+    [System.Serializable]
+    public class Study
+    {
+        [Tooltip("Carpeta dentro de StreamingAssets/CT.")]
+        public string folder;
+
+        [Tooltip("Nombre que aparece en la cabecera del visor.")]
+        public string label;
+
+        public int axial;
+        public int coronal;
+        public int sagittal;
+    }
+
     [SerializeField] private List<CTPlaneView> planes = new List<CTPlaneView>();
 
-    [Tooltip("Carpetas dentro de StreamingAssets/CT, una por órgano.")]
+    [Tooltip("Series DICOM reales. Si hay alguna, se usan en lugar de la lista de órganos.")]
+    [SerializeField] private List<Study> studies = new List<Study>();
+
+    [Tooltip("Carpetas dentro de StreamingAssets/CT, una por órgano (capturas de Slicer).")]
     [SerializeField] private List<string> organs = new List<string> { "higado", "estomago", "pancreas", "vesicula" };
 
     [SerializeField] private TMP_Text organLabel;
@@ -22,6 +46,9 @@ public class CTMultiPlaneViewer : MonoBehaviour
     [SerializeField] private Button nextButton;
 
     private int _index;
+
+    private bool UseStudies => studies.Count > 0;
+    private int Count => UseStudies ? studies.Count : organs.Count;
 
     private void Start()
     {
@@ -33,23 +60,35 @@ public class CTMultiPlaneViewer : MonoBehaviour
 
     public void NextOrgan()
     {
-        if (organs.Count == 0) return;
+        if (Count == 0) return;
 
-        _index = (_index + 1) % organs.Count;
+        _index = (_index + 1) % Count;
         ApplyOrgan();
     }
 
     public void PreviousOrgan()
     {
-        if (organs.Count == 0) return;
+        if (Count == 0) return;
 
-        _index = (_index - 1 + organs.Count) % organs.Count;
+        _index = (_index - 1 + Count) % Count;
         ApplyOrgan();
     }
 
     private void ApplyOrgan()
     {
-        if (organs.Count == 0) return;
+        if (Count == 0) return;
+
+        if (UseStudies)
+        {
+            Study study = studies[_index];
+            if (organLabel != null) organLabel.text = string.IsNullOrEmpty(study.label) ? study.folder : study.label;
+
+            foreach (var plane in planes)
+            {
+                if (plane != null) plane.SetOrgan(study.folder, CountFor(study, plane.Plane));
+            }
+            return;
+        }
 
         string organ = organs[_index];
         if (organLabel != null) organLabel.text = Capitalize(organ);
@@ -58,6 +97,17 @@ public class CTMultiPlaneViewer : MonoBehaviour
         foreach (var plane in planes)
         {
             if (plane != null) plane.SetOrgan(organ);
+        }
+    }
+
+    private static int CountFor(Study study, string plane)
+    {
+        switch (plane)
+        {
+            case "axial": return study.axial;
+            case "coronal": return study.coronal;
+            case "sagital": return study.sagittal;
+            default: return 0;
         }
     }
 

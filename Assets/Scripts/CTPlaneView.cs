@@ -66,6 +66,29 @@ public class CTPlaneView : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>
+    /// Cambia de serie y, con ella, el número de cortes de este plano: cada serie de
+    /// TC trae su propio número de cortes axiales.
+    /// </summary>
+    public void SetOrgan(string organ, int count)
+    {
+        if (count > 0 && count != sliceCount)
+        {
+            sliceCount = count;
+
+            if (slider != null)
+            {
+                // Bajar el valor antes de cambiar el máximo: si el máximo nuevo es
+                // menor, el deslizador recortaría su valor y dispararía una carga del
+                // corte equivocado.
+                slider.SetValueWithoutNotify(0);
+                slider.maxValue = Mathf.Max(0, sliceCount - 1);
+            }
+        }
+
+        SetOrgan(organ);
+    }
+
     private void OnSliderChanged(float value)
     {
         _slice = Mathf.RoundToInt(value);
