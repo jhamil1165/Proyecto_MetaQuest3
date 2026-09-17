@@ -435,16 +435,16 @@ public static class MedicalCtViewerLayout
             TextAlignmentOptions.MidlineRight, "Counter");
         counter.gameObject.AddComponent<LayoutElement>().minWidth = 15f * U;
 
-        RawImage raw = Film(quad.transform, FilmH);
+        RawImage raw = Film(quad.transform, FilmH, out RawImage overlay);
 
         GameObject sliderGo = NewUI("Slider", quad.transform);
         Fixed(sliderGo, -1f, 4.5f * U);
         Slider slider = BuildSlider(sliderGo);
 
-        return AddView(quad, plane, raw, slider, title, counter);
+        return AddView(quad, plane, raw, overlay, slider, title, counter);
     }
 
-    private static RawImage Film(Transform parent, float height)
+    private static RawImage Film(Transform parent, float height, out RawImage overlay)
     {
         GameObject film = NewUI("Film", parent);
         Fixed(film, -1f, height);
@@ -464,16 +464,31 @@ public static class MedicalCtViewerLayout
         var fitter = slice.AddComponent<AspectRatioFitter>();
         fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
         fitter.aspectRatio = 1f;
+
+        // Capa para la máscara de segmentación: hija de la imagen y del mismo tamaño,
+        // así hereda su proporción y queda exactamente encima. Apagada hasta que se use.
+        GameObject overlayGo = NewUI("Overlay", slice.transform);
+        var ort = overlayGo.GetComponent<RectTransform>();
+        ort.anchorMin = Vector2.zero;
+        ort.anchorMax = Vector2.one;
+        ort.offsetMin = Vector2.zero;
+        ort.offsetMax = Vector2.zero;
+        overlay = overlayGo.AddComponent<RawImage>();
+        overlay.color = Color.white;
+        overlay.raycastTarget = false;
+        overlay.enabled = false;
+
         return raw;
     }
 
-    private static CTPlaneView AddView(GameObject go, string plane, RawImage raw, Slider slider,
+    private static CTPlaneView AddView(GameObject go, string plane, RawImage raw, RawImage overlay, Slider slider,
         TMP_Text title, TMP_Text counter)
     {
         var view = go.AddComponent<CTPlaneView>();
         var so = new SerializedObject(view);
         so.FindProperty("plane").stringValue = plane;
         so.FindProperty("display").objectReferenceValue = raw;
+        so.FindProperty("overlay").objectReferenceValue = overlay;
         so.FindProperty("slider").objectReferenceValue = slider;
         so.FindProperty("title").objectReferenceValue = title;
         so.FindProperty("counter").objectReferenceValue = counter;

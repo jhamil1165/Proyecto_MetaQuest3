@@ -85,6 +85,15 @@ public class CTMultiPlaneViewer : MonoBehaviour
         return true;
     }
 
+    /// <summary>Pone (o quita, con null) la máscara de segmentación en los tres planos.</summary>
+    public void SetOverlay(string maskFolder)
+    {
+        foreach (var plane in planes)
+        {
+            if (plane != null) plane.SetOverlay(maskFolder);
+        }
+    }
+
     public void NextOrgan()
     {
         if (Count == 0) return;

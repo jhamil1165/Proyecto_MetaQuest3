@@ -11,7 +11,8 @@ using UnityEngine.UI;
 /// Paso 3 de la interfaz: la vista SEGMENTACIÓN, que junta lo que pidió el profesor.
 ///
 ///   izquierda  tomografía normal (serie de cuerpo completo, la misma de las capturas)
-///   derecha    tomografía con el órgano pintado, con los botones de órgano en la cabecera
+///   derecha    la misma tomografía con la MÁSCARA del órgano encima (CT/masks), con los
+///              botones de órgano en la cabecera; "Todos" pinta los cuatro a la vez
 ///   delante    el modelo 3D del órgano elegido
 ///
 /// Las dos tomografías se mueven juntas. El orden de los cortes se comprobó con imágenes:
@@ -33,8 +34,11 @@ public static class MedicalSegmentationView
     private const float Radius = 2.0f;
     private const float Scale = 0.001f;
 
-    private const bool ReverseAxial = true;
-    private const bool ReverseCoronal = true;
+    // Los dos visores muestran la misma serie (el derecho lleva la máscara encima), así que
+    // los cortes coinciden uno a uno. Con las capturas de Slicer había que invertir axial y
+    // coronal, pero ya no se usan en esta vista.
+    private const bool ReverseAxial = false;
+    private const bool ReverseCoronal = false;
     private const bool ReverseSagital = false;
 
     private static readonly (string label, string folder)[] Organs =
@@ -52,7 +56,7 @@ public static class MedicalSegmentationView
     private static Material _matRounded;
     private static TMP_FontAsset _font;
 
-    [MenuItem("MedicalViewer/Step65 - Vista Segmentacion")]
+    [MenuItem("MedicalViewer/Step66 - Vista Segmentacion con mascaras")]
     public static void Apply()
     {
         if (!Application.isBatchMode &&
@@ -67,7 +71,7 @@ public static class MedicalSegmentationView
 
         if (!MedicalCtViewerLayout.LoadResources() || _matRounded == null || _font == null)
         {
-            Debug.LogError("[Step65] Faltan el material redondeado o la fuente.");
+            Debug.LogError("[Step66] Faltan el material redondeado o la fuente.");
             return;
         }
 
@@ -78,7 +82,7 @@ public static class MedicalSegmentationView
 
         if (dicom == null || actions == null || systems == null)
         {
-            Debug.LogError("[Step65] Falta Canvas_DICOM, MedicalMenuActions u OrganSystemsPanel.");
+            Debug.LogError("[Step66] Falta Canvas_DICOM, MedicalMenuActions u OrganSystemsPanel.");
             return;
         }
 
@@ -96,7 +100,7 @@ public static class MedicalSegmentationView
         GameObject painted = GetOrClone(root, dicom.gameObject, "Canvas_SegPainted", sb);
         Place(painted, Angle);
         CTMultiPlaneViewer paintedViewer = MedicalCtViewerLayout.BuildViewer(painted, "Card_SegPainted", sb, "Segmentación");
-        UseOrgans(paintedViewer, sb);
+        KeepOnlyStudy(paintedViewer, "serie_cuerpo", sb);
         HideArrows(paintedViewer);
         MedicalCtViewerLayout.ApplyInitialState(paintedViewer, sb);
 
@@ -152,6 +156,8 @@ public static class MedicalSegmentationView
         pso.FindProperty("paintedPlanes").objectReferenceValue = planesRow;
         pso.FindProperty("allNote").objectReferenceValue = allNote;
         pso.FindProperty("sync").objectReferenceValue = sync;
+        pso.FindProperty("useMasks").boolValue = true;
+        pso.FindProperty("allMasksFolder").stringValue = "todos";
         pso.ApplyModifiedPropertiesWithoutUndo();
 
         // Lo que se ve fuera de Play: hígado elegido.
@@ -163,6 +169,8 @@ public static class MedicalSegmentationView
             lbl.text = Organs[0].label;
             EditorUtility.SetDirty(lbl);
         }
+
+        AssignMaskPreviews(paintedViewer, Organs[0].folder, sb);
 
         // ---- 5. Menú ----
         var aso = new SerializedObject(actions);
@@ -187,9 +195,9 @@ public static class MedicalSegmentationView
         RenderViews(root, dicom.gameObject, clean, painted, models, sb);
 
         System.IO.Directory.CreateDirectory(OutDir);
-        System.IO.File.WriteAllText(OutDir + "step65_output.txt", sb.ToString());
+        System.IO.File.WriteAllText(OutDir + "step66_output.txt", sb.ToString());
         Debug.Log(sb.ToString());
-        Debug.Log("STEP65_DONE");
+        Debug.Log("STEP66_DONE");
     }
 
     // ---------------- piezas ----------------
@@ -271,6 +279,50 @@ public static class MedicalSegmentationView
 
         so.ApplyModifiedPropertiesWithoutUndo();
         sb.AppendLine("   visor pintado: capturas de Slicer por organo");
+    }
+
+    /// <summary>Máscara del corte central en la capa de cada plano, para verla fuera de Play.</summary>
+    private static void AssignMaskPreviews(CTMultiPlaneViewer viewer, string mask, StringBuilder sb)
+    {
+        var planes = new SerializedObject(viewer).FindProperty("planes");
+        for (int i = 0; i < planes.arraySize; i++)
+        {
+            if (!(planes.GetArrayElementAtIndex(i).objectReferenceValue is CTPlaneView view)) continue;
+
+            var vso = new SerializedObject(view);
+            string plane = vso.FindProperty("plane").stringValue;
+            int count = vso.FindProperty("sliceCount").intValue;
+            if (!(vso.FindProperty("overlay").objectReferenceValue is RawImage overlay))
+            {
+                sb.AppendLine("[AVISO] " + plane + " sin capa de mascara");
+                continue;
+            }
+
+            string file = mask + "_" + plane + "_" + (count / 2).ToString("D4") + ".png";
+            string src = Application.streamingAssetsPath + "/CT/masks/" + mask + "/" + plane + "/" + file;
+            if (!System.IO.File.Exists(src))
+            {
+                sb.AppendLine("[AVISO] no existe " + src);
+                continue;
+            }
+
+            string dst = "Assets/UI/CTPreview/Preview_mask_" + mask + "_" + plane + ".png";
+            System.IO.File.Copy(src, dst, true);
+            AssetDatabase.ImportAsset(dst, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+            if (AssetImporter.GetAtPath(dst) is TextureImporter importer)
+            {
+                importer.mipmapEnabled = false;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.npotScale = TextureImporterNPOTScale.None;
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+            }
+
+            overlay.texture = AssetDatabase.LoadAssetAtPath<Texture2D>(dst);
+            overlay.enabled = true;
+            EditorUtility.SetDirty(overlay);
+            sb.AppendLine("   mascara " + mask + " en " + plane + ": " + file);
+        }
     }
 
     private static void HideArrows(CTMultiPlaneViewer viewer)
@@ -447,8 +499,8 @@ public static class MedicalSegmentationView
     private static void RenderViews(Transform root, GameObject dicom, GameObject clean, GameObject painted,
         Dictionary<string, GameObject> models, StringBuilder sb)
     {
-        MedicalCtViewerLayout.RenderPreview(painted, OutDir + "step65_segmentada.png", sb);
-        MedicalCtViewerLayout.RenderPreview(clean, OutDir + "step65_normal.png", sb);
+        MedicalCtViewerLayout.RenderPreview(painted, OutDir + "step66_segmentada.png", sb);
+        MedicalCtViewerLayout.RenderPreview(clean, OutDir + "step66_normal.png", sb);
 
         // Vista del usuario simulando la vista Segmentación con el hígado elegido. La escena
         // ya está guardada: estos cambios son solo para la foto y se deshacen después.
@@ -467,7 +519,7 @@ public static class MedicalSegmentationView
         Set(painted, true);
         foreach (var kv in models) Set(kv.Value, kv.Key == "higado");
 
-        MedicalWorkspaceLayout.RenderOverview(root, OutDir + "step65_vista_usuario.png", sb);
+        MedicalWorkspaceLayout.RenderOverview(root, OutDir + "step66_vista_usuario.png", sb);
 
         for (int i = saved.Count - 1; i >= 0; i--) saved[i].go.SetActive(saved[i].active);
     }

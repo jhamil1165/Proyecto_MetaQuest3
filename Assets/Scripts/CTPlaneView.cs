@@ -28,12 +28,19 @@ public class CTPlaneView : MonoBehaviour
     [SerializeField] private TMP_Text title;
     [SerializeField] private TMP_Text counter;
 
+    [Tooltip("Capa opcional encima de la imagen: máscara de segmentación (PNG con transparencia).")]
+    [SerializeField] private RawImage overlay;
+
     [SerializeField] private string rootFolder = "CT";
 
     private string _organ;
     private int _slice;
     private Coroutine _loading;
     private Texture2D _current;
+
+    private string _overlayFolder;
+    private Coroutine _overlayLoading;
+    private Texture2D _overlayCurrent;
 
     public string Plane => plane;
     public int SliceCount => sliceCount;
@@ -58,6 +65,7 @@ public class CTPlaneView : MonoBehaviour
     private void OnDestroy()
     {
         if (_current != null) Destroy(_current);
+        if (_overlayCurrent != null) Destroy(_overlayCurrent);
     }
 
     public void SetOrgan(string organ)
@@ -124,6 +132,64 @@ public class CTPlaneView : MonoBehaviour
 
         if (_loading != null) StopCoroutine(_loading);
         _loading = StartCoroutine(LoadSlice(path));
+        RefreshOverlay();
+    }
+
+    /// <summary>
+    /// Pone encima de cada corte la máscara de una carpeta de CT/masks ("higado", "todos"...).
+    /// Vacío o null quita la capa. Las máscaras están hechas sobre la serie de cuerpo
+    /// completo, así que el índice de corte coincide uno a uno con esa serie.
+    /// </summary>
+    public void SetOverlay(string maskFolder)
+    {
+        _overlayFolder = maskFolder;
+        bool on = !string.IsNullOrEmpty(maskFolder);
+
+        if (overlay != null) overlay.enabled = on;
+        if (!on && _overlayLoading != null)
+        {
+            StopCoroutine(_overlayLoading);
+            _overlayLoading = null;
+        }
+
+        RefreshOverlay();
+    }
+
+    private void RefreshOverlay()
+    {
+        if (overlay == null || string.IsNullOrEmpty(_overlayFolder) || string.IsNullOrEmpty(_organ)) return;
+        if (!isActiveAndEnabled) return;
+
+        string file = $"{_overlayFolder}_{plane}_{_slice:D4}.png";
+        string path = System.IO.Path.Combine(Application.streamingAssetsPath, rootFolder, "masks", _overlayFolder, plane, file);
+
+        if (_overlayLoading != null) StopCoroutine(_overlayLoading);
+        _overlayLoading = StartCoroutine(LoadOverlay(path));
+    }
+
+    private IEnumerator LoadOverlay(string path)
+    {
+        string url = path.Contains("://") ? path : "file://" + path;
+
+        using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(url))
+        {
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"[CTPlaneView] No se pudo cargar la mascara {url}: {request.error}");
+                yield break;
+            }
+
+            Texture2D tex = DownloadHandlerTexture.GetContent(request);
+            if (overlay != null) overlay.texture = tex;
+
+            // Igual que con los cortes: liberar la máscara anterior para no acumular texturas.
+            if (_overlayCurrent != null && _overlayCurrent != tex) Destroy(_overlayCurrent);
+            _overlayCurrent = tex;
+        }
+
+        _overlayLoading = null;
     }
 
     private IEnumerator LoadSlice(string path)

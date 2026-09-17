@@ -10,13 +10,14 @@ using UnityEngine.UI;
 /// "Todos". Al elegir un órgano se ve a la vez lo que pidió el profesor: su modelo 3D,
 /// la tomografía normal y la tomografía con ese órgano pintado, en el mismo corte.
 ///
+/// El órgano se pinta con MÁSCARAS encima de la tomografía limpia: una capa PNG con
+/// transparencia por corte, alineada con el DICOM. "Todos" pinta los cuatro órganos a
+/// la vez, cada uno de su color. Si se desactiva "useMasks" se vuelve a las capturas de
+/// 3D Slicer (con su texto quemado y sin vista conjunta).
+///
 /// Mientras la vista está abierta este panel es el dueño de la visibilidad de los
 /// órganos: al abrirse muestra el elegido y al cerrarse los oculta, igual que hacía el
 /// panel "Sistemas" en Modelo 3D. Así los dos nunca se pisan.
-///
-/// "Todos" muestra los cuatro modelos. La tomografía pintada con todos los órganos a la
-/// vez necesita la segmentación exportada de 3D Slicer, que todavía no está; mientras
-/// tanto se muestra un aviso en su lugar.
 /// </summary>
 public class OrganSegmentationPanel : MonoBehaviour
 {
@@ -25,7 +26,7 @@ public class OrganSegmentationPanel : MonoBehaviour
     {
         public string label;
 
-        [Tooltip("Carpeta de las capturas de Slicer en StreamingAssets/CT.")]
+        [Tooltip("Nombre de la carpeta del órgano: en CT/masks (máscaras) o en CT (capturas de Slicer).")]
         public string folder;
 
         public GameObject model;
@@ -41,6 +42,13 @@ public class OrganSegmentationPanel : MonoBehaviour
     [SerializeField] private GameObject paintedPlanes;
     [SerializeField] private GameObject allNote;
     [SerializeField] private SliceSync sync;
+
+    [Header("Máscaras")]
+    [Tooltip("Pintar los órganos con máscaras sobre la tomografía limpia. Desactivado: capturas de Slicer.")]
+    [SerializeField] private bool useMasks = true;
+
+    [Tooltip("Carpeta de CT/masks con los cuatro órganos juntos.")]
+    [SerializeField] private string allMasksFolder = "todos";
 
     [Header("Estilo de los botones")]
     [SerializeField] private Color selectedColor = new Color(0.09f, 0.42f, 0.88f, 1f);
@@ -93,8 +101,8 @@ public class OrganSegmentationPanel : MonoBehaviour
 
     private IEnumerator ApplyImagesNextFrame()
     {
-        // Un frame de espera: el visor pintado hace su propio Start y, si no, cargaría el
-        // primer órgano de su lista encima de la selección.
+        // Un frame de espera: el visor pintado hace su propio Start y, si no, cargaría su
+        // estado inicial encima de la selección.
         yield return null;
         ApplyImages();
     }
@@ -117,16 +125,26 @@ public class OrganSegmentationPanel : MonoBehaviour
     {
         bool single = _selected >= 0 && _selected < organs.Count;
 
-        if (paintedPlanes != null) paintedPlanes.SetActive(single);
-        if (allNote != null) allNote.SetActive(!single);
-
-        if (single)
+        if (useMasks)
         {
-            if (paintedViewer != null) paintedViewer.ShowOrgan(organs[_selected].folder);
+            // La tomografía no cambia: solo la capa de máscara. "Todos" tiene su propia capa.
+            if (paintedPlanes != null) paintedPlanes.SetActive(true);
+            if (allNote != null) allNote.SetActive(false);
+            if (paintedViewer != null) paintedViewer.SetOverlay(single ? organs[_selected].folder : allMasksFolder);
+        }
+        else
+        {
+            if (paintedPlanes != null) paintedPlanes.SetActive(single);
+            if (allNote != null) allNote.SetActive(!single);
 
-            // Tras cambiar de órgano, la tomografía pintada vuelve al corte que se está
-            // viendo en la normal, no al central.
-            if (sync != null) sync.CopyAToB();
+            if (single)
+            {
+                if (paintedViewer != null) paintedViewer.ShowOrgan(organs[_selected].folder);
+
+                // Tras cambiar de órgano, la tomografía pintada vuelve al corte que se está
+                // viendo en la normal, no al central.
+                if (sync != null) sync.CopyAToB();
+            }
         }
 
         if (paintedLabel != null) paintedLabel.text = single ? organs[_selected].label : "Todos los órganos";
