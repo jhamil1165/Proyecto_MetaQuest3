@@ -7,13 +7,12 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Visor de TC en CUADRÍCULA OSCURA, al estilo de los equipos de navegación quirúrgica
-/// (Brainlab): cuatro recuadros iguales con axial, coronal, sagital y un cuarto de
-/// información del estudio, que reserva el hueco donde la vista Segmentación pondrá
-/// el modelo 3D del órgano.
+/// Visor de TC con los tres planos EN FILA: axial, coronal y sagital, uno al
+/// lado del otro y del mismo tamaño, cada uno con su contador y su deslizador. Sin
+/// datos técnicos añadidos (grosor de corte, tamaño de píxel): solo las imágenes.
 ///
-/// Paleta oscura a propósito: la tomografía es negra, y sobre un fondo claro el ojo
-/// se adapta al blanco y pierde contraste en la imagen.
+/// Tarjeta blanca, como el resto de la interfaz. Las imágenes van sobre fondo negro:
+/// la tomografía se lee mucho mejor así.
 ///
 /// Las imágenes tienen alto fijo; dentro de cada recuadro un AspectRatioFitter
 /// mantiene la proporción real del corte, así nada se deforma.
@@ -28,22 +27,22 @@ public static class MedicalCtViewerLayout
     private const string PreviewDir = "Assets/UI/CTPreview";
     private const float U = 8f;
 
-    // Cuadrícula 2 x 2 de recuadros de 476 px. Tarjeta: 24 + 476 + 16 + 476 + 24 de
-    // ancho, y 24 + 56 cabecera + 16 + 968 cuadrícula + 24 de alto.
-    public const float CardW = 1016f;
-    public const float CardH = 1088f;
+    // Tres recuadros de 476 px en fila. Tarjeta: 24 + 476 + 16 + 476 + 16 + 476 + 24 de
+    // ancho, y 24 + 56 cabecera + 16 + 476 fila + 24 de alto.
+    public const float CardW = 1508f;
+    public const float CardH = 596f;
     private const float Quad = 476f;
     private const float QuadPad = 14f;
     private const float FilmH = 364f; // 476 - 28 relleno - 32 título - 36 deslizador - 16 espacios
 
-    private static readonly Color CardBg      = new Color(0.055f, 0.063f, 0.078f, 1f);
-    private static readonly Color QuadBg      = new Color(0.098f, 0.114f, 0.137f, 1f);
-    private static readonly Color FilmBg      = new Color(0.012f, 0.016f, 0.020f, 1f);
-    private static readonly Color TextPrimary = new Color(0.91f, 0.93f, 0.95f, 1f);
-    private static readonly Color TextMuted   = new Color(0.54f, 0.58f, 0.64f, 1f);
-    private static readonly Color Accent      = new Color(0.23f, 0.63f, 1.00f, 1f);
-    private static readonly Color Track       = new Color(0.17f, 0.20f, 0.24f, 1f);
-    private static readonly Color ButtonBg    = new Color(0.16f, 0.19f, 0.23f, 1f);
+    private static readonly Color CardBg      = new Color(1f, 1f, 1f, 1f);
+    private static readonly Color QuadBg      = new Color(0.955f, 0.960f, 0.968f, 1f);
+    private static readonly Color FilmBg      = new Color(0.07f, 0.08f, 0.10f, 1f);
+    private static readonly Color TextPrimary = new Color(0.13f, 0.15f, 0.18f, 1f);
+    private static readonly Color TextMuted   = new Color(0.55f, 0.58f, 0.62f, 1f);
+    private static readonly Color Accent      = new Color(0.09f, 0.42f, 0.88f, 1f);
+    private static readonly Color Track       = new Color(0.86f, 0.87f, 0.89f, 1f);
+    private static readonly Color ButtonBg    = new Color(0.955f, 0.960f, 0.968f, 1f);
 
     // Espaciado real de cada serie, leído de las cabeceras DICOM (SliceThickness y PixelSpacing).
     private static readonly Dictionary<string, (float slice, float pixel)> Spacing =
@@ -57,7 +56,7 @@ public static class MedicalCtViewerLayout
     private static Sprite _knob;
     private static TMP_FontAsset _font;
 
-    [MenuItem("MedicalViewer/Step60 - Visor de TC en cuadricula oscura")]
+    [MenuItem("MedicalViewer/Step62 - Visor de TC en fila (claro)")]
     public static void Apply()
     {
         if (!Application.isBatchMode &&
@@ -68,7 +67,7 @@ public static class MedicalCtViewerLayout
 
         if (!LoadResources())
         {
-            Debug.LogError("[Step60] Faltan el material redondeado, el knob o la fuente.");
+            Debug.LogError("[Step62] Faltan el material redondeado, el knob o la fuente.");
             return;
         }
 
@@ -76,7 +75,7 @@ public static class MedicalCtViewerLayout
         Transform canvas = rootGo != null ? rootGo.transform.Find("Canvas_DICOM") : null;
         if (canvas == null)
         {
-            Debug.LogError("[Step60] No encuentro Medical_Menu_UI/Canvas_DICOM.");
+            Debug.LogError("[Step62] No encuentro Medical_Menu_UI/Canvas_DICOM.");
             return;
         }
 
@@ -88,12 +87,12 @@ public static class MedicalCtViewerLayout
         sb.AppendLine("scene_saved=" + EditorSceneManager.SaveScene(scene));
 
         // Después de guardar: la cámara temporal del render no debe quedar en la escena.
-        RenderPreview(canvas.gameObject, OutDir + "step60_canvas_dicom.png", sb);
+        RenderPreview(canvas.gameObject, OutDir + "step62_canvas_dicom.png", sb);
 
         System.IO.Directory.CreateDirectory(OutDir);
-        System.IO.File.WriteAllText(OutDir + "step60_output.txt", sb.ToString());
+        System.IO.File.WriteAllText(OutDir + "step62_output.txt", sb.ToString());
         Debug.Log(sb.ToString());
-        Debug.Log("STEP60_DONE");
+        Debug.Log("STEP62_DONE");
     }
 
     public static bool LoadResources()
@@ -128,19 +127,19 @@ public static class MedicalCtViewerLayout
 
         Header(card.transform, out TMP_Text seriesLabel, out Button prev, out Button next);
 
-        GameObject grid = NewUI("Grid", card.transform);
-        Fixed(grid, -1f, Quad * 2f + 2f * U);
-        var g = grid.AddComponent<GridLayoutGroup>();
+        // Los tres planos en fila y del mismo tamaño.
+        GameObject row = NewUI("Planes", card.transform);
+        Fixed(row, -1f, Quad);
+        var g = row.AddComponent<GridLayoutGroup>();
         g.cellSize = new Vector2(Quad, Quad);
-        g.spacing = new Vector2(2f * U, 2f * U);
-        g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        g.constraintCount = 2;
+        g.spacing = new Vector2(2f * U, 0f);
+        g.constraint = GridLayoutGroup.Constraint.FixedRowCount;
+        g.constraintCount = 1;
         g.childAlignment = TextAnchor.UpperCenter;
 
-        CTPlaneView axial = BuildPlaneQuad(grid.transform, "axial");
-        CTPlaneView coronal = BuildPlaneQuad(grid.transform, "coronal");
-        CTPlaneView sagital = BuildPlaneQuad(grid.transform, "sagital");
-        TMP_Text info = BuildInfoQuad(grid.transform);
+        CTPlaneView axial = BuildPlaneQuad(row.transform, "axial");
+        CTPlaneView coronal = BuildPlaneQuad(row.transform, "coronal");
+        CTPlaneView sagital = BuildPlaneQuad(row.transform, "sagital");
 
         var so = new SerializedObject(viewer);
         var list = so.FindProperty("planes");
@@ -149,13 +148,13 @@ public static class MedicalCtViewerLayout
         list.GetArrayElementAtIndex(1).objectReferenceValue = coronal;
         list.GetArrayElementAtIndex(2).objectReferenceValue = sagital;
         so.FindProperty("organLabel").objectReferenceValue = seriesLabel;
-        so.FindProperty("infoText").objectReferenceValue = info;
+        so.FindProperty("infoText").objectReferenceValue = null; // sin recuadro de datos
         so.FindProperty("previousButton").objectReferenceValue = prev;
         so.FindProperty("nextButton").objectReferenceValue = next;
         so.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(viewer);
 
-        sb.AppendLine(canvas.name + "/" + cardName + ": cuadricula 2x2 de " + Quad + " px, tema oscuro, configuracion " +
+        sb.AppendLine(canvas.name + "/" + cardName + ": tres planos en fila de " + Quad + " px, tarjeta blanca, configuracion " +
                       (config != null ? "conservada" : "nueva"));
         return viewer;
     }
@@ -338,7 +337,7 @@ public static class MedicalCtViewerLayout
         cam.nearClipPlane = 0.01f;
         cam.farClipPlane = distance + 0.02f;
 
-        int w = 1400;
+        int w = 1800;
         int h = Mathf.RoundToInt(w * worldH / worldW);
         cam.aspect = worldW / worldH;
 
@@ -442,46 +441,6 @@ public static class MedicalCtViewerLayout
         Slider slider = BuildSlider(sliderGo);
 
         return AddView(quad, plane, raw, slider, title, counter);
-    }
-
-    private static TMP_Text BuildInfoQuad(Transform parent)
-    {
-        GameObject quad = NewUI("Info", parent);
-        Rounded(quad, QuadBg, 20f);
-
-        var v = quad.AddComponent<VerticalLayoutGroup>();
-        v.padding = new RectOffset(24, 24, 20, 20);
-        v.spacing = 12f;
-        v.childControlWidth = true;
-        v.childControlHeight = true;
-        v.childForceExpandWidth = true;
-        v.childForceExpandHeight = false;
-
-        TMP_Text title = Label(quad.transform, "Estudio", 22f, TextPrimary,
-            TextAlignmentOptions.MidlineLeft, "Title", FontStyles.Bold | FontStyles.UpperCase);
-        title.characterSpacing = 4f;
-        Fixed(title.gameObject, -1f, 4f * U);
-
-        TMP_Text details = Label(quad.transform, "", 24f, TextPrimary,
-            TextAlignmentOptions.TopLeft, "Details");
-        details.enableWordWrapping = true;
-        details.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
-
-        TMP_Text note = Label(quad.transform, "El modelo 3D de cada órgano aparece en la vista Segmentación.",
-            17f, TextMuted, TextAlignmentOptions.BottomLeft, "Note");
-        note.enableWordWrapping = true;
-        Fixed(note.gameObject, -1f, 6f * U);
-
-        // Hueco reservado para el modelo 3D. Fuera del layout, ocupando todo el recuadro.
-        GameObject slot = NewUI("ModelSlot", quad.transform);
-        slot.AddComponent<LayoutElement>().ignoreLayout = true;
-        var srt = slot.GetComponent<RectTransform>();
-        srt.anchorMin = Vector2.zero;
-        srt.anchorMax = Vector2.one;
-        srt.offsetMin = Vector2.zero;
-        srt.offsetMax = Vector2.zero;
-
-        return details;
     }
 
     private static RawImage Film(Transform parent, float height)
@@ -606,9 +565,9 @@ public static class MedicalCtViewerLayout
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = bg;
         var c = btn.colors;
-        c.normalColor = new Color(0.85f, 0.85f, 0.85f, 1f);
-        c.highlightedColor = Color.white;
-        c.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+        c.normalColor = Color.white;
+        c.highlightedColor = new Color(0.90f, 0.92f, 0.95f, 1f);
+        c.pressedColor = new Color(0.80f, 0.82f, 0.86f, 1f);
         c.fadeDuration = 0.08f;
         btn.colors = c;
 
