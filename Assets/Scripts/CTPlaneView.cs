@@ -124,7 +124,15 @@ public class CTPlaneView : MonoBehaviour
             }
 
             Texture2D tex = DownloadHandlerTexture.GetContent(request);
-            if (display != null) display.texture = tex;
+            if (display != null)
+            {
+                display.texture = tex;
+
+                // Si la imagen lleva un AspectRatioFitter, respetar la proporción real del
+                // corte: las capturas de Slicer no son cuadradas y se verían estiradas.
+                if (tex.height > 0 && display.TryGetComponent(out AspectRatioFitter fitter))
+                    fitter.aspectRatio = (float)tex.width / tex.height;
+            }
 
             // Liberar el corte anterior: sin esto, cada arrastre del deslizador deja
             // una textura huérfana y la memoria se dispara.
