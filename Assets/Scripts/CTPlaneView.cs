@@ -36,6 +36,11 @@ public class CTPlaneView : MonoBehaviour
     private Texture2D _current;
 
     public string Plane => plane;
+    public int SliceCount => sliceCount;
+    public int Slice => _slice;
+
+    /// <summary>Se dispara cuando el usuario mueve el deslizador (no al cambiar de serie).</summary>
+    public event System.Action<CTPlaneView, int> SliceChanged;
 
     private void Awake()
     {
@@ -89,10 +94,22 @@ public class CTPlaneView : MonoBehaviour
         SetOrgan(organ);
     }
 
+    /// <summary>
+    /// Va a un corte sin avisar a los oyentes. Sirve para sincronizar dos visores: si
+    /// avisara, cada uno movería al otro en un bucle sin fin.
+    /// </summary>
+    public void SetSliceWithoutNotify(int slice)
+    {
+        _slice = Mathf.Clamp(slice, 0, Mathf.Max(0, sliceCount - 1));
+        if (slider != null) slider.SetValueWithoutNotify(_slice);
+        Refresh();
+    }
+
     private void OnSliderChanged(float value)
     {
         _slice = Mathf.RoundToInt(value);
         Refresh();
+        SliceChanged?.Invoke(this, _slice);
     }
 
     private void Refresh()

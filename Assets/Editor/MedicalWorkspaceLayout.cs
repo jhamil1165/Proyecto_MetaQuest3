@@ -167,7 +167,7 @@ public static class MedicalWorkspaceLayout
     }
 
     /// <summary>Imagen desde los ojos del usuario, mirando al frente, para ver el arco completo.</summary>
-    private static void RenderOverview(Transform root, string path, StringBuilder sb)
+    public static void RenderOverview(Transform root, string path, StringBuilder sb)
     {
         if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null)
         {

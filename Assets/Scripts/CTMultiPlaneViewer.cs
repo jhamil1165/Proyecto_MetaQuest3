@@ -67,6 +67,24 @@ public class CTMultiPlaneViewer : MonoBehaviour
         ApplyOrgan();
     }
 
+    public IReadOnlyList<CTPlaneView> Planes => planes;
+
+    /// <summary>
+    /// Muestra un órgano concreto de la lista "organs". Lo usa la vista Segmentación, donde
+    /// el órgano lo eligen sus propios botones y no las flechas del visor.
+    /// </summary>
+    public bool ShowOrgan(string folder)
+    {
+        if (UseStudies) return false;
+
+        int i = organs.IndexOf(folder);
+        if (i < 0) return false;
+
+        _index = i;
+        ApplyOrgan();
+        return true;
+    }
+
     public void NextOrgan()
     {
         if (Count == 0) return;

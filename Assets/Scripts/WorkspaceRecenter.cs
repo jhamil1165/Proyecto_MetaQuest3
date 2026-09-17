@@ -109,14 +109,31 @@ public class WorkspaceRecenter : MonoBehaviour
     {
         centre = default;
 
-        var renderers = t.GetComponentsInChildren<Renderer>(true);
+        // Se calcula con la malla y no con Renderer.bounds: un órgano oculto (por ejemplo,
+        // porque la vista inicial no es Modelo 3D) no tiene bounds de renderer válidos y
+        // acabaría colocado por su pivote, lejos de donde se ve.
+        var filters = t.GetComponentsInChildren<MeshFilter>(true);
         bool found = false;
         Bounds bounds = default;
 
-        foreach (var r in renderers)
+        foreach (var mf in filters)
         {
-            if (!found) { bounds = r.bounds; found = true; }
-            else bounds.Encapsulate(r.bounds);
+            if (mf.sharedMesh == null) continue;
+
+            Bounds local = mf.sharedMesh.bounds;
+            Matrix4x4 m = mf.transform.localToWorldMatrix;
+
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = local.center + Vector3.Scale(local.extents, new Vector3(
+                    (i & 1) == 0 ? -1f : 1f,
+                    (i & 2) == 0 ? -1f : 1f,
+                    (i & 4) == 0 ? -1f : 1f));
+                Vector3 world = m.MultiplyPoint3x4(corner);
+
+                if (!found) { bounds = new Bounds(world, Vector3.zero); found = true; }
+                else bounds.Encapsulate(world);
+            }
         }
 
         if (!found) return false;

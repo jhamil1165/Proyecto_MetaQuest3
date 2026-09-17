@@ -105,7 +105,8 @@ public static class MedicalCtViewerLayout
     }
 
     /// <summary>Rehace la interfaz del visor dentro de un canvas, conservando su configuración.</summary>
-    public static CTMultiPlaneViewer BuildViewer(GameObject canvas, string cardName, StringBuilder sb)
+    public static CTMultiPlaneViewer BuildViewer(GameObject canvas, string cardName, StringBuilder sb,
+        string kicker = "Tomografía")
     {
         var old = canvas.GetComponentInChildren<CTMultiPlaneViewer>(true);
         string config = old != null ? EditorJsonUtility.ToJson(old) : null;
@@ -125,7 +126,7 @@ public static class MedicalCtViewerLayout
         // sobrescriben justo abajo con las nuevas.
         if (config != null) EditorJsonUtility.FromJsonOverwrite(config, viewer);
 
-        Header(card.transform, out TMP_Text seriesLabel, out Button prev, out Button next);
+        Header(card.transform, kicker, out TMP_Text seriesLabel, out Button prev, out Button next);
 
         // Los tres planos en fila y del mismo tamaño.
         GameObject row = NewUI("Planes", card.transform);
@@ -366,7 +367,7 @@ public static class MedicalCtViewerLayout
 
     // ---------------- construcción ----------------
 
-    private static void Header(Transform parent, out TMP_Text seriesLabel, out Button prev, out Button next)
+    private static void Header(Transform parent, string kicker, out TMP_Text seriesLabel, out Button prev, out Button next)
     {
         GameObject row = NewUI("Header", parent);
         Fixed(row, -1f, 7f * U);
@@ -389,10 +390,10 @@ public static class MedicalCtViewerLayout
         v.childForceExpandWidth = true;
         v.childForceExpandHeight = false;
 
-        TMP_Text kicker = Label(titles.transform, "Tomografía", 16f, TextMuted,
+        TMP_Text kickerLabel = Label(titles.transform, kicker, 16f, TextMuted,
             TextAlignmentOptions.MidlineLeft, "Kicker", FontStyles.UpperCase);
-        kicker.characterSpacing = 6f;
-        Fixed(kicker.gameObject, -1f, 20f);
+        kickerLabel.characterSpacing = 6f;
+        Fixed(kickerLabel.gameObject, -1f, 20f);
 
         seriesLabel = Label(titles.transform, "", 30f, TextPrimary,
             TextAlignmentOptions.MidlineLeft, "Series", FontStyles.Bold);

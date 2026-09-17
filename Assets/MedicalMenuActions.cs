@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -13,7 +14,7 @@ public class MedicalMenuActions : MonoBehaviour
     [Header("Raíz del menú (para ExitMenu)")]
     [SerializeField] private GameObject menuRoot;
 
-    public enum InitialView { SoloMenu, Modelo3D, DICOM }
+    public enum InitialView { SoloMenu, Modelo3D, DICOM, Segmentacion }
 
     [Tooltip("Que se ve al arrancar la escena. SoloMenu deja todas las vistas ocultas.")]
     [SerializeField] private InitialView initialView = InitialView.SoloMenu;
@@ -43,6 +44,10 @@ public class MedicalMenuActions : MonoBehaviour
 
             case InitialView.DICOM:
                 ShowView(dicomObjects, "DICOM (vista inicial)");
+                break;
+
+            case InitialView.Segmentacion:
+                ShowView(segmentationObjects, "Segmentación (vista inicial)");
                 break;
 
             default:
@@ -105,9 +110,22 @@ public class MedicalMenuActions : MonoBehaviour
             return;
         }
 
-        SetGroupActive(dicomObjects, ReferenceEquals(target, dicomObjects));
-        SetGroupActive(segmentationObjects, ReferenceEquals(target, segmentationObjects));
-        SetGroupActive(model3DObjects, ReferenceEquals(target, model3DObjects));
+        // Primero se apaga lo que no pertenece a la vista nueva y después se enciende la
+        // vista. Antes los grupos se recorrían en un orden fijo (DICOM, Segmentación,
+        // Modelo 3D): un objeto presente en dos vistas quedaba apagado si el grupo que lo
+        // apagaba iba después del que lo encendía.
+        var keep = new HashSet<GameObject>(target);
+        foreach (var group in new[] { dicomObjects, segmentationObjects, model3DObjects })
+        {
+            if (group == null || ReferenceEquals(group, target)) continue;
+
+            foreach (var go in group)
+            {
+                if (go != null && !keep.Contains(go)) go.SetActive(false);
+            }
+        }
+
+        SetGroupActive(target, true);
 
         Debug.Log($"[MedicalViewer] Vista activa: {label}");
     }
