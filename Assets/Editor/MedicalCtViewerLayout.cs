@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEditor;
@@ -6,17 +7,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Visor de TC con el AXIAL como vista principal: grande a la izquierda, y coronal y
-/// sagital más pequeños, uno sobre otro, a la derecha. Es lo que pide el documento de
-/// la Fase 2 ("visor axial (Principal)") y como se reparte una estación de radiología.
+/// Visor de TC en CUADRÍCULA OSCURA, al estilo de los equipos de navegación quirúrgica
+/// (Brainlab): cuatro recuadros iguales con axial, coronal, sagital y un cuarto de
+/// información del estudio, que reserva el hueco donde la vista Segmentación pondrá
+/// el modelo 3D del órgano.
 ///
-/// Las medidas de las imágenes son fijas y cuadradas a propósito. Si un layout las
-/// estirara, la anatomía se deformaría; dentro de cada recuadro, un AspectRatioFitter
-/// mantiene la proporción real del corte (las capturas de Slicer no son cuadradas).
+/// Paleta oscura a propósito: la tomografía es negra, y sobre un fondo claro el ojo
+/// se adapta al blanco y pierde contraste en la imagen.
 ///
-/// BuildViewer es reutilizable: la vista Segmentación monta con él sus dos visores
-/// (TC normal y TC con el órgano pintado). Al reconstruir se conserva la configuración
-/// del CTMultiPlaneViewer existente (series y órganos), solo se rehace la interfaz.
+/// Las imágenes tienen alto fijo; dentro de cada recuadro un AspectRatioFitter
+/// mantiene la proporción real del corte, así nada se deforma.
+///
+/// BuildViewer es reutilizable (la vista Segmentación monta con él sus visores) y
+/// conserva la configuración del CTMultiPlaneViewer que reconstruye.
 /// </summary>
 public static class MedicalCtViewerLayout
 {
@@ -25,27 +28,36 @@ public static class MedicalCtViewerLayout
     private const string PreviewDir = "Assets/UI/CTPreview";
     private const float U = 8f;
 
-    // Tarjeta de 1060 x 700. Con cabecera, pie y márgenes quedan ~534 px de alto para
-    // los planos: axial = 32 título + 418 imagen + 24 contador + 36 deslizador + 24 de
-    // espacios; a la derecha, dos filas de 259 + 16 de separación.
-    public const float CardW = 1060f;
-    public const float CardH = 700f;
-    private const float AxialFilm = 418f;
-    private const float SmallFilm = 259f;
+    // Cuadrícula 2 x 2 de recuadros de 476 px. Tarjeta: 24 + 476 + 16 + 476 + 24 de
+    // ancho, y 24 + 56 cabecera + 16 + 968 cuadrícula + 24 de alto.
+    public const float CardW = 1016f;
+    public const float CardH = 1088f;
+    private const float Quad = 476f;
+    private const float QuadPad = 14f;
+    private const float FilmH = 364f; // 476 - 28 relleno - 32 título - 36 deslizador - 16 espacios
 
-    private static readonly Color CardBg      = new Color(1f, 1f, 1f, 1f);
-    private static readonly Color TextPrimary = new Color(0.13f, 0.15f, 0.18f, 1f);
-    private static readonly Color TextMuted   = new Color(0.55f, 0.58f, 0.62f, 1f);
-    private static readonly Color SubtleBg    = new Color(0.955f, 0.960f, 0.968f, 1f);
-    private static readonly Color Accent      = new Color(0.09f, 0.42f, 0.88f, 1f);
-    private static readonly Color DividerCol  = new Color(0.91f, 0.92f, 0.93f, 1f);
-    private static readonly Color FilmBg      = new Color(0.07f, 0.08f, 0.10f, 1f);
+    private static readonly Color CardBg      = new Color(0.055f, 0.063f, 0.078f, 1f);
+    private static readonly Color QuadBg      = new Color(0.098f, 0.114f, 0.137f, 1f);
+    private static readonly Color FilmBg      = new Color(0.012f, 0.016f, 0.020f, 1f);
+    private static readonly Color TextPrimary = new Color(0.91f, 0.93f, 0.95f, 1f);
+    private static readonly Color TextMuted   = new Color(0.54f, 0.58f, 0.64f, 1f);
+    private static readonly Color Accent      = new Color(0.23f, 0.63f, 1.00f, 1f);
+    private static readonly Color Track       = new Color(0.17f, 0.20f, 0.24f, 1f);
+    private static readonly Color ButtonBg    = new Color(0.16f, 0.19f, 0.23f, 1f);
+
+    // Espaciado real de cada serie, leído de las cabeceras DICOM (SliceThickness y PixelSpacing).
+    private static readonly Dictionary<string, (float slice, float pixel)> Spacing =
+        new Dictionary<string, (float slice, float pixel)>
+        {
+            { "serie_toraxabdomen", (2.5f, 0.762f) },
+            { "serie_cuerpo", (3.27f, 0.977f) },
+        };
 
     private static Material _matRounded;
     private static Sprite _knob;
     private static TMP_FontAsset _font;
 
-    [MenuItem("MedicalViewer/Step59 - Visor con axial principal")]
+    [MenuItem("MedicalViewer/Step60 - Visor de TC en cuadricula oscura")]
     public static void Apply()
     {
         if (!Application.isBatchMode &&
@@ -56,7 +68,7 @@ public static class MedicalCtViewerLayout
 
         if (!LoadResources())
         {
-            Debug.LogError("[Step59] Faltan el material redondeado, el knob o la fuente.");
+            Debug.LogError("[Step60] Faltan el material redondeado, el knob o la fuente.");
             return;
         }
 
@@ -64,11 +76,11 @@ public static class MedicalCtViewerLayout
         Transform canvas = rootGo != null ? rootGo.transform.Find("Canvas_DICOM") : null;
         if (canvas == null)
         {
-            Debug.LogError("[Step59] No encuentro Medical_Menu_UI/Canvas_DICOM.");
+            Debug.LogError("[Step60] No encuentro Medical_Menu_UI/Canvas_DICOM.");
             return;
         }
 
-        CTMultiPlaneViewer viewer = BuildViewer(canvas.gameObject, "Card_DICOM", "Tomografía", sb);
+        CTMultiPlaneViewer viewer = BuildViewer(canvas.gameObject, "Card_DICOM", sb);
         ApplyInitialState(viewer, sb);
 
         var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
@@ -76,12 +88,12 @@ public static class MedicalCtViewerLayout
         sb.AppendLine("scene_saved=" + EditorSceneManager.SaveScene(scene));
 
         // Después de guardar: la cámara temporal del render no debe quedar en la escena.
-        RenderPreview(canvas.gameObject, OutDir + "step59_canvas_dicom.png", sb);
+        RenderPreview(canvas.gameObject, OutDir + "step60_canvas_dicom.png", sb);
 
         System.IO.Directory.CreateDirectory(OutDir);
-        System.IO.File.WriteAllText(OutDir + "step59_output.txt", sb.ToString());
+        System.IO.File.WriteAllText(OutDir + "step60_output.txt", sb.ToString());
         Debug.Log(sb.ToString());
-        Debug.Log("STEP59_DONE");
+        Debug.Log("STEP60_DONE");
     }
 
     public static bool LoadResources()
@@ -94,7 +106,7 @@ public static class MedicalCtViewerLayout
     }
 
     /// <summary>Rehace la interfaz del visor dentro de un canvas, conservando su configuración.</summary>
-    public static CTMultiPlaneViewer BuildViewer(GameObject canvas, string cardName, string title, StringBuilder sb)
+    public static CTMultiPlaneViewer BuildViewer(GameObject canvas, string cardName, StringBuilder sb)
     {
         var old = canvas.GetComponentInChildren<CTMultiPlaneViewer>(true);
         string config = old != null ? EditorJsonUtility.ToJson(old) : null;
@@ -114,35 +126,21 @@ public static class MedicalCtViewerLayout
         // sobrescriben justo abajo con las nuevas.
         if (config != null) EditorJsonUtility.FromJsonOverwrite(config, viewer);
 
-        Header(card.transform, title, out TMP_Text organLabel);
+        Header(card.transform, out TMP_Text seriesLabel, out Button prev, out Button next);
 
-        GameObject planes = NewUI("Planes", card.transform);
-        planes.AddComponent<LayoutElement>().flexibleHeight = 1f;
-        var ph = planes.AddComponent<HorizontalLayoutGroup>();
-        ph.spacing = 2 * U;
-        ph.childAlignment = TextAnchor.UpperLeft;
-        ph.childControlWidth = true;
-        ph.childControlHeight = true;
-        ph.childForceExpandWidth = false;
-        ph.childForceExpandHeight = false;
+        GameObject grid = NewUI("Grid", card.transform);
+        Fixed(grid, -1f, Quad * 2f + 2f * U);
+        var g = grid.AddComponent<GridLayoutGroup>();
+        g.cellSize = new Vector2(Quad, Quad);
+        g.spacing = new Vector2(2f * U, 2f * U);
+        g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        g.constraintCount = 2;
+        g.childAlignment = TextAnchor.UpperCenter;
 
-        CTPlaneView axial = BuildAxial(planes.transform);
-
-        GameObject side = NewUI("Side", planes.transform);
-        side.AddComponent<LayoutElement>().flexibleWidth = 1f;
-        var sv = side.AddComponent<VerticalLayoutGroup>();
-        sv.spacing = 2 * U;
-        sv.childAlignment = TextAnchor.UpperLeft;
-        sv.childControlWidth = true;
-        sv.childControlHeight = true;
-        sv.childForceExpandWidth = true;
-        sv.childForceExpandHeight = false;
-
-        CTPlaneView coronal = BuildSmall(side.transform, "coronal");
-        CTPlaneView sagital = BuildSmall(side.transform, "sagital");
-
-        Divider(card.transform);
-        Footer(card.transform, out Button prev, out Button next);
+        CTPlaneView axial = BuildPlaneQuad(grid.transform, "axial");
+        CTPlaneView coronal = BuildPlaneQuad(grid.transform, "coronal");
+        CTPlaneView sagital = BuildPlaneQuad(grid.transform, "sagital");
+        TMP_Text info = BuildInfoQuad(grid.transform);
 
         var so = new SerializedObject(viewer);
         var list = so.FindProperty("planes");
@@ -150,40 +148,66 @@ public static class MedicalCtViewerLayout
         list.GetArrayElementAtIndex(0).objectReferenceValue = axial;
         list.GetArrayElementAtIndex(1).objectReferenceValue = coronal;
         list.GetArrayElementAtIndex(2).objectReferenceValue = sagital;
-        so.FindProperty("organLabel").objectReferenceValue = organLabel;
+        so.FindProperty("organLabel").objectReferenceValue = seriesLabel;
+        so.FindProperty("infoText").objectReferenceValue = info;
         so.FindProperty("previousButton").objectReferenceValue = prev;
         so.FindProperty("nextButton").objectReferenceValue = next;
         so.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(viewer);
 
-        sb.AppendLine(canvas.name + "/" + cardName + ": axial " + AxialFilm + " px, coronal y sagital " +
-                      SmallFilm + " px, configuracion " + (config != null ? "conservada" : "nueva"));
+        sb.AppendLine(canvas.name + "/" + cardName + ": cuadricula 2x2 de " + Quad + " px, tema oscuro, configuracion " +
+                      (config != null ? "conservada" : "nueva"));
         return viewer;
     }
 
-    /// <summary>Contadores, deslizadores y vistas previas según la primera serie u órgano.</summary>
+    /// <summary>Espaciado de las series, contadores, deslizadores, datos y vistas previas.</summary>
     public static void ApplyInitialState(CTMultiPlaneViewer viewer, StringBuilder sb)
     {
         var so = new SerializedObject(viewer);
         var studies = so.FindProperty("studies");
         var organs = so.FindProperty("organs");
 
-        string folder, label;
+        for (int i = 0; i < studies.arraySize; i++)
+        {
+            var s = studies.GetArrayElementAtIndex(i);
+            string f = s.FindPropertyRelative("folder").stringValue;
+            if (!Spacing.TryGetValue(f, out var mm)) continue;
+            s.FindPropertyRelative("sliceMm").floatValue = mm.slice;
+            s.FindPropertyRelative("pixelMm").floatValue = mm.pixel;
+        }
+        so.ApplyModifiedPropertiesWithoutUndo();
+        so.Update();
+
+        string folder;
+        string label;
+        string details;
         int axialCount, coronalCount, sagitalCount;
 
         if (studies.arraySize > 0)
         {
             var s = studies.GetArrayElementAtIndex(0);
-            folder = s.FindPropertyRelative("folder").stringValue;
-            label = s.FindPropertyRelative("label").stringValue;
-            axialCount = s.FindPropertyRelative("axial").intValue;
-            coronalCount = s.FindPropertyRelative("coronal").intValue;
-            sagitalCount = s.FindPropertyRelative("sagittal").intValue;
+            var study = new CTMultiPlaneViewer.Study
+            {
+                folder = s.FindPropertyRelative("folder").stringValue,
+                label = s.FindPropertyRelative("label").stringValue,
+                axial = s.FindPropertyRelative("axial").intValue,
+                coronal = s.FindPropertyRelative("coronal").intValue,
+                sagittal = s.FindPropertyRelative("sagittal").intValue,
+                sliceMm = s.FindPropertyRelative("sliceMm").floatValue,
+                pixelMm = s.FindPropertyRelative("pixelMm").floatValue,
+            };
+            folder = study.folder;
+            label = study.label;
+            details = CTMultiPlaneViewer.Describe(study);
+            axialCount = study.axial;
+            coronalCount = study.coronal;
+            sagitalCount = study.sagittal;
         }
         else if (organs.arraySize > 0)
         {
             folder = organs.GetArrayElementAtIndex(0).stringValue;
             label = Capitalize(folder);
+            details = "Capturas de 3D Slicer";
             axialCount = 267;
             coronalCount = 512;
             sagitalCount = 512;
@@ -194,10 +218,16 @@ public static class MedicalCtViewerLayout
             return;
         }
 
-        if (so.FindProperty("organLabel").objectReferenceValue is TMP_Text organLabel)
+        if (so.FindProperty("organLabel").objectReferenceValue is TMP_Text seriesLabel)
         {
-            organLabel.text = label;
-            EditorUtility.SetDirty(organLabel);
+            seriesLabel.text = label;
+            EditorUtility.SetDirty(seriesLabel);
+        }
+
+        if (so.FindProperty("infoText").objectReferenceValue is TMP_Text infoText)
+        {
+            infoText.text = details;
+            EditorUtility.SetDirty(infoText);
         }
 
         var planes = so.FindProperty("planes");
@@ -243,6 +273,8 @@ public static class MedicalCtViewerLayout
             sb.AppendLine("   " + plane + ": " + count + " cortes, vista previa " +
                           (tex != null ? tex.width + "x" + tex.height : "NO ENCONTRADA"));
         }
+
+        sb.AppendLine("   serie inicial: " + label);
     }
 
     /// <summary>Copia el corte central a Assets para que se vea también fuera de Play.</summary>
@@ -306,7 +338,7 @@ public static class MedicalCtViewerLayout
         cam.nearClipPlane = 0.01f;
         cam.farClipPlane = distance + 0.02f;
 
-        int w = 1600;
+        int w = 1400;
         int h = Mathf.RoundToInt(w * worldH / worldW);
         cam.aspect = worldW / worldH;
 
@@ -335,81 +367,127 @@ public static class MedicalCtViewerLayout
 
     // ---------------- construcción ----------------
 
-    private static CTPlaneView BuildAxial(Transform parent)
+    private static void Header(Transform parent, out TMP_Text seriesLabel, out Button prev, out Button next)
     {
-        GameObject column = NewUI("Plane_axial", parent);
-        Fixed(column, AxialFilm, -1f);
-
-        var v = column.AddComponent<VerticalLayoutGroup>();
-        v.spacing = U;
-        v.childAlignment = TextAnchor.UpperLeft;
-        v.childControlWidth = true;
-        v.childControlHeight = true;
-        v.childForceExpandWidth = true;
-        v.childForceExpandHeight = false;
-
-        TMP_Text title = Label(column.transform, "Axial", 26f, TextPrimary,
-            TextAlignmentOptions.MidlineLeft, "Title", FontStyles.Bold);
-        Fixed(title.gameObject, -1f, 4 * U);
-
-        RawImage raw = Film(column.transform, AxialFilm);
-
-        TMP_Text counter = Label(column.transform, "", 18f, TextMuted,
-            TextAlignmentOptions.MidlineLeft, "Counter");
-        Fixed(counter.gameObject, -1f, 3 * U);
-
-        GameObject sliderGo = NewUI("Slider", column.transform);
-        Fixed(sliderGo, -1f, 4.5f * U);
-        Slider slider = BuildSlider(sliderGo);
-
-        return AddView(column, "axial", raw, slider, title, counter);
-    }
-
-    private static CTPlaneView BuildSmall(Transform parent, string plane)
-    {
-        GameObject row = NewUI("Plane_" + plane, parent);
-        Fixed(row, -1f, SmallFilm);
+        GameObject row = NewUI("Header", parent);
+        Fixed(row, -1f, 7f * U);
 
         var h = row.AddComponent<HorizontalLayoutGroup>();
-        h.spacing = 2 * U;
+        h.spacing = U;
         h.childAlignment = TextAnchor.MiddleLeft;
         h.childControlWidth = true;
         h.childControlHeight = true;
         h.childForceExpandWidth = false;
         h.childForceExpandHeight = false;
 
-        RawImage raw = Film(row.transform, SmallFilm);
-
-        GameObject controls = NewUI("Controls", row.transform);
-        controls.AddComponent<LayoutElement>().flexibleWidth = 1f;
-        var v = controls.AddComponent<VerticalLayoutGroup>();
-        v.spacing = U;
+        GameObject titles = NewUI("Titles", row.transform);
+        titles.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        var v = titles.AddComponent<VerticalLayoutGroup>();
+        v.spacing = 2f;
         v.childAlignment = TextAnchor.MiddleLeft;
         v.childControlWidth = true;
         v.childControlHeight = true;
         v.childForceExpandWidth = true;
         v.childForceExpandHeight = false;
 
-        TMP_Text title = Label(controls.transform, Capitalize(plane), 24f, TextPrimary,
-            TextAlignmentOptions.MidlineLeft, "Title", FontStyles.Bold);
-        Fixed(title.gameObject, -1f, 4 * U);
+        TMP_Text kicker = Label(titles.transform, "Tomografía", 16f, TextMuted,
+            TextAlignmentOptions.MidlineLeft, "Kicker", FontStyles.UpperCase);
+        kicker.characterSpacing = 6f;
+        Fixed(kicker.gameObject, -1f, 20f);
 
-        TMP_Text counter = Label(controls.transform, "", 18f, TextMuted,
-            TextAlignmentOptions.MidlineLeft, "Counter");
-        Fixed(counter.gameObject, -1f, 3 * U);
+        seriesLabel = Label(titles.transform, "", 30f, TextPrimary,
+            TextAlignmentOptions.MidlineLeft, "Series", FontStyles.Bold);
+        Fixed(seriesLabel.gameObject, -1f, 34f);
 
-        GameObject sliderGo = NewUI("Slider", controls.transform);
+        prev = IconButton(row.transform, "<", "Btn_Previous");
+        next = IconButton(row.transform, ">", "Btn_Next");
+    }
+
+    private static CTPlaneView BuildPlaneQuad(Transform parent, string plane)
+    {
+        GameObject quad = NewUI("Plane_" + plane, parent);
+        Rounded(quad, QuadBg, 20f);
+
+        var v = quad.AddComponent<VerticalLayoutGroup>();
+        int p = (int)QuadPad;
+        v.padding = new RectOffset(p, p, p, p);
+        v.spacing = U;
+        v.childControlWidth = true;
+        v.childControlHeight = true;
+        v.childForceExpandWidth = true;
+        v.childForceExpandHeight = false;
+
+        GameObject top = NewUI("Top", quad.transform);
+        Fixed(top, -1f, 4f * U);
+        var th = top.AddComponent<HorizontalLayoutGroup>();
+        th.childAlignment = TextAnchor.MiddleLeft;
+        th.childControlWidth = true;
+        th.childControlHeight = true;
+        th.childForceExpandWidth = false;
+        th.childForceExpandHeight = false;
+
+        TMP_Text title = Label(top.transform, Capitalize(plane), 22f, TextPrimary,
+            TextAlignmentOptions.MidlineLeft, "Title", FontStyles.Bold | FontStyles.UpperCase);
+        title.characterSpacing = 4f;
+        title.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+        TMP_Text counter = Label(top.transform, "", 18f, TextMuted,
+            TextAlignmentOptions.MidlineRight, "Counter");
+        counter.gameObject.AddComponent<LayoutElement>().minWidth = 15f * U;
+
+        RawImage raw = Film(quad.transform, FilmH);
+
+        GameObject sliderGo = NewUI("Slider", quad.transform);
         Fixed(sliderGo, -1f, 4.5f * U);
         Slider slider = BuildSlider(sliderGo);
 
-        return AddView(row, plane, raw, slider, title, counter);
+        return AddView(quad, plane, raw, slider, title, counter);
     }
 
-    private static RawImage Film(Transform parent, float size)
+    private static TMP_Text BuildInfoQuad(Transform parent)
     {
-        // Fondo oscuro: una tomografía se lee mucho mejor sobre negro.
+        GameObject quad = NewUI("Info", parent);
+        Rounded(quad, QuadBg, 20f);
+
+        var v = quad.AddComponent<VerticalLayoutGroup>();
+        v.padding = new RectOffset(24, 24, 20, 20);
+        v.spacing = 12f;
+        v.childControlWidth = true;
+        v.childControlHeight = true;
+        v.childForceExpandWidth = true;
+        v.childForceExpandHeight = false;
+
+        TMP_Text title = Label(quad.transform, "Estudio", 22f, TextPrimary,
+            TextAlignmentOptions.MidlineLeft, "Title", FontStyles.Bold | FontStyles.UpperCase);
+        title.characterSpacing = 4f;
+        Fixed(title.gameObject, -1f, 4f * U);
+
+        TMP_Text details = Label(quad.transform, "", 24f, TextPrimary,
+            TextAlignmentOptions.TopLeft, "Details");
+        details.enableWordWrapping = true;
+        details.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1f;
+
+        TMP_Text note = Label(quad.transform, "El modelo 3D de cada órgano aparece en la vista Segmentación.",
+            17f, TextMuted, TextAlignmentOptions.BottomLeft, "Note");
+        note.enableWordWrapping = true;
+        Fixed(note.gameObject, -1f, 6f * U);
+
+        // Hueco reservado para el modelo 3D. Fuera del layout, ocupando todo el recuadro.
+        GameObject slot = NewUI("ModelSlot", quad.transform);
+        slot.AddComponent<LayoutElement>().ignoreLayout = true;
+        var srt = slot.GetComponent<RectTransform>();
+        srt.anchorMin = Vector2.zero;
+        srt.anchorMax = Vector2.one;
+        srt.offsetMin = Vector2.zero;
+        srt.offsetMax = Vector2.zero;
+
+        return details;
+    }
+
+    private static RawImage Film(Transform parent, float height)
+    {
         GameObject film = NewUI("Film", parent);
-        Fixed(film, size, size);
+        Fixed(film, -1f, height);
         Rounded(film, FilmBg, 12f);
 
         GameObject inset = NewUI("Inset", film.transform);
@@ -443,7 +521,7 @@ public static class MedicalCtViewerLayout
         return view;
     }
 
-    // ---------------- helpers (mismo estilo que el resto de la interfaz) ----------------
+    // ---------------- helpers ----------------
 
     private static GameObject NewUI(string name, Transform parent)
     {
@@ -492,11 +570,11 @@ public static class MedicalCtViewerLayout
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = size;
         rt.anchoredPosition = Vector2.zero;
-        Rounded(go, CardBg, 28f);
+        Rounded(go, CardBg, 32f);
 
         var v = go.AddComponent<VerticalLayoutGroup>();
-        v.padding = new RectOffset((int)(3 * U), (int)(3 * U), (int)(3 * U), (int)(2.5f * U));
-        v.spacing = (int)U;
+        v.padding = new RectOffset((int)(3 * U), (int)(3 * U), (int)(3 * U), (int)(3 * U));
+        v.spacing = 2f * U;
         v.childControlWidth = true;
         v.childControlHeight = true;
         v.childForceExpandWidth = true;
@@ -519,60 +597,22 @@ public static class MedicalCtViewerLayout
         return t;
     }
 
-    private static void Header(Transform parent, string title, out TMP_Text organLabel)
+    private static Button IconButton(Transform parent, string glyph, string name)
     {
-        GameObject row = NewUI("Header", parent);
-        Fixed(row, -1f, 6 * U);
-
-        var h = row.AddComponent<HorizontalLayoutGroup>();
-        h.childAlignment = TextAnchor.MiddleLeft;
-        h.childControlWidth = true;
-        h.childControlHeight = true;
-
-        Label(row.transform, title, 34f, TextPrimary, TextAlignmentOptions.MidlineLeft, "Title", FontStyles.Bold)
-            .gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-
-        organLabel = Label(row.transform, "", 26f, Accent, TextAlignmentOptions.MidlineRight, "Organ");
-        organLabel.gameObject.AddComponent<LayoutElement>().minWidth = 30 * U;
-    }
-
-    private static void Divider(Transform parent)
-    {
-        GameObject go = NewUI("Divider", parent);
-        Fixed(go, -1f, 1.5f);
-        go.AddComponent<Image>().color = DividerCol;
-    }
-
-    private static void Footer(Transform parent, out Button previous, out Button next)
-    {
-        GameObject row = NewUI("Footer", parent);
-        Fixed(row, -1f, 6 * U);
-
-        var h = row.AddComponent<HorizontalLayoutGroup>();
-        h.spacing = U;
-        h.childAlignment = TextAnchor.MiddleCenter;
-        h.childControlWidth = true;
-        h.childControlHeight = true;
-
-        previous = TextButton(row.transform, "Estudio anterior");
-        next = TextButton(row.transform, "Estudio siguiente");
-    }
-
-    private static Button TextButton(Transform parent, string label)
-    {
-        GameObject go = NewUI("Btn_" + label, parent);
-        go.AddComponent<LayoutElement>().flexibleWidth = 1f;
-        Image bg = Rounded(go, SubtleBg, 16f);
+        GameObject go = NewUI(name, parent);
+        Fixed(go, 6f * U, 6f * U);
+        Image bg = Rounded(go, ButtonBg, 14f);
 
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = bg;
         var c = btn.colors;
-        c.normalColor = Color.white;
-        c.highlightedColor = new Color(0.88f, 0.90f, 0.93f);
+        c.normalColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+        c.highlightedColor = Color.white;
+        c.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
         c.fadeDuration = 0.08f;
         btn.colors = c;
 
-        TMP_Text t = Label(go.transform, label, 20f, TextPrimary, TextAlignmentOptions.Center, "Label");
+        TMP_Text t = Label(go.transform, glyph, 26f, TextPrimary, TextAlignmentOptions.Center, "Glyph", FontStyles.Bold);
         var rt = t.rectTransform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
@@ -591,7 +631,7 @@ public static class MedicalCtViewerLayout
         brt.anchorMax = new Vector2(1f, 0.5f);
         brt.sizeDelta = new Vector2(-3f * U, 0.75f * U);
         brt.anchoredPosition = Vector2.zero;
-        Rounded(bg, DividerCol, 0.4f * U);
+        Rounded(bg, Track, 0.4f * U);
 
         GameObject fillArea = NewUI("Fill Area", go.transform);
         var frt = fillArea.GetComponent<RectTransform>();

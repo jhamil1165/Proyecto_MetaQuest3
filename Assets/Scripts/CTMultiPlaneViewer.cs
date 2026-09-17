@@ -31,6 +31,12 @@ public class CTMultiPlaneViewer : MonoBehaviour
         public int axial;
         public int coronal;
         public int sagittal;
+
+        [Tooltip("Grosor de corte en mm (SliceThickness del DICOM).")]
+        public float sliceMm;
+
+        [Tooltip("Tamaño de píxel en mm (PixelSpacing del DICOM).")]
+        public float pixelMm;
     }
 
     [SerializeField] private List<CTPlaneView> planes = new List<CTPlaneView>();
@@ -42,6 +48,9 @@ public class CTMultiPlaneViewer : MonoBehaviour
     [SerializeField] private List<string> organs = new List<string> { "higado", "estomago", "pancreas", "vesicula" };
 
     [SerializeField] private TMP_Text organLabel;
+
+    [Tooltip("Texto con los datos de la serie: cortes, grosor y tamaño de píxel.")]
+    [SerializeField] private TMP_Text infoText;
     [SerializeField] private Button previousButton;
     [SerializeField] private Button nextButton;
 
@@ -82,6 +91,7 @@ public class CTMultiPlaneViewer : MonoBehaviour
         {
             Study study = studies[_index];
             if (organLabel != null) organLabel.text = string.IsNullOrEmpty(study.label) ? study.folder : study.label;
+            if (infoText != null) infoText.text = Describe(study);
 
             foreach (var plane in planes)
             {
@@ -92,12 +102,40 @@ public class CTMultiPlaneViewer : MonoBehaviour
 
         string organ = organs[_index];
         if (organLabel != null) organLabel.text = Capitalize(organ);
+        if (infoText != null) infoText.text = "Capturas de 3D Slicer";
 
         // Los tres planos cambian a la vez: siempre muestran el mismo estudio.
         foreach (var plane in planes)
         {
             if (plane != null) plane.SetOrgan(organ);
         }
+    }
+
+    /// <summary>Datos de la serie para el recuadro de información del visor.</summary>
+    public static string Describe(Study study)
+    {
+        var lines = new List<string>
+        {
+            Row("Cortes", "axial " + study.axial + "  ·  coronal " + study.coronal + "  ·  sagital " + study.sagittal)
+        };
+
+        if (study.sliceMm > 0f) lines.Add(Row("Grosor de corte", Mm(study.sliceMm)));
+        if (study.pixelMm > 0f) lines.Add(Row("Tamaño de píxel", Mm(study.pixelMm)));
+
+        return string.Join("<br><br>", lines);
+    }
+
+    private static string Row(string label, string value)
+    {
+        // <br> y no un salto de línea literal: TextMeshPro lo interpreta igual en el
+        // editor de Windows y en el Quest.
+        return "<size=75%><color=#8A94A3>" + label.ToUpperInvariant() + "</color></size><br>" + value;
+    }
+
+    private static string Mm(float value)
+    {
+        // Coma decimal, como se escribe en español, sin depender del idioma del visor.
+        return value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture).Replace('.', ',') + " mm";
     }
 
     private static int CountFor(Study study, string plane)
