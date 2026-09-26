@@ -16,8 +16,8 @@ public class ClippingPlaneAnchor : MonoBehaviour
     [Tooltip("Espera a que WorkspaceRecenter haya colocado los órganos.")]
     [SerializeField] private float delay = 1.3f;
 
-    [Tooltip("Altura del plano respecto al centro de los órganos.")]
-    [SerializeField] private float heightOffset = 0f;
+    [Tooltip("Margen por encima de los órganos. El plano arranca ahí para que se vean enteros.")]
+    [SerializeField] private float margin = 0.04f;
 
     private void OnEnable()
     {
@@ -56,7 +56,9 @@ public class ClippingPlaneAnchor : MonoBehaviour
 
         if (!found) return;
 
-        transform.position = bounds.center + Vector3.up * heightOffset;
+        // Por encima de los órganos: así se ven enteros al abrir la vista y es el usuario
+        // quien baja el plano cuando quiere cortar.
+        transform.position = new Vector3(bounds.center.x, bounds.max.y + margin, bounds.center.z);
 
         // Plano horizontal: su eje Y es la normal que lee el shader.
         transform.rotation = Quaternion.identity;
