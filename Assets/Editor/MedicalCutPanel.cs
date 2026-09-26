@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEditor;
@@ -7,20 +8,23 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Panel del menú para manejar el plano de corte: activar y desactivar, volver a
-/// centrarlo sobre los órganos y girarlo 90 grados (corte horizontal o vertical).
+/// Panel de controles bajo el menú, con dos filas:
 ///
-/// Hacía falta porque el plano, por sí solo, no se explica: el usuario tiene que poder
-/// decidir cuándo corta. El mismo componente responde al botón B/Y del mando.
+///   Plano de corte   activar o quitar el corte, centrarlo sobre los órganos y girarlo
+///                    90 grados (corte horizontal o vertical)
+///   Volumen 3D       tejido, esqueleto, solo órganos, u ocultarlo
 ///
-/// Va debajo del menú principal, en el mismo arco, y se enciende con las vistas
-/// Modelo 3D y Segmentación, que son donde hay algo que cortar.
+/// El plano solo, flotando, no se explica: el usuario tiene que poder decidir cuándo
+/// corta. El botón B/Y del mando hace lo mismo que el primer botón.
+///
+/// El esqueleto no se saca de un umbral de grises: la segmentación trae marcadas las
+/// costillas, vértebras, caderas y fémures, así que se enciende como un elemento más.
 /// </summary>
 public static class MedicalCutPanel
 {
     private const string ScenePath = "Assets/Scenes/SampleScene.unity";
     private const string OutDir = "Logs/EditorAutomation/";
-    private const string CanvasName = "Canvas_Corte";
+    private const string CanvasName = "Canvas_Controles";
     private const float U = 8f;
     private const float Scale = 0.0016f;
 
@@ -32,7 +36,7 @@ public static class MedicalCutPanel
     private static Material _rounded;
     private static TMP_FontAsset _font;
 
-    [MenuItem("MedicalViewer/Step71 - Panel del plano de corte")]
+    [MenuItem("MedicalViewer/Step73 - Panel de corte y volumen")]
     public static void Apply()
     {
         if (!Application.isBatchMode &&
@@ -47,20 +51,24 @@ public static class MedicalCutPanel
 
         GameObject rootGo = GameObject.Find("Medical_Menu_UI");
         GameObject plane = GameObject.Find("Plano_de_corte");
+        GameObject volume = GameObject.Find("Volumen_3D");
         var actions = Object.FindObjectOfType<MedicalMenuActions>(true);
 
         if (rootGo == null || plane == null || actions == null || _rounded == null || _font == null)
         {
-            Debug.LogError("[Step71] Falta Medical_Menu_UI, Plano_de_corte, el menu, el material o la fuente.");
+            Debug.LogError("[Step73] Falta Medical_Menu_UI, Plano_de_corte, el menu, el material o la fuente.");
             return;
         }
 
         var input = plane.GetComponent<ClippingPlaneInput>();
         if (input == null) input = plane.AddComponent<ClippingPlaneInput>();
 
-        // ---- el canvas, debajo del menú ----
-        Transform existing = rootGo.transform.Find(CanvasName);
-        if (existing != null) Object.DestroyImmediate(existing.gameObject);
+        // Se rehace entero, y tambien se limpia el panel anterior si existia.
+        foreach (string old in new[] { CanvasName, "Canvas_Corte" })
+        {
+            Transform existing = rootGo.transform.Find(old);
+            if (existing != null) Object.DestroyImmediate(existing.gameObject);
+        }
 
         var go = new GameObject(CanvasName, typeof(RectTransform));
         go.transform.SetParent(rootGo.transform, false);
@@ -73,44 +81,39 @@ public static class MedicalCutPanel
 
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(660f, 190f);
-        rt.anchoredPosition3D = new Vector3(0f, -0.46f, 1.8f);
+        rt.sizeDelta = new Vector2(700f, 330f);
+        // Por debajo de la fila de organos (van de -0,46 a -0,25 respecto de los
+        // ojos): a media altura los modelos se ponian delante y tapaban los botones.
+        rt.anchoredPosition3D = new Vector3(0f, -0.82f, 1.8f);
         rt.localRotation = Quaternion.identity;
         rt.localScale = Vector3.one * Scale;
 
-        GameObject card = NewUI("Card_Corte", go.transform);
+        GameObject card = NewUI("Card_Controles", go.transform);
         var crt = card.GetComponent<RectTransform>();
         crt.anchorMin = crt.anchorMax = crt.pivot = new Vector2(0.5f, 0.5f);
-        crt.sizeDelta = new Vector2(620f, 150f);
+        crt.sizeDelta = new Vector2(660f, 290f);
         Rounded(card, CardBg, 24f);
 
+        // La tarjeta se ajusta a lo que lleve dentro: con una altura fija quedaba un
+        // hueco blanco debajo de los botones.
+        var fitter = card.AddComponent<ContentSizeFitter>();
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
         var layout = card.AddComponent<VerticalLayoutGroup>();
-        layout.padding = new RectOffset((int)(2 * U), (int)(2 * U), (int)(1.5f * U), (int)(1.5f * U));
-        layout.spacing = U;
+        layout.padding = new RectOffset((int)(2 * U), (int)(2 * U), (int)(2 * U), (int)(2 * U));
+        layout.spacing = (int)U;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = false;
 
-        TMP_Text title = Label(card.transform, "Plano de corte", 20f, TextMuted,
-            TextAlignmentOptions.MidlineLeft, "Title", FontStyles.UpperCase);
-        title.characterSpacing = 5f;
-        Fixed(title.gameObject, 3 * U);
+        // ---- fila 1: plano de corte ----
+        Title(card.transform, "Plano de corte");
+        GameObject cutRow = Row(card.transform);
+        Button toggle = PillButton(cutRow.transform, "Activar corte", out Image toggleBg, out TMP_Text toggleText);
+        Button center = PillButton(cutRow.transform, "Centrar", out _, out _);
+        Button rotate = PillButton(cutRow.transform, "Girar 90°", out _, out _);
 
-        GameObject row = NewUI("Botones", card.transform);
-        Fixed(row, 7 * U);
-        var h = row.AddComponent<HorizontalLayoutGroup>();
-        h.spacing = (int)U;
-        h.childAlignment = TextAnchor.MiddleCenter;
-        h.childControlWidth = true;
-        h.childControlHeight = true;
-        h.childForceExpandWidth = true;
-
-        Button toggle = PillButton(row.transform, "Activar corte", out Image toggleBg, out TMP_Text toggleText);
-        Button center = PillButton(row.transform, "Centrar", out _, out _);
-        Button rotate = PillButton(row.transform, "Girar 90°", out _, out _);
-
-        // Los eventos se guardan en la escena: funcionan sin tocar nada en el Inspector.
         UnityEventTools.AddVoidPersistentListener(toggle.onClick, input.Toggle);
         UnityEventTools.AddVoidPersistentListener(center.onClick, input.Center);
         UnityEventTools.AddVoidPersistentListener(rotate.onClick, input.Rotate90);
@@ -121,11 +124,55 @@ public static class MedicalCutPanel
         iso.FindProperty("cutting").boolValue = false;
         iso.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(input);
+        sb.AppendLine("fila 1: activar corte, centrar y girar 90 grados (tambien el boton B/Y del mando)");
 
-        sb.AppendLine("panel creado con: activar/quitar corte, centrar y girar 90 grados");
-        sb.AppendLine("boton B/Y del mando: tambien activa y quita el corte");
+        // ---- fila 2: volumen 3D ----
+        if (volume != null)
+        {
+            Title(card.transform, "Volumen 3D");
+            GameObject volumeRow = Row(card.transform);
 
-        // ---- el menú lo enciende donde hay algo que cortar ----
+            var display = volume.GetComponent<VolumeDisplay>();
+            if (display == null) display = volume.AddComponent<VolumeDisplay>();
+
+            var buttons = new List<Button>
+            {
+                PillButton(volumeRow.transform, "Tejido", out _, out _),
+                PillButton(volumeRow.transform, "Esqueleto", out _, out _),
+                PillButton(volumeRow.transform, "Órganos", out _, out _),
+            };
+            Button hide = PillButton(volumeRow.transform, "Ocultar", out _, out _);
+
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                UnityEventTools.AddIntPersistentListener(buttons[i].onClick, display.Show, i);
+            }
+            UnityEventTools.AddVoidPersistentListener(hide.onClick, display.ToggleVisible);
+
+            var vso = new SerializedObject(display);
+            vso.FindProperty("volume").objectReferenceValue = volume.GetComponent<Renderer>();
+
+            var modes = vso.FindProperty("modes");
+            modes.arraySize = 3;
+            SetMode(modes.GetArrayElementAtIndex(0), "Tejido", 40f, 500f, 0.12f, 0.85f, 0f);
+            SetMode(modes.GetArrayElementAtIndex(1), "Esqueleto", 300f, 1200f, 0.03f, 0.25f, 0.95f);
+            SetMode(modes.GetArrayElementAtIndex(2), "Órganos", 40f, 400f, 0.03f, 0.95f, 0f);
+
+            var list = vso.FindProperty("buttons");
+            list.arraySize = buttons.Count;
+            for (int i = 0; i < buttons.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = buttons[i];
+
+            vso.FindProperty("current").intValue = 0;
+            vso.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(display);
+            sb.AppendLine("fila 2: tejido, esqueleto, organos y ocultar");
+        }
+        else
+        {
+            sb.AppendLine("[AVISO] no hay Volumen_3D: la fila del volumen no se crea");
+        }
+
+        // ---- el menú enciende el panel donde hay algo que manejar ----
         var aso = new SerializedObject(actions);
         foreach (string field in new[] { "model3DObjects", "segmentationObjects" })
         {
@@ -150,12 +197,43 @@ public static class MedicalCutPanel
         sb.AppendLine("scene_saved=" + EditorSceneManager.SaveScene(scene));
 
         MedicalCtViewerLayout.LoadResources();
-        MedicalCtViewerLayout.RenderPreview(go, OutDir + "step71_panel.png", sb);
+        MedicalCtViewerLayout.RenderPreview(go, OutDir + "step73_panel.png", sb);
 
         System.IO.Directory.CreateDirectory(OutDir);
-        System.IO.File.WriteAllText(OutDir + "step71_output.txt", sb.ToString());
+        System.IO.File.WriteAllText(OutDir + "step73_output.txt", sb.ToString());
         Debug.Log(sb.ToString());
-        Debug.Log("STEP71_DONE");
+        Debug.Log("STEP73_DONE");
+    }
+
+    private static void SetMode(SerializedProperty mode, string label, float center, float width,
+        float tissue, float organ, float bone)
+    {
+        mode.FindPropertyRelative("label").stringValue = label;
+        mode.FindPropertyRelative("windowCenter").floatValue = center;
+        mode.FindPropertyRelative("windowWidth").floatValue = width;
+        mode.FindPropertyRelative("tissueOpacity").floatValue = tissue;
+        mode.FindPropertyRelative("organOpacity").floatValue = organ;
+        mode.FindPropertyRelative("boneOpacity").floatValue = bone;
+    }
+
+    private static void Title(Transform parent, string text)
+    {
+        TMP_Text title = Label(parent, text, 20f, TextMuted, TextAlignmentOptions.MidlineLeft, "Title_" + text, FontStyles.UpperCase);
+        title.characterSpacing = 5f;
+        Fixed(title.gameObject, 3 * U);
+    }
+
+    private static GameObject Row(Transform parent)
+    {
+        GameObject row = NewUI("Fila", parent);
+        Fixed(row, 7 * U);
+        var h = row.AddComponent<HorizontalLayoutGroup>();
+        h.spacing = (int)U;
+        h.childAlignment = TextAnchor.MiddleCenter;
+        h.childControlWidth = true;
+        h.childControlHeight = true;
+        h.childForceExpandWidth = true;
+        return row;
     }
 
     private static Button PillButton(Transform parent, string label, out Image background, out TMP_Text text)

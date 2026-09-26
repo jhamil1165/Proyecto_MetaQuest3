@@ -73,3 +73,9 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Texturas 3D del volumen medico: se generan solas al abrir Unity a partir de los
+# ficheros comprimidos de Assets/Volumes. Sueltas ocupan 134 MB cada una y GitHub
+# no admite ficheros de mas de 100 MB.
+/[Aa]ssets/[Vv]olumes/Tex_*.asset
+/[Aa]ssets/[Vv]olumes/Tex_*.asset.meta

@@ -23,6 +23,12 @@ public static class MedicalVolumeSetup
     private const string MatDir = "Assets/Materials/Volume";
     private const string ObjectName = "Volumen_3D";
 
+    // Identificador fijo de cada textura. El material las referencia por este numero,
+    // y como cada ordenador se fabrica las suyas, si no se fijara aqui el material
+    // quedaria apuntando a la nada en el Unity del compañero.
+    private const string DensityGuid = "98517d8e7447987409c63e3a5a76c3ed";
+    private const string OrgansGuid = "9ff1ff7ac6c0fe94b9b0f7e77f20efe9";
+
     // Medidas reales de la serie de cuerpo completo.
     private const float PixelMm = 0.976562f;
     private const float SliceMm = 3.27002f;
@@ -64,6 +70,8 @@ public static class MedicalVolumeSetup
         material.SetTexture("_Density", density);
         material.SetTexture("_Organs", organs);
         material.SetFloat("_PlaneDistance", -100000f);
+        material.SetFloat("_Steps", 160f);    // pasos del rayo: mas = mas nitido y mas lento
+        material.SetFloat("_Shading", 0.85f);  // relieve; a 0 se ve plano
         material.SetVector("_PlaneNormal", new Vector4(0f, 1f, 0f, 0f));
         EditorUtility.SetDirty(material);
         sb.AppendLine("material: " + matPath);
@@ -84,8 +92,11 @@ public static class MedicalVolumeSetup
         volume.GetComponent<Renderer>().sharedMaterial = material;
 
         // Tamaño real del paciente: ancho y fondo por el tamaño de píxel, alto por los cortes.
-        float width = size.x * 2f * PixelMm / 1000f;   // el volumen esta a mitad de resolucion
-        float height = size.z * 2f * SliceMm / 1000f;
+        // Un voxel es un pixel del TAC, ni mas ni menos: con la textura a resolucion
+        // completa no hay que multiplicar por nada, y si se multiplica sale un paciente
+        // del doble de su tamaño que se come medio puesto de trabajo.
+        float width = size.x * PixelMm / 1000f;
+        float height = size.z * SliceMm / 1000f;
         volume.transform.localScale = new Vector3(width, height, width);
 
         // Colgado del menú, que es lo que se recoloca delante del usuario al arrancar.
@@ -94,9 +105,10 @@ public static class MedicalVolumeSetup
         {
             volume.transform.SetParent(root.transform, false);
 
-            // A la izquierda y algo por debajo: en el centro tapaba el menú y se encimaba
-            // con los órganos, que están en fila delante del usuario.
-            volume.transform.localPosition = new Vector3(-0.75f, -0.15f, 1.25f);
+            // Arriba a la izquierda. Los órganos sueltos van en fila a la altura del
+            // pecho (de -0,46 a -0,25 respecto de los ojos), así que el volumen se sube
+            // por encima de esa franja: se ven los dos a la vez sin atravesarse.
+            volume.transform.localPosition = new Vector3(-0.80f, 0.30f, 1.15f);
             volume.transform.localRotation = Quaternion.identity;
         }
 
@@ -167,24 +179,61 @@ public static class MedicalVolumeSetup
         Debug.Log("STEP70_DONE");
     }
 
+    /// <summary>
+    /// Rehace las texturas 3D a partir de los ficheros comprimidos y las vuelve a enganchar
+    /// al material. Las texturas no se suben al repositorio (ocupan 134 MB cada una y GitHub
+    /// no admite ficheros de mas de 100 MB), asi que se generan en cada ordenador.
+    /// No toca la escena: se puede llamar al abrir Unity sin molestar.
+    /// </summary>
+    public static bool RebuildTextures(StringBuilder sb)
+    {
+        Shader shader = Shader.Find("MedicalViewer/VolumeRender");
+        if (shader == null) return false;
+
+        Texture3D density = BuildTexture("ct_densidad", FilterMode.Bilinear, sb, out _);
+        Texture3D organs = BuildTexture("ct_organos", FilterMode.Point, sb, out _);
+        if (density == null || organs == null) return false;
+
+        System.IO.Directory.CreateDirectory(MatDir);
+        string matPath = MatDir + "/Mat_Volumen.mat";
+        var material = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (material == null)
+        {
+            material = new Material(shader);
+            AssetDatabase.CreateAsset(material, matPath);
+        }
+
+        material.shader = shader;
+        material.SetTexture("_Density", density);
+        material.SetTexture("_Organs", organs);
+        EditorUtility.SetDirty(material);
+        AssetDatabase.SaveAssets();
+        return true;
+    }
+
     /// <summary>Convierte un fichero en bruto en una textura 3D de un byte por voxel.</summary>
     private static Texture3D BuildTexture(string prefix, FilterMode filter, StringBuilder sb, out Vector3Int size)
     {
         size = Vector3Int.zero;
 
-        string[] found = Directory.GetFiles(VolumeDir, prefix + "_*.bytes");
+        // Los datos van comprimidos (.bytes.gz): sueltos son 67 MB cada uno y el
+        // repositorio del grupo se hacia inmanejable. Se admite tambien el .bytes suelto.
+        string[] found = Directory.GetFiles(VolumeDir, prefix + "_*.bytes.gz");
+        if (found.Length == 0) found = Directory.GetFiles(VolumeDir, prefix + "_*.bytes");
         if (found.Length == 0)
         {
-            sb.AppendLine("[FALLO] no encuentro " + prefix + "_*.bytes");
+            sb.AppendLine("[FALLO] no encuentro " + prefix + "_*.bytes.gz");
             return null;
         }
 
         string path = found[0].Replace('\\', '/');
-        string dims = Path.GetFileNameWithoutExtension(path).Substring(prefix.Length + 1);
+        // El tamaño va en el nombre: ct_densidad_512x512x267.bytes.gz
+        string file = Path.GetFileName(path);
+        string dims = file.Substring(prefix.Length + 1, file.IndexOf(".bytes") - prefix.Length - 1);
         string[] parts = dims.Split('x');
         size = new Vector3Int(int.Parse(parts[0]), int.Parse(parts[1]), int.Parse(parts[2]));
 
-        byte[] data = File.ReadAllBytes(path);
+        byte[] data = path.EndsWith(".gz") ? Decompress(path) : File.ReadAllBytes(path);
         int expected = size.x * size.y * size.z;
         if (data.Length != expected)
         {
@@ -203,8 +252,36 @@ public static class MedicalVolumeSetup
 
         AssetDatabase.DeleteAsset(assetPath);
         AssetDatabase.CreateAsset(texture, assetPath);
+        PinGuid(assetPath, prefix == "ct_densidad" ? DensityGuid : OrgansGuid);
         sb.AppendLine(string.Format("textura {0}: {1}x{2}x{3} ({4:F1} MB)", prefix, size.x, size.y, size.z, data.Length / 1048576f));
         return AssetDatabase.LoadAssetAtPath<Texture3D>(assetPath);
+    }
+
+    /// <summary>Le pone a la textura recien creada el identificador de siempre.</summary>
+    private static void PinGuid(string assetPath, string guid)
+    {
+        string metaPath = assetPath + ".meta";
+        if (!File.Exists(metaPath)) return;
+
+        string meta = File.ReadAllText(metaPath);
+        string updated = System.Text.RegularExpressions.Regex.Replace(
+            meta, "guid: [0-9a-f]{32}", "guid: " + guid);
+        if (updated == meta) return;
+
+        File.WriteAllText(metaPath, updated);
+        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+    }
+
+    /// <summary>Saca a memoria el contenido de un fichero comprimido.</summary>
+    private static byte[] Decompress(string path)
+    {
+        using (var file = File.OpenRead(path))
+        using (var gzip = new System.IO.Compression.GZipStream(file, System.IO.Compression.CompressionMode.Decompress))
+        using (var memory = new MemoryStream())
+        {
+            gzip.CopyTo(memory);
+            return memory.ToArray();
+        }
     }
 
     private static T GetOrAdd<T>(GameObject go) where T : Component

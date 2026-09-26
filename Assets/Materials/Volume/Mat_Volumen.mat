@@ -33,13 +33,16 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BoneOpacity: 0
     - _OrganOpacity: 0.85
     - _PlaneDistance: -100000
-    - _Steps: 96
+    - _Shading: 0.85
+    - _Steps: 160
     - _TissueOpacity: 0.1
     - _WindowCenter: 40
     - _WindowWidth: 500
     m_Colors:
+    - _ColorBone: {r: 0.95, g: 0.93, b: 0.88, a: 1}
     - _ColorGallbladder: {r: 0.94, g: 0.59, b: 0.15999997, a: 1}
     - _ColorLiver: {r: 0.8, g: 0.4699999, b: 0.36999997, a: 1}
     - _ColorPancreas: {r: 0.42999998, g: 0.63, b: 0.82, a: 1}
