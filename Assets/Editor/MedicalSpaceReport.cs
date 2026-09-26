@@ -95,10 +95,26 @@ public static class MedicalSpaceReport
             far = Mathf.Max(far, depth);
         }
 
-        return string.Format("{0} | {1,7:F1} | {2,7:F1} a {3,7:F1} | {4:F2}-{5:F2} m | y {6:F2} a {7:F2}{8}",
+        return string.Format("{0} | {1,7:F1} | {2,7:F1} a {3,7:F1} | {4:F2}-{5:F2} m | y {6:F2} a {7:F2} | mide {8:F0}x{9:F0}x{10:F0} cm{11}",
             go.name, (minAngle + maxAngle) * 0.5f, minAngle, maxAngle, near, far,
             bounds.min.y - eye.y, bounds.max.y - eye.y,
-            go.activeSelf ? "" : "  (apagado)");
+            bounds.size.x * 100f, bounds.size.y * 100f, bounds.size.z * 100f,
+            go.activeSelf ? "" : "  (apagado)") + Scaling(go);
+    }
+
+    /// <summary>
+    /// Escala a la que se muestra el objeto y tamaño que tendria la malla sin tocar. Sirve
+    /// para saber si lo que se mide en la escena vale como medida anatomica.
+    /// </summary>
+    private static string Scaling(GameObject go)
+    {
+        var mf = go.GetComponentInChildren<MeshFilter>(true);
+        if (mf == null || mf.sharedMesh == null) return "";
+
+        Vector3 raw = mf.sharedMesh.bounds.size;
+        Vector3 scale = mf.transform.lossyScale;
+        return string.Format("  [escala {0:F2} | malla {1:F1}x{2:F1}x{3:F1} cm]",
+            scale.x, raw.x * 100f, raw.y * 100f, raw.z * 100f);
     }
 
     /// <summary>Caja que ocupa el objeto y todo lo que cuelga de él, encendido o no.</summary>

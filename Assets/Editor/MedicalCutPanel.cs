@@ -82,9 +82,11 @@ public static class MedicalCutPanel
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = new Vector2(700f, 330f);
-        // Por debajo de la fila de organos (van de -0,46 a -0,25 respecto de los
-        // ojos): a media altura los modelos se ponian delante y tapaban los botones.
-        rt.anchoredPosition3D = new Vector3(0f, -0.82f, 1.8f);
+        // Por debajo de todo lo que hay delante del usuario. Los organos llegan a -0,46 y
+        // el plano de corte a -0,36, pero estan a 1 metro y el panel a 1,8, asi que desde
+        // los ojos se ponen delante aunque esten mas altos. Mirando por angulo, lo de
+        // delante baja hasta unos -21 grados; el panel empieza por debajo de eso.
+        rt.anchoredPosition3D = new Vector3(0f, -1.12f, 1.8f);
         rt.localRotation = Quaternion.identity;
         rt.localScale = Vector3.one * Scale;
 
@@ -170,6 +172,27 @@ public static class MedicalCutPanel
         else
         {
             sb.AppendLine("[AVISO] no hay Volumen_3D: la fila del volumen no se crea");
+        }
+
+        // ---- fila 3: medicion ----
+        MeasureTool tool = MedicalMeasureSetup.Ensure(rootGo, sb);
+        if (tool != null)
+        {
+            Title(card.transform, "Medición");
+            GameObject measureRow = Row(card.transform);
+
+            Button measure = PillButton(measureRow.transform, "Medir", out _, out _);
+            Button clear = PillButton(measureRow.transform, "Borrar", out _, out _);
+
+            UnityEventTools.AddVoidPersistentListener(measure.onClick, tool.Toggle);
+            UnityEventTools.AddVoidPersistentListener(clear.onClick, tool.Clear);
+
+            var mso = new SerializedObject(tool);
+            mso.FindProperty("toggleButton").objectReferenceValue = measure;
+            mso.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(tool);
+
+            sb.AppendLine("fila 3: medir y borrar (los puntos se clavan con el boton A del mando)");
         }
 
         // ---- el menú enciende el panel donde hay algo que manejar ----

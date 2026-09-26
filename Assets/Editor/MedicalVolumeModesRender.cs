@@ -122,6 +122,7 @@ public static class MedicalVolumeModesRender
         Object.DestroyImmediate(camGo);
 
         WideShot(volume, sb);
+        CutShot(volume, sb);
 
         volume.SetActive(wasActive);
 
@@ -196,5 +197,92 @@ public static class MedicalVolumeModesRender
 
         for (int i = restore.Count - 1; i >= 0; i--) restore[i].go.SetActive(restore[i].active);
         sb.AppendLine("render vista del usuario: " + path);
+    }
+
+    /// <summary>
+    /// Simula un fotograma con el corte encendido: hace a mano lo que hace VolumeCutSlice en
+    /// ejecucion (colocar la rebanada en el centro del volumen y cortar ahi) y lo fotografia.
+    /// Sin esto no habria forma de comprobar el corte sin darle a Play.
+    /// </summary>
+    private static void CutShot(GameObject volume, StringBuilder sb)
+    {
+        var renderer = volume.GetComponent<Renderer>();
+        GameObject sliceGo = GameObject.Find("Corte_TAC");
+        if (sliceGo == null) { sb.AppendLine("render corte: no encuentro Corte_TAC"); return; }
+
+        var slice = sliceGo.GetComponent<Renderer>();
+        bool sliceWasOn = slice.enabled;
+        bool sliceWasActive = sliceGo.activeSelf;
+
+        Bounds bounds = renderer.bounds;
+        Vector3 normal = Vector3.up;
+        Vector3 cutPoint = bounds.center;
+
+        var mpb = new MaterialPropertyBlock();
+        renderer.GetPropertyBlock(mpb);
+        float previousDistance = mpb.GetFloat("_PlaneDistance");
+        mpb.SetVector("_PlaneNormal", new Vector4(0f, 1f, 0f, 0f));
+        mpb.SetFloat("_PlaneDistance", -Vector3.Dot(normal, cutPoint));
+        mpb.SetFloat("_WindowCenter", Modes[1].Center);
+        mpb.SetFloat("_WindowWidth", Modes[1].Width);
+        mpb.SetFloat("_TissueOpacity", Modes[1].Tissue);
+        mpb.SetFloat("_OrganOpacity", Modes[1].Organ);
+        mpb.SetFloat("_BoneOpacity", Modes[1].Bone);
+        renderer.SetPropertyBlock(mpb);
+
+        sliceGo.SetActive(true);
+        slice.enabled = true;
+        sliceGo.transform.position = cutPoint;
+        sliceGo.transform.rotation = Quaternion.LookRotation(normal);
+        sliceGo.transform.localScale = new Vector3(1.18f, 1.18f, 1f);
+
+        var sliceMpb = new MaterialPropertyBlock();
+        slice.GetPropertyBlock(sliceMpb);
+        sliceMpb.SetMatrix("_VolumeWorldToObject", volume.transform.worldToLocalMatrix);
+        slice.SetPropertyBlock(sliceMpb);
+
+        // Desde arriba y de lado, que es desde donde se ve la rebanada.
+        var camGo = new GameObject("TmpCutCamera");
+        var cam = camGo.AddComponent<Camera>();
+        cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.backgroundColor = new Color(0.05f, 0.06f, 0.08f, 1f);
+        cam.fieldOfView = 45f;
+        cam.nearClipPlane = 0.05f;
+        cam.farClipPlane = 20f;
+
+        Vector3 eye = cutPoint + new Vector3(0.9f, 0.75f, -1.1f);
+        cam.transform.position = eye;
+        cam.transform.LookAt(cutPoint);
+
+        const int w = 1200;
+        const int h = 900;
+        cam.aspect = (float)w / h;
+
+        var target = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
+        cam.targetTexture = target;
+        cam.Render();
+
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = target;
+        var image = new Texture2D(w, h, TextureFormat.RGB24, false);
+        image.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+        image.Apply();
+        RenderTexture.active = previous;
+
+        string path = OutDir + "step74_corte.png";
+        System.IO.File.WriteAllBytes(path, image.EncodeToPNG());
+
+        cam.targetTexture = null;
+        Object.DestroyImmediate(target);
+        Object.DestroyImmediate(image);
+        Object.DestroyImmediate(camGo);
+
+        renderer.GetPropertyBlock(mpb);
+        mpb.SetFloat("_PlaneDistance", previousDistance);
+        renderer.SetPropertyBlock(mpb);
+        slice.enabled = sliceWasOn;
+        sliceGo.SetActive(sliceWasActive);
+
+        sb.AppendLine("render corte: " + path);
     }
 }
