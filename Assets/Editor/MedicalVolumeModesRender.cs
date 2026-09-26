@@ -121,7 +121,8 @@ public static class MedicalVolumeModesRender
 
         Object.DestroyImmediate(camGo);
 
-        WideShot(volume, sb);
+        WideShot(volume, sb, 0f, "vista");
+        WideShot(volume, sb, 35f, "vista_derecha");
         CutShot(volume, sb);
 
         volume.SetActive(wasActive);
@@ -132,7 +133,7 @@ public static class MedicalVolumeModesRender
     }
 
     /// <summary>Lo que ve el usuario al arrancar, con el esqueleto puesto.</summary>
-    private static void WideShot(GameObject volume, StringBuilder sb)
+    private static void WideShot(GameObject volume, StringBuilder sb, float yaw, string name)
     {
         GameObject root = GameObject.Find("Medical_Menu_UI");
         if (root == null) return;
@@ -170,7 +171,9 @@ public static class MedicalVolumeModesRender
         cam.nearClipPlane = 0.05f;
         cam.farClipPlane = 30f;
         cam.fieldOfView = 75f;
-        cam.transform.SetPositionAndRotation(root.transform.position, root.transform.rotation);
+        // El yaw permite mirar a un lado: el puesto es mas ancho que el campo de vision.
+        cam.transform.SetPositionAndRotation(root.transform.position,
+            root.transform.rotation * Quaternion.Euler(0f, yaw, 0f));
 
         const int w = 2000;
         const int h = 1100;
@@ -187,7 +190,7 @@ public static class MedicalVolumeModesRender
         image.Apply();
         RenderTexture.active = previous;
 
-        string path = OutDir + "step74_vista.png";
+        string path = OutDir + "step74_" + name + ".png";
         System.IO.File.WriteAllBytes(path, image.EncodeToPNG());
 
         cam.targetTexture = null;
@@ -196,7 +199,7 @@ public static class MedicalVolumeModesRender
         Object.DestroyImmediate(camGo);
 
         for (int i = restore.Count - 1; i >= 0; i--) restore[i].go.SetActive(restore[i].active);
-        sb.AppendLine("render vista del usuario: " + path);
+        sb.AppendLine("render " + name + ": " + path);
     }
 
     /// <summary>
