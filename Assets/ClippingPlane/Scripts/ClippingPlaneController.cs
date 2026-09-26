@@ -26,7 +26,10 @@ public class ClippingPlaneController : MonoBehaviour
     private static readonly int PlaneNormalId = Shader.PropertyToID("_PlaneNormal");
     private static readonly int PlaneDistanceId = Shader.PropertyToID("_PlaneDistance");
 
-    private const float DisabledDistance = 100000f;
+    // Negativo a proposito: el shader descarta lo que queda del lado positivo del plano.
+    // Con +100000 todo quedaba del lado descartado y los organos desaparecian al apagar
+    // el corte, que es justo lo contrario de lo que se busca.
+    private const float DisabledDistance = -100000f;
 
     private MaterialPropertyBlock _mpb;
 

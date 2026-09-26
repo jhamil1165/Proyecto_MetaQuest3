@@ -1428,13 +1428,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc5054bde2c06e04d8a50718d17c8dee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  origen: 1
   dicomFolderPath: C:\Users\Alejandra\Downloads\ct-lung-screening-nlst-series
+  streamingFolder: DICOM/serie_toraxabdomen
   axialImage: {fileID: 288385998}
   coronalImage: {fileID: 1539709966}
   sagittalImage: {fileID: 1257543029}
   axialSlider: {fileID: 2086708968}
   coronalSlider: {fileID: 435864326}
   sagittalSlider: {fileID: 2057624280}
+  windowCenter: 40
+  windowWidth: 400
 --- !u!4 &1464006515
 Transform:
   m_ObjectHideFlags: 0
