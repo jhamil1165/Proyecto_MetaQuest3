@@ -111,6 +111,67 @@ public static class MedicalVolumeCut
         EditorUtility.SetDirty(cut);
         sb.AppendLine("rebanada: " + (size.magnitude * 1.05f).ToString("F2") + " m de lado");
 
+        // ---- el plano azul se aparta de la vista ----
+        // Desde que la rebanada dibuja el TAC encima, el plano solo sirve de asa para
+        // agarrarlo. Con su azul original teñía la imagen médica de azul, que es justo lo
+        // que no puede pasar cuando lo que se mira es una tomografía.
+        var planeRenderer = handle.GetComponentInChildren<Renderer>(true);
+        if (planeRenderer != null)
+        {
+            string handlePath = MatDir + "/Mat_Plano_Corte.mat";
+            var handleMat = AssetDatabase.LoadAssetAtPath<Material>(handlePath);
+            if (handleMat == null)
+            {
+                Shader unlit = Shader.Find("Universal Render Pipeline/Unlit");
+                handleMat = new Material(unlit);
+                AssetDatabase.CreateAsset(handleMat, handlePath);
+            }
+
+            var tint = new Color(0.16f, 0.52f, 0.72f, 0.14f);
+            handleMat.SetColor("_BaseColor", tint);
+            handleMat.SetColor("_Color", tint);
+            handleMat.SetFloat("_Surface", 1f);
+            handleMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            handleMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            handleMat.SetInt("_ZWrite", 0);
+            handleMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            handleMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            EditorUtility.SetDirty(handleMat);
+
+            planeRenderer.sharedMaterial = handleMat;
+            EditorUtility.SetDirty(planeRenderer);
+            sb.AppendLine("plano azul: casi transparente, para no teñir el TAC");
+        }
+
+        // ---- "Centrar" tiene que contar con el volumen ----
+        var anchor = Object.FindObjectOfType<ClippingPlaneAnchor>(true);
+        if (anchor != null)
+        {
+            var aso2 = new SerializedObject(anchor);
+            var list = aso2.FindProperty("organs");
+
+            bool already = false;
+            for (int i = 0; i < list.arraySize; i++)
+            {
+                if (list.GetArrayElementAtIndex(i).objectReferenceValue == volumeGo) already = true;
+            }
+
+            if (!already)
+            {
+                list.arraySize += 1;
+                list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = volumeGo;
+                aso2.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(anchor);
+            }
+
+            aso2 = new SerializedObject(anchor);
+            aso2.FindProperty("preferred").objectReferenceValue = volumeGo;
+            aso2.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(anchor);
+
+            sb.AppendLine("boton Centrar: lleva el plano al centro del volumen");
+        }
+
         // ---- el menú la enciende con el resto de la vista ----
         var actions = Object.FindObjectOfType<MedicalMenuActions>(true);
         if (actions != null)

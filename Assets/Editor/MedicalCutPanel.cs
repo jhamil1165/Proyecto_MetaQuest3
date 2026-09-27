@@ -32,6 +32,10 @@ public static class MedicalCutPanel
     // y sobre passthrough Apple recomienda material oscuro con texto blanco.
     private static readonly Color CardBg = new Color32(0x1E, 0x22, 0x28, 224);
     private static readonly Color Subtle = new Color(1f, 1f, 1f, 0.10f);
+
+    // Color "al 100%" de una pastilla. El estado normal del boton lo rebaja al 45%,
+    // que es el 0,10 de siempre; asi queda margen para encenderla al apuntar.
+    private static readonly Color PillFull = new Color(1f, 1f, 1f, 0.22f);
     private static readonly Color TextPrimary = new Color32(0xF0, 0xF2, 0xF5, 255);
     private static readonly Color TextMuted = new Color32(0xA8, 0xB1, 0xBC, 255);
 
@@ -251,7 +255,10 @@ public static class MedicalCutPanel
     private static GameObject Row(Transform parent)
     {
         GameObject row = NewUI("Fila", parent);
-        Fixed(row, 7 * U);
+
+        // 9*U y no 7*U: a 1,8 m del usuario esto son unos 3,6 grados de alto. Con 7*U
+        // se quedaba por debajo de 3 y apuntar con el mando se volvia puntilloso.
+        Fixed(row, 9 * U);
         var h = row.AddComponent<HorizontalLayoutGroup>();
         h.spacing = (int)U;
         h.childAlignment = TextAnchor.MiddleCenter;
@@ -265,15 +272,17 @@ public static class MedicalCutPanel
     {
         GameObject go = NewUI("Btn_" + label, parent);
         go.AddComponent<LayoutElement>().flexibleWidth = 1f;
-        background = Rounded(go, Subtle, 20f);
+        background = Rounded(go, PillFull, 20f);
 
         var button = go.AddComponent<Button>();
         button.targetGraphic = background;
+
         var colors = button.colors;
-        colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(0.90f, 0.92f, 0.95f, 1f);
-        colors.pressedColor = new Color(0.80f, 0.82f, 0.86f, 1f);
-        colors.fadeDuration = 0.08f;
+        colors.normalColor = new Color(1f, 1f, 1f, 0.45f);        // en reposo, discreta
+        colors.highlightedColor = new Color(1f, 1f, 1f, 0.85f);   // al apuntar, se enciende
+        colors.pressedColor = new Color(0.42f, 0.63f, 1f, 1f);    // al pulsar, azul
+        colors.selectedColor = new Color(1f, 1f, 1f, 0.45f);
+        colors.fadeDuration = 0.06f;
         button.colors = colors;
 
         text = Label(go.transform, label, 20f, TextPrimary, TextAlignmentOptions.Center, "Label");

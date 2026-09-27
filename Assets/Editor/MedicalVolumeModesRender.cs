@@ -123,7 +123,8 @@ public static class MedicalVolumeModesRender
 
         WideShot(volume, sb, 0f, "vista");
         WideShot(volume, sb, 35f, "vista_derecha");
-        CutShot(volume, sb);
+        CutShot(volume, sb, 0f, "corte");
+        CutShot(volume, sb, 90f, "corte_girado");
 
         volume.SetActive(wasActive);
 
@@ -207,7 +208,7 @@ public static class MedicalVolumeModesRender
     /// ejecucion (colocar la rebanada en el centro del volumen y cortar ahi) y lo fotografia.
     /// Sin esto no habria forma de comprobar el corte sin darle a Play.
     /// </summary>
-    private static void CutShot(GameObject volume, StringBuilder sb)
+    private static void CutShot(GameObject volume, StringBuilder sb, float roll, string name)
     {
         var renderer = volume.GetComponent<Renderer>();
         GameObject sliceGo = GameObject.Find("Corte_TAC");
@@ -217,14 +218,28 @@ public static class MedicalVolumeModesRender
         bool sliceWasOn = slice.enabled;
         bool sliceWasActive = sliceGo.activeSelf;
 
+        // Se simula lo que hace VolumeCutSlice de verdad: cortar por donde esta el plano,
+        // despues de pulsar "Centrar". Antes se cortaba siempre por el centro del volumen, y
+        // asi no se habria visto el desfase del que se quejo el usuario.
+        var anchor = Object.FindObjectOfType<ClippingPlaneAnchor>(true);
+        GameObject planeGo = GameObject.Find("Plano_de_corte");
+
+        bool planeWasActive = planeGo != null && planeGo.activeSelf;
+        if (planeGo != null) planeGo.SetActive(true);
+        if (anchor != null) anchor.Place();
+
         Bounds bounds = renderer.bounds;
-        Vector3 normal = Vector3.up;
-        Vector3 cutPoint = bounds.center;
+        if (planeGo != null && roll != 0f) planeGo.transform.Rotate(Vector3.right, roll, Space.Self);
+
+        Vector3 normal = planeGo != null ? planeGo.transform.up.normalized : Vector3.up;
+        Vector3 cutPoint = planeGo != null ? planeGo.transform.position : bounds.center;
+        sb.AppendLine("corte simulado en " + cutPoint.ToString("F2") +
+                      " (centro del volumen: " + bounds.center.ToString("F2") + ")");
 
         var mpb = new MaterialPropertyBlock();
         renderer.GetPropertyBlock(mpb);
         float previousDistance = mpb.GetFloat("_PlaneDistance");
-        mpb.SetVector("_PlaneNormal", new Vector4(0f, 1f, 0f, 0f));
+        mpb.SetVector("_PlaneNormal", new Vector4(normal.x, normal.y, normal.z, 0f));
         mpb.SetFloat("_PlaneDistance", -Vector3.Dot(normal, cutPoint));
         mpb.SetFloat("_WindowCenter", Modes[1].Center);
         mpb.SetFloat("_WindowWidth", Modes[1].Width);
@@ -238,6 +253,7 @@ public static class MedicalVolumeModesRender
         sliceGo.transform.position = cutPoint;
         sliceGo.transform.rotation = Quaternion.LookRotation(normal);
         sliceGo.transform.localScale = new Vector3(1.18f, 1.18f, 1f);
+        if (planeGo != null) planeGo.SetActive(planeWasActive);
 
         var sliceMpb = new MaterialPropertyBlock();
         slice.GetPropertyBlock(sliceMpb);
@@ -272,7 +288,7 @@ public static class MedicalVolumeModesRender
         image.Apply();
         RenderTexture.active = previous;
 
-        string path = OutDir + "step74_corte.png";
+        string path = OutDir + "step74_" + name + ".png";
         System.IO.File.WriteAllBytes(path, image.EncodeToPNG());
 
         cam.targetTexture = null;
@@ -286,6 +302,6 @@ public static class MedicalVolumeModesRender
         slice.enabled = sliceWasOn;
         sliceGo.SetActive(sliceWasActive);
 
-        sb.AppendLine("render corte: " + path);
+        sb.AppendLine("render " + name + ": " + path);
     }
 }

@@ -40,6 +40,11 @@ Shader "MedicalViewer/VolumeSlice"
             Cull Off
             ZWrite On
 
+            // La rebanada y el plano azul ocupan exactamente el mismo sitio, asi que sin esto
+            // parpadearian peleandose por quien se dibuja delante. Con el sesgo, gana siempre
+            // la rebanada, que es la que lleva la informacion.
+            Offset -1, -1
+
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag

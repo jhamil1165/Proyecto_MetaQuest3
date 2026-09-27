@@ -37,28 +37,11 @@ public class VolumeCutSlice : MonoBehaviour
 
     private MaterialPropertyBlock _volumeMpb;
     private MaterialPropertyBlock _sliceMpb;
-    private Vector3 _restPosition;
-    private bool _restCaptured;
 
     private void Awake()
     {
         _volumeMpb = new MaterialPropertyBlock();
         _sliceMpb = new MaterialPropertyBlock();
-        CaptureRest();
-    }
-
-    private void OnEnable()
-    {
-        CaptureRest();
-    }
-
-    /// <summary>Guarda dónde está el plano cuando no se ha tocado, que es el corte por el centro.</summary>
-    private void CaptureRest()
-    {
-        if (planeHandle == null || _restCaptured) return;
-
-        _restPosition = planeHandle.position;
-        _restCaptured = true;
     }
 
     private void LateUpdate()
@@ -77,12 +60,14 @@ public class VolumeCutSlice : MonoBehaviour
             return;
         }
 
-        CaptureRest();
-
-        // El mismo desplazamiento que lleva el plano, pero aplicado al centro del volumen.
+        // El plano corta donde esta, sin trasladar nada. Antes se le sumaba al centro del
+        // volumen el desplazamiento del plano desde su reposo, para que el corte funcionase
+        // aunque el plano se hubiese quedado por debajo del volumen. El efecto era que el
+        // corte no ocurria donde el usuario veia el plano, sino a una distancia fija de el:
+        // se acercaba el plano y el corte iba por otro lado. Eso confunde mas de lo que
+        // resuelve, asi que ahora corta exactamente por donde pasa.
         Vector3 normal = planeHandle.up.normalized;
-        Vector3 moved = planeHandle.position - _restPosition;
-        Vector3 cutPoint = volume.bounds.center + moved;
+        Vector3 cutPoint = planeHandle.position;
 
         volume.GetPropertyBlock(_volumeMpb);
         _volumeMpb.SetVector(PlaneNormalId, new Vector4(normal.x, normal.y, normal.z, 0f));

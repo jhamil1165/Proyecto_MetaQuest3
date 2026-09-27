@@ -19,6 +19,10 @@ public class ClippingPlaneAnchor : MonoBehaviour
     [Tooltip("Margen por encima de los órganos. El plano arranca ahí para que se vean enteros.")]
     [SerializeField] private float margin = 0.04f;
 
+    [Tooltip("Si está encendido, el plano se centra en él y no en la media de todo. " +
+             "Es el volumen 3D: es lo que casi siempre se quiere cortar.")]
+    [SerializeField] private GameObject preferred;
+
     private void OnEnable()
     {
         StartCoroutine(PlaceWhenReady());
@@ -30,35 +34,42 @@ public class ClippingPlaneAnchor : MonoBehaviour
         Place();
     }
 
-    /// <summary>Centra el plano en los órganos visibles. Se puede enlazar a un botón.</summary>
+    /// <summary>
+    /// Lleva el plano al centro de todo lo que se puede cortar y esté a la vista.
+    ///
+    /// Antes miraba sólo la lista de órganos sueltos y dejaba el plano por encima de ellos.
+    /// Desde que existe el volumen 3D eso se queda corto: se pulsaba "Centrar" y el plano se
+    /// iba con los órganos, lejos del volumen, que es lo que casi siempre se quiere cortar.
+    /// Ahora entra todo lo que esté en la lista, el volumen incluido, y el plano se queda en
+    /// el centro, ya cortando, en vez de por encima sin cortar nada.
+    /// </summary>
     public void Place()
     {
         bool found = false;
         Bounds bounds = default;
 
-        foreach (var organ in organs)
-        {
-            if (organ == null || !organ.activeInHierarchy) continue;
+        // El plano es un cuadrado pequeño, pero el corte que aplica es un plano infinito. Si
+        // el cuadrado se queda lejos de lo que se está cortando, el usuario ve el corte
+        // ocurrir en un sitio y el cuadrado en otro, y parece que van descompasados. Por eso
+        // se centra en una sola cosa, la principal, y no en la media de todas.
+        var list = new List<GameObject>();
+        if (preferred != null && preferred.activeInHierarchy) list.Add(preferred);
+        else list.AddRange(organs);
 
-            foreach (var renderer in organ.GetComponentsInChildren<Renderer>(false))
+        foreach (var target in list)
+        {
+            if (target == null || !target.activeInHierarchy) continue;
+
+            foreach (var renderer in target.GetComponentsInChildren<Renderer>(false))
             {
-                if (!found)
-                {
-                    bounds = renderer.bounds;
-                    found = true;
-                }
-                else
-                {
-                    bounds.Encapsulate(renderer.bounds);
-                }
+                if (!found) { bounds = renderer.bounds; found = true; }
+                else bounds.Encapsulate(renderer.bounds);
             }
         }
 
         if (!found) return;
 
-        // Por encima de los órganos: así se ven enteros al abrir la vista y es el usuario
-        // quien baja el plano cuando quiere cortar.
-        transform.position = new Vector3(bounds.center.x, bounds.max.y + margin, bounds.center.z);
+        transform.position = bounds.center;
 
         // Plano horizontal: su eje Y es la normal que lee el shader.
         transform.rotation = Quaternion.identity;
