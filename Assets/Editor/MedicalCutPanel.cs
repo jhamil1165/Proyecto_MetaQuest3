@@ -28,10 +28,12 @@ public static class MedicalCutPanel
     private const float U = 8f;
     private const float Scale = 0.0016f;
 
-    private static readonly Color CardBg = new Color(1f, 1f, 1f, 1f);
-    private static readonly Color Subtle = new Color(0.955f, 0.960f, 0.968f, 1f);
-    private static readonly Color TextPrimary = new Color(0.13f, 0.15f, 0.18f, 1f);
-    private static readonly Color TextMuted = new Color(0.55f, 0.58f, 0.62f, 1f);
+    // Vidrio oscuro. Meta pide no pasar de #DADADA en claro ni bajar de #1A1A1A en oscuro,
+    // y sobre passthrough Apple recomienda material oscuro con texto blanco.
+    private static readonly Color CardBg = new Color32(0x1E, 0x22, 0x28, 224);
+    private static readonly Color Subtle = new Color(1f, 1f, 1f, 0.10f);
+    private static readonly Color TextPrimary = new Color32(0xF0, 0xF2, 0xF5, 255);
+    private static readonly Color TextMuted = new Color32(0xA8, 0xB1, 0xBC, 255);
 
     private static Material _rounded;
     private static TMP_FontAsset _font;
