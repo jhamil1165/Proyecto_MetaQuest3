@@ -13,7 +13,8 @@ using UnityEngine.XR.Interaction.Toolkit;
 /// Con la fijación puesta, esos objetos siguen viéndose igual pero no responden al agarre.
 /// El plano de corte no se toca: ese tiene que seguir moviéndose, que es de lo que se trata.
 ///
-/// Empieza fijado. Quien quiera recolocar el cuerpo lo suelta, lo mueve y lo vuelve a fijar.
+/// Empieza suelto, como ha sido siempre: quitarle al usuario algo que ya funcionaba, y sin
+/// avisar, es peor que el problema que resuelve. Se fija cuando hace falta, antes de cortar.
 /// </summary>
 public class HoldStill : MonoBehaviour
 {
@@ -27,7 +28,7 @@ public class HoldStill : MonoBehaviour
     [SerializeField] private Color onText = Color.white;
     [SerializeField] private Color offText = new Color32(0xF0, 0xF2, 0xF5, 255);
 
-    [SerializeField] private bool holding = true;
+    [SerializeField] private bool holding;
 
     private void OnEnable()
     {

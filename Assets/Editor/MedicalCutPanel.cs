@@ -121,7 +121,7 @@ public static class MedicalCutPanel
         Button toggle = PillButton(cutRow.transform, "Activar corte", out Image toggleBg, out TMP_Text toggleText);
         Button center = PillButton(cutRow.transform, "Centrar", out _, out _);
         Button rotate = PillButton(cutRow.transform, "Girar 90°", out _, out _);
-        Button hold = PillButton(cutRow.transform, "Fijado", out _, out _);
+        Button hold = PillButton(cutRow.transform, "Suelto", out _, out _);
 
         // Corto a proposito: mas largo se sale del ancho de la tarjeta y se corta la ultima
         // palabra.
@@ -291,7 +291,7 @@ public static class MedicalCutPanel
         for (int i = 0; i < grabs.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = grabs[i];
 
         so.FindProperty("toggleButton").objectReferenceValue = button;
-        so.FindProperty("holding").boolValue = true;
+        so.FindProperty("holding").boolValue = false;   // suelto de entrada
         so.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(still);
 
