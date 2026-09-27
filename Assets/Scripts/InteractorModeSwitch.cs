@@ -24,49 +24,62 @@ public class InteractorModeSwitch : MonoBehaviour
     [SerializeField] private OVRHand leftHand;
     [SerializeField] private OVRHand rightHand;
 
-    [Tooltip("Margen tras perder las manos antes de volver a los mandos. Evita " +
-             "parpadeos cuando el tracking se pierde un instante.")]
+    [Tooltip("Tiempo sin tocar los mandos antes de pasar a manos. Evita que el modo salte " +
+             "de uno a otro por un roce.")]
     [SerializeField] private float switchDelay = 1.2f;
 
     private bool _handsActive;
     private bool _initialised;
-    private float _lastHandSeen;
+    private float _lastControllerUse;
 
     private void Update()
     {
-        bool handsTracked = HandsInUse();
+        // Se mira si alguien esta USANDO los mandos, no si estan encendidos. Dejandolos en la
+        // mesa siguen conectados y con cualquier temblor el sistema los da por activos: por
+        // eso el modo saltaba a manos y volvia solo a los mandos con los mandos en la mesa.
+        if (ControllersInUse()) _lastControllerUse = Time.time;
 
-        if (handsTracked) _lastHandSeen = Time.time;
+        bool hands = HandsInUse() && (Time.time - _lastControllerUse) > switchDelay;
 
-        // El margen evita que un parpadeo del tracking haga saltar el modo de ida y vuelta.
-        bool useHands = handsTracked || (Time.time - _lastHandSeen) < switchDelay;
-
-        if (_initialised && useHands == _handsActive) return;
+        if (_initialised && hands == _handsActive) return;
 
         _initialised = true;
-        _handsActive = useHands;
-        Apply(useHands);
+        _handsActive = hands;
+        Apply(hands);
     }
 
     /// <summary>
-    /// Si el usuario está usando las manos o los mandos.
+    /// Si hay una mano de verdad puesta en un mando.
     ///
-    /// Antes bastaba con que una mano estuviera rastreada, y eso da muchos falsos positivos:
-    /// el visor sigue viendo las manos mientras sujetan los mandos, así que el modo saltaba
-    /// de uno a otro constantemente y ni las manos ni los mandos acababan de funcionar.
+    /// La pista buena es el sensor de contacto: los mandos detectan el dedo apoyado aunque no
+    /// se apriete nada, y en la mesa no hay ningun dedo apoyado. Ademas vale cualquier uso
+    /// real (boton, gatillo o joystick), por si alguien los sujeta con guantes y el sensor de
+    /// contacto no lo nota.
+    /// </summary>
+    private static bool ControllersInUse()
+    {
+        foreach (var side in new[] { OVRInput.Controller.LTouch, OVRInput.Controller.RTouch })
+        {
+            if (OVRInput.Get(OVRInput.Touch.Any, side)) return true;
+            if (OVRInput.Get(OVRInput.Button.Any, side)) return true;
+            if (OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, side) > 0.15f) return true;
+            if (OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, side) > 0.15f) return true;
+            if (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, side).magnitude > 0.2f) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Si el usuario esta usando las manos.
     ///
-    /// Ahora se pregunta primero al propio sistema con qué se está jugando, que es quien
-    /// mejor lo sabe y ya trae su propio margen. Sólo cuando no lo tiene claro se mira el
-    /// rastreo de las manos, y entonces se exige confianza alta: con confianza baja la mano
-    /// da tumbos y es peor que no tenerla.
+    /// Se pregunta primero al propio sistema, que es quien mejor lo sabe. Si no lo tiene
+    /// claro se mira el rastreo, exigiendo confianza alta: con confianza baja la mano da
+    /// tumbos y es peor que no tenerla.
     /// </summary>
     private bool HandsInUse()
     {
-        OVRInput.Controller active = OVRInput.GetActiveController();
-
-        if (active == OVRInput.Controller.Hands) return true;
-        if (active != OVRInput.Controller.None) return false;   // hay mandos despiertos
-
+        if (OVRInput.GetActiveController() == OVRInput.Controller.Hands) return true;
         return Confident(leftHand) || Confident(rightHand);
     }
 
