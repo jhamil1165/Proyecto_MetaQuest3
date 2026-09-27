@@ -21537,10 +21537,7 @@ MonoBehaviour:
   - {fileID: 891630511}
   - {fileID: 1662767336}
   - {fileID: 1280679473}
-  - {fileID: 0}
   - {fileID: 1169792360}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 2050368379}
   model3DObjects:
   - {fileID: 788514049}
@@ -21550,11 +21547,8 @@ MonoBehaviour:
   - {fileID: 68292591}
   - {fileID: 1280679473}
   - {fileID: 1664319389}
-  - {fileID: 0}
   - {fileID: 1169792360}
   - {fileID: 2058597687}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 2050368379}
 --- !u!114 &944651582
 MonoBehaviour:

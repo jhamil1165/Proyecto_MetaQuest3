@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -39,13 +40,35 @@ public class OrganSystemsPanel : MonoBehaviour
     {
         Wire();
 
-        // Al abrirse el panel, los órganos vuelven a verse. Es lo que espera quien
-        // acaba de pulsar "Modelo 3D".
+        // Al abrirse el panel los órganos empiezan ocultos y es el usuario quien enciende
+        // los que quiere mirar. Antes aparecían los cinco a la vez: el que entraba se
+        // encontraba un amasijo de órganos delante y tenía que ir apagando para ver algo.
+        // Empezando de cero, cada uno aparece porque alguien ha decidido verlo.
         foreach (var row in rows)
         {
             if (row.toggle == null) continue;
-            row.toggle.SetIsOnWithoutNotify(true);
-            if (row.target != null) row.target.SetActive(true);
+            row.toggle.SetIsOnWithoutNotify(false);
+            if (row.target != null) row.target.SetActive(false);
+        }
+
+        Refresh();
+
+        // Y otra vez en el siguiente fotograma. El menú enciende los objetos de la vista uno
+        // a uno, y este panel es uno de ellos: si mañana alguien reordena esa lista y los
+        // órganos pasan a encenderse después del panel, aparecerían igualmente. Repasando al
+        // fotograma siguiente, manda siempre lo que digan los interruptores.
+        if (isActiveAndEnabled) StartCoroutine(SyncNextFrame());
+    }
+
+    /// <summary>Pone cada órgano como diga su interruptor, pase lo que pase antes.</summary>
+    private IEnumerator SyncNextFrame()
+    {
+        yield return null;
+
+        foreach (var row in rows)
+        {
+            if (row.toggle == null || row.target == null) continue;
+            row.target.SetActive(row.toggle.isOn);
         }
 
         Refresh();
@@ -79,9 +102,33 @@ public class OrganSystemsPanel : MonoBehaviour
             });
         }
 
-        if (hideAllButton != null) hideAllButton.onClick.AddListener(HideAll);
+        if (hideAllButton != null) hideAllButton.onClick.AddListener(ToggleAll);
     }
 
+    /// <summary>
+    /// Enciende todos o los apaga todos, según lo que haya ahora.
+    ///
+    /// Antes sólo sabía apagar, que era lo útil cuando todo empezaba encendido. Ahora que se
+    /// empieza de cero hace falta lo contrario, y un botón que sólo apagase lo ya apagado no
+    /// serviría de nada. El texto del botón dice en cada momento lo que va a hacer.
+    /// </summary>
+    public void ToggleAll()
+    {
+        bool anyVisible = false;
+        foreach (var row in rows)
+        {
+            if (row.target != null && row.target.activeSelf) anyVisible = true;
+        }
+
+        foreach (var row in rows)
+        {
+            if (row.toggle != null) row.toggle.isOn = !anyVisible;
+        }
+
+        Refresh();
+    }
+
+    /// <summary>Se mantiene por si algún botón antiguo seguía llamándola.</summary>
     public void HideAll()
     {
         foreach (var row in rows)
@@ -107,6 +154,12 @@ public class OrganSystemsPanel : MonoBehaviour
 
         if (headerBadge != null) headerBadge.text = total.ToString();
         if (footerText != null) footerText.text = $"{visible} piezas visibles";
+
+        if (hideAllButton != null)
+        {
+            var label = hideAllButton.GetComponentInChildren<TMP_Text>(true);
+            if (label != null) label.text = visible > 0 ? "Ocultar todo" : "Mostrar todo";
+        }
     }
 
     private static int CountPieces(GameObject go)
