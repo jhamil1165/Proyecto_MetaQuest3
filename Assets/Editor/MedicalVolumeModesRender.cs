@@ -125,6 +125,7 @@ public static class MedicalVolumeModesRender
         WideShot(volume, sb, 35f, "vista_derecha");
         CutShot(volume, sb, 0f, "corte");
         CutShot(volume, sb, 90f, "corte_girado");
+        CutShot(volume, sb, 38f, "corte_diagonal");
 
         volume.SetActive(wasActive);
 
@@ -269,8 +270,14 @@ public static class MedicalVolumeModesRender
         cam.nearClipPlane = 0.05f;
         cam.farClipPlane = 20f;
 
-        Vector3 eye = cutPoint + new Vector3(0.9f, 0.75f, -1.1f);
-        cam.transform.position = eye;
+        // La camara se coloca respecto del plano, no en un sitio fijo: si el plano esta
+        // girado, desde una posicion fija se veria de canto y no se apreciaria el corte.
+        Vector3 side = Vector3.Cross(Vector3.up, normal);
+        if (side.sqrMagnitude < 0.01f) side = Vector3.right;
+        side.Normalize();
+
+        Vector3 look = (normal * 1.0f + side * 0.55f + Vector3.up * 0.35f).normalized;
+        cam.transform.position = cutPoint + look * 1.7f;
         cam.transform.LookAt(cutPoint);
 
         const int w = 1200;
