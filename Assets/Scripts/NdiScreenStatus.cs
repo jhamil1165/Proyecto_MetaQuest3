@@ -22,6 +22,10 @@ public class NdiScreenStatus : MonoBehaviour
     [Tooltip("Cada cuánto se comprueba si hay señal. No hace falta mirarlo cada frame.")]
     [SerializeField] private float checkInterval = 0.5f;
 
+    [Tooltip("Quien busca emisiones en la red. Sirve para distinguir 'no hay nada emitiendo' " +
+             "de 'hay algo pero no llega'.")]
+    [SerializeField] private NdiSourcePicker picker;
+
     [SerializeField] private Color offColor = new Color(0.07f, 0.08f, 0.10f, 1f);
     [SerializeField] private Color liveColor = Color.white;
 
@@ -30,6 +34,7 @@ public class NdiScreenStatus : MonoBehaviour
     private float _timer;
     private bool _hasState;
     private bool _live;
+    private string _lastName;
 
     private void Awake()
     {
@@ -62,10 +67,14 @@ public class NdiScreenStatus : MonoBehaviour
 
         // Solo repintar en los cambios: escribir el property block cada medio segundo
         // no cuesta nada, pero tampoco aporta.
-        if (_hasState && live == _live) return;
+        // Tambien se repinta si cambia la fuente: si no, la etiqueta seguiria diciendo que
+        // busca una emision que ya se dejo de buscar.
+        string name = _receiver != null ? _receiver.ndiName : null;
+        if (_hasState && live == _live && name == _lastName) return;
 
         _hasState = true;
         _live = live;
+        _lastName = name;
         Apply(live);
     }
 
@@ -92,10 +101,19 @@ public class NdiScreenStatus : MonoBehaviour
             {
                 string fuente = _receiver != null && !string.IsNullOrEmpty(_receiver.ndiName)
                     ? _receiver.ndiName
-                    : "(sin fuente configurada)";
+                    : "(sin fuente)";
+
+                // Se distingue el caso de "no hay nadie emitiendo" del de "hay algo pero no
+                // llega". Son problemas distintos: uno se arregla en el ordenador que emite y
+                // el otro en la red o en el visor.
+                string detalle = picker == null
+                    ? "Buscando  " + fuente
+                    : picker.SourceCount == 0
+                        ? "No se ve ninguna emisión en la red"
+                        : picker.Describe() + "  ·  probando  " + fuente;
 
                 statusLabel.text = "NDI · SIN SEÑAL" + System.Environment.NewLine +
-                                   "<size=55%>Buscando  " + fuente + "</size>";
+                                   "<size=55%>" + detalle + "</size>";
             }
         }
 

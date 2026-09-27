@@ -21533,6 +21533,7 @@ MonoBehaviour:
   dicomObjects:
   - {fileID: 1509131557}
   - {fileID: 2053271120}
+  - {fileID: 1104711058}
   segmentationObjects:
   - {fileID: 891630511}
   - {fileID: 1662767336}
@@ -24726,7 +24727,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1104711059
 RectTransform:
   m_ObjectHideFlags: 0
@@ -44993,6 +44994,7 @@ GameObject:
   - component: {fileID: 2007775645}
   - component: {fileID: 2007775644}
   - component: {fileID: 2007775643}
+  - component: {fileID: 2007775649}
   m_Layer: 0
   m_Name: NDI_Screen_duplicada_APAGADA
   m_TagString: Untagged
@@ -45015,6 +45017,7 @@ MonoBehaviour:
   screenRenderer: {fileID: 2007775646}
   statusLabel: {fileID: 0}
   checkInterval: 0.5
+  picker: {fileID: 2007775649}
   offColor: {r: 0.07058824, g: 0.08627451, b: 0.10980392, a: 1}
   liveColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &2007775644
@@ -45121,6 +45124,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 237389752}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2007775649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2007775642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a487753d9abf77747837f93326699137, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  receiver: {fileID: 2007775644}
+  preferred: 
+  searchInterval: 1.5
+  autoConnect: 1
 --- !u!1 &2008781959
 GameObject:
   m_ObjectHideFlags: 0
@@ -45685,6 +45704,7 @@ GameObject:
   - component: {fileID: 2053271121}
   - component: {fileID: 2053271125}
   - component: {fileID: 2053271126}
+  - component: {fileID: 2053271127}
   m_Layer: 0
   m_Name: NDI_Screen
   m_TagString: Untagged
@@ -45811,8 +45831,25 @@ MonoBehaviour:
   screenRenderer: {fileID: 2053271122}
   statusLabel: {fileID: 1773239017}
   checkInterval: 0.5
+  picker: {fileID: 2053271127}
   offColor: {r: 0.07058824, g: 0.08627451, b: 0.10980392, a: 1}
   liveColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &2053271127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2053271120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a487753d9abf77747837f93326699137, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  receiver: {fileID: 2053271125}
+  preferred: 10.36.202.200 (stream0)
+  searchInterval: 1.5
+  autoConnect: 1
 --- !u!1 &2058597687
 GameObject:
   m_ObjectHideFlags: 0
