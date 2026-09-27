@@ -121,15 +121,20 @@ public static class MedicalCutPanel
         Button toggle = PillButton(cutRow.transform, "Activar corte", out Image toggleBg, out TMP_Text toggleText);
         Button center = PillButton(cutRow.transform, "Centrar", out _, out _);
         Button rotate = PillButton(cutRow.transform, "Girar 90°", out _, out _);
+        Button hold = PillButton(cutRow.transform, "Fijado", out _, out _);
 
         // Corto a proposito: mas largo se sale del ancho de la tarjeta y se corta la ultima
         // palabra.
-        Hint(card.transform, "Agárralo con el gatillo  ·  joystick derecho: inclinar  ·  " +
-                            "izquierdo: subir y bajar");
+        Hint(card.transform, "Agárralo con el gatillo  ·  joysticks: inclinar y subir  ·  " +
+                            "menú: botón ☰ del mando");
 
         UnityEventTools.AddVoidPersistentListener(toggle.onClick, input.Toggle);
         UnityEventTools.AddVoidPersistentListener(center.onClick, input.Center);
         UnityEventTools.AddVoidPersistentListener(rotate.onClick, input.Rotate90);
+
+        // Sujetar el cuerpo mientras se corta: al apuntar al plano es facil rozar lo que hay
+        // detras y llevarselo sin querer.
+        var still = WireHoldStill(rootGo, hold, sb);
 
         var iso = new SerializedObject(input);
         iso.FindProperty("stateLabel").objectReferenceValue = toggleText;
@@ -255,6 +260,45 @@ public static class MedicalCutPanel
         TMP_Text title = Label(parent, text, 20f, TextMuted, TextAlignmentOptions.MidlineLeft, "Title_" + text, FontStyles.UpperCase);
         title.characterSpacing = 5f;
         Fixed(title.gameObject, 3 * U);
+    }
+
+    /// <summary>
+    /// Deja enganchado el fijador del cuerpo. Se fija todo lo que se pueda agarrar menos el
+    /// propio plano de corte, que tiene que seguir moviendose.
+    /// </summary>
+    private static HoldStill WireHoldStill(GameObject root, Button button, StringBuilder sb)
+    {
+        GameObject go = GameObject.Find("Fijacion_Cuerpo");
+        if (go == null)
+        {
+            go = new GameObject("Fijacion_Cuerpo");
+            if (root != null) go.transform.SetParent(root.transform, false);
+        }
+
+        var still = go.GetComponent<HoldStill>();
+        if (still == null) still = go.AddComponent<HoldStill>();
+
+        var grabs = new List<UnityEngine.XR.Interaction.Toolkit.XRGrabInteractable>();
+        foreach (var grab in Object.FindObjectsOfType<UnityEngine.XR.Interaction.Toolkit.XRGrabInteractable>(true))
+        {
+            if (grab.name == "Plano_de_corte") continue;   // este tiene que moverse
+            grabs.Add(grab);
+        }
+
+        var so = new SerializedObject(still);
+        var list = so.FindProperty("targets");
+        list.arraySize = grabs.Count;
+        for (int i = 0; i < grabs.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = grabs[i];
+
+        so.FindProperty("toggleButton").objectReferenceValue = button;
+        so.FindProperty("holding").boolValue = true;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(still);
+
+        UnityEventTools.AddVoidPersistentListener(button.onClick, still.Toggle);
+
+        sb.AppendLine("fijacion del cuerpo: " + grabs.Count + " objetos (el plano queda libre)");
+        return still;
     }
 
     /// <summary>Línea de ayuda, más pequeña y apagada que un título.</summary>
