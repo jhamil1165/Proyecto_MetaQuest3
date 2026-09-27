@@ -92,7 +92,7 @@ public static class MedicalCutPanel
         // el plano de corte a -0,36, pero estan a 1 metro y el panel a 1,8, asi que desde
         // los ojos se ponen delante aunque esten mas altos. Mirando por angulo, lo de
         // delante baja hasta unos -21 grados; el panel empieza por debajo de eso.
-        rt.anchoredPosition3D = new Vector3(0f, -1.12f, 1.8f);
+        rt.anchoredPosition3D = new Vector3(0f, -1.20f, 1.8f);
         rt.localRotation = Quaternion.identity;
         rt.localScale = Vector3.one * Scale;
 
@@ -144,7 +144,32 @@ public static class MedicalCutPanel
         EditorUtility.SetDirty(input);
         sb.AppendLine("fila 1: activar corte, centrar y girar 90 grados (tambien el boton B/Y del mando)");
 
-        // ---- fila 2: volumen 3D ----
+        // ---- fila 2: los tres cortes cruzados ----
+        var tri = Object.FindObjectOfType<TriPlaneView>(true);
+        if (tri != null)
+        {
+            Title(card.transform, "Tres planos (neuronavegador)");
+            GameObject triRow = Row(card.transform);
+
+            Button show = PillButton(triRow.transform, "Mostrar", out _, out _);
+            Button recenter = PillButton(triRow.transform, "Centrar cruz", out _, out _);
+
+            UnityEventTools.AddVoidPersistentListener(show.onClick, tri.Toggle);
+            UnityEventTools.AddVoidPersistentListener(recenter.onClick, tri.Center);
+
+            var tso = new SerializedObject(tri);
+            tso.FindProperty("toggleButton").objectReferenceValue = show;
+            tso.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(tri);
+
+            sb.AppendLine("fila 2: mostrar los tres cortes y centrar la cruz");
+        }
+        else
+        {
+            sb.AppendLine("[AVISO] no hay TriPlaneView: ejecuta antes el Step94");
+        }
+
+        // ---- fila 3: volumen 3D ----
         if (volume != null)
         {
             Title(card.transform, "Volumen 3D");
