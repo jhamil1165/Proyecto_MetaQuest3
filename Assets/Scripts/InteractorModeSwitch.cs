@@ -31,6 +31,7 @@ public class InteractorModeSwitch : MonoBehaviour
     private bool _handsActive;
     private bool _initialised;
     private float _lastControllerUse;
+    private float _lastSwitch;
 
     private void Update()
     {
@@ -43,31 +44,57 @@ public class InteractorModeSwitch : MonoBehaviour
 
         if (_initialised && hands == _handsActive) return;
 
+        // Garantia contra el parpadeo: entre dos cambios tiene que pasar al menos el margen.
+        // Sin esto, una señal que dudase podria encender y apagar los rayos cada fotograma, y
+        // eso no solo se ve mal: XRI se pasaria el rato dando de alta y de baja interactores,
+        // el rendimiento se hunde y la interfaz deja de responder. Que es justo lo que pasaba.
+        if (_initialised && Time.time - _lastSwitch < switchDelay) return;
+
         _initialised = true;
         _handsActive = hands;
+        _lastSwitch = Time.time;
         Apply(hands);
     }
 
     /// <summary>
     /// Si hay una mano de verdad puesta en un mando.
     ///
-    /// La pista buena es el sensor de contacto: los mandos detectan el dedo apoyado aunque no
-    /// se apriete nada, y en la mesa no hay ningun dedo apoyado. Ademas vale cualquier uso
-    /// real (boton, gatillo o joystick), por si alguien los sujeta con guantes y el sensor de
-    /// contacto no lo nota.
+    /// La pista que vale es el movimiento. Un mando en la mano nunca está del todo quieto: el
+    /// pulso lo mueve siempre un poco. Uno en la mesa está inmóvil y ahí se queda.
+    ///
+    /// Antes se miraba el sensor de contacto, y eso falla justo en el caso que importa: un
+    /// mando tumbado apoya sus sensores capacitivos contra la mesa y se da por tocado, así que
+    /// el visor lo reactivaba solo y volvían a aparecer los rayos desde la mesa.
+    ///
+    /// También vale una pulsación de verdad, porque alguien puede coger el mando y apretar sin
+    /// llegar a moverlo; pero no basta con rozarlo.
     /// </summary>
-    private static bool ControllersInUse()
+    private bool ControllersInUse()
     {
         foreach (var side in new[] { OVRInput.Controller.LTouch, OVRInput.Controller.RTouch })
         {
-            if (OVRInput.Get(OVRInput.Touch.Any, side)) return true;
+            if (Moving(side)) return true;
+
+            // Pulsaciones deliberadas, no el simple contacto.
             if (OVRInput.Get(OVRInput.Button.Any, side)) return true;
-            if (OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, side) > 0.15f) return true;
-            if (OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, side) > 0.15f) return true;
-            if (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, side).magnitude > 0.2f) return true;
+            if (OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, side) > 0.3f) return true;
+            if (OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, side) > 0.3f) return true;
+            if (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, side).magnitude > 0.3f) return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Si el mando se está moviendo más de lo que se mueve algo apoyado en una mesa.
+    ///
+    /// Los umbrales son pequeños a propósito: se trata de distinguir "quieto en un mueble" de
+    /// "en una mano", y una mano quieta tiembla bastante más que una mesa.
+    /// </summary>
+    private static bool Moving(OVRInput.Controller side)
+    {
+        if (OVRInput.GetLocalControllerVelocity(side).magnitude > 0.04f) return true;
+        return OVRInput.GetLocalControllerAngularVelocity(side).magnitude > 0.25f;
     }
 
     /// <summary>
