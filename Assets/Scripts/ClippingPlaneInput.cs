@@ -144,8 +144,17 @@ public class ClippingPlaneInput : MonoBehaviour
     private void Apply()
     {
         if (controller != null) controller.SetClippingEnabled(cutting);
-        if (planeRenderer != null) planeRenderer.enabled = cutting;
         if (planeCollider != null) planeCollider.enabled = cutting;
+
+        // Todo lo que se vea del plano, incluido el marco azul del borde, que es un objeto
+        // hijo aparte. Antes solo se apagaba la lamina: el marco se quedaba encendido en
+        // medio de la escena aunque el corte estuviera apagado.
+        foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+        {
+            renderer.enabled = cutting;
+        }
+
+        if (planeRenderer != null) planeRenderer.enabled = cutting;
 
         // El botón del menú dice en qué estado está, para no tener que adivinarlo.
         if (stateLabel != null)
