@@ -122,6 +122,11 @@ public static class MedicalCutPanel
         Button center = PillButton(cutRow.transform, "Centrar", out _, out _);
         Button rotate = PillButton(cutRow.transform, "Girar 90°", out _, out _);
 
+        // Corto a proposito: mas largo se sale del ancho de la tarjeta y se corta la ultima
+        // palabra.
+        Hint(card.transform, "Agárralo con el gatillo  ·  joystick derecho: inclinar  ·  " +
+                            "izquierdo: subir y bajar");
+
         UnityEventTools.AddVoidPersistentListener(toggle.onClick, input.Toggle);
         UnityEventTools.AddVoidPersistentListener(center.onClick, input.Center);
         UnityEventTools.AddVoidPersistentListener(rotate.onClick, input.Rotate90);
@@ -250,6 +255,13 @@ public static class MedicalCutPanel
         TMP_Text title = Label(parent, text, 20f, TextMuted, TextAlignmentOptions.MidlineLeft, "Title_" + text, FontStyles.UpperCase);
         title.characterSpacing = 5f;
         Fixed(title.gameObject, 3 * U);
+    }
+
+    /// <summary>Línea de ayuda, más pequeña y apagada que un título.</summary>
+    private static void Hint(Transform parent, string text)
+    {
+        TMP_Text hint = Label(parent, text, 15f, TextMuted, TextAlignmentOptions.MidlineLeft, "Ayuda");
+        Fixed(hint.gameObject, (int)(2.4f * U));
     }
 
     private static GameObject Row(Transform parent)

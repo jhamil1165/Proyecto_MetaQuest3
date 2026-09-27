@@ -37,6 +37,19 @@ public class ClippingPlaneInput : MonoBehaviour
     [Tooltip("Botón B (mano derecha) o Y (izquierda) para activar y desactivar el corte.")]
     [SerializeField] private OVRInput.Button toggleButton = OVRInput.Button.Two;
 
+    [Header("Joysticks: control fino")]
+    [Tooltip("Grados por segundo con el joystick derecho a tope.")]
+    [SerializeField] private float rotateSpeed = 45f;
+
+    [Tooltip("Metros por segundo con el joystick izquierdo a tope.")]
+    [SerializeField] private float moveSpeed = 0.20f;
+
+    [Tooltip("Por debajo de esto no se mueve: los joysticks nunca descansan del todo en cero.")]
+    [SerializeField] private float deadZone = 0.2f;
+
+    [Tooltip("Para no pelearse con la mano mientras se agarra el plano.")]
+    [SerializeField] private UnityEngine.XR.Interaction.Toolkit.XRGrabInteractable grab;
+
     [SerializeField] private bool cutting;
 
     private void Awake()
@@ -45,6 +58,7 @@ public class ClippingPlaneInput : MonoBehaviour
         if (anchor == null) anchor = GetComponent<ClippingPlaneAnchor>();
         if (planeRenderer == null) planeRenderer = GetComponent<Renderer>();
         if (planeCollider == null) planeCollider = GetComponent<Collider>();
+        if (grab == null) grab = GetComponent<UnityEngine.XR.Interaction.Toolkit.XRGrabInteractable>();
     }
 
     private void OnEnable()
@@ -58,6 +72,45 @@ public class ClippingPlaneInput : MonoBehaviour
         if (OVRInput.GetDown(toggleButton) || OVRInput.GetDown(toggleButton, OVRInput.Controller.LTouch))
         {
             Toggle();
+        }
+
+        FineControl();
+    }
+
+    /// <summary>
+    /// Control fino con los joysticks: el derecho inclina el plano y el izquierdo lo sube y
+    /// lo baja por su propia perpendicular.
+    ///
+    /// Hace falta porque a mano sólo se puede girar con el pulso que uno tenga, y el botón
+    /// salta de 90 en 90. Para enseñar un corte concreto eso no vale: hace falta poder ir
+    /// grado a grado y milímetro a milímetro.
+    ///
+    /// Los joysticks están libres: la escena no tiene locomoción, así que no le quitan el
+    /// movimiento a nadie. Sólo responden con el corte encendido, para que no se mueva solo
+    /// mientras se hace otra cosa, y callan mientras el plano está agarrado con la mano, para
+    /// no pelearse con ella.
+    /// </summary>
+    private void FineControl()
+    {
+        if (!cutting) return;
+        if (grab != null && grab.isSelected) return;
+
+        Vector2 turn = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.RTouch);
+        Vector2 shift = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.LTouch);
+
+        if (turn.magnitude > deadZone)
+        {
+            // Adelante y atrás inclina de frente; izquierda y derecha inclina de lado.
+            float pitch = -turn.y * rotateSpeed * Time.deltaTime;
+            float roll = -turn.x * rotateSpeed * Time.deltaTime;
+            transform.Rotate(pitch, 0f, roll, Space.Self);
+        }
+
+        if (Mathf.Abs(shift.y) > deadZone)
+        {
+            // Por su perpendicular: así sube y baja respecto del corte, no del suelo, y
+            // sigue sirviendo con el plano girado.
+            transform.position += transform.up * (shift.y * moveSpeed * Time.deltaTime);
         }
     }
 
