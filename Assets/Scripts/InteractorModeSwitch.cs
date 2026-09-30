@@ -28,6 +28,17 @@ public class InteractorModeSwitch : MonoBehaviour
              "de uno a otro por un roce.")]
     [SerializeField] private float switchDelay = 1.2f;
 
+    private static readonly OVRInput.Controller[] Sides =
+        { OVRInput.Controller.LTouch, OVRInput.Controller.RTouch };
+
+    // Cuanto tiene que durar el movimiento de un mando para contar como uso.
+    private const float SustainedMotion = 0.15f;
+    // Margen tras recuperar el rastreo de un mando antes de fiarse de su velocidad.
+    private const float TrackingSettle = 0.5f;
+
+    private readonly float[] _movingSince = { -1f, -1f };
+    private readonly float[] _trackedSince = { -1f, -1f };
+
     private bool _handsActive;
     private bool _initialised;
     private float _lastControllerUse;
@@ -38,9 +49,27 @@ public class InteractorModeSwitch : MonoBehaviour
         // Se mira si alguien esta USANDO los mandos, no si estan encendidos. Dejandolos en la
         // mesa siguen conectados y con cualquier temblor el sistema los da por activos: por
         // eso el modo saltaba a manos y volvia solo a los mandos con los mandos en la mesa.
-        if (ControllersInUse()) _lastControllerUse = Time.time;
+        bool controllersInUse = ControllersInUse();
+        if (controllersInUse) _lastControllerUse = Time.time;
 
-        bool hands = HandsInUse() && (Time.time - _lastControllerUse) > switchDelay;
+        bool hands;
+        if (!_initialised)
+        {
+            hands = HandsInUse() && !controllersInUse;
+        }
+        else if (_handsActive)
+        {
+            // En modo manos SOLO se vuelve a los mandos si alguien los usa de verdad. Perder el
+            // rastreo de la mano no cuenta: al agarrar y girar un organo las manos se tapan
+            // entre si o ponen la palma hacia la cara, la confianza cae un instante y antes eso
+            // bastaba para devolver el control a unos mandos que seguian en la mesa.
+            // Tampoco se cambia a media manipulacion: soltaria el objeto de golpe.
+            hands = !controllersInUse || HandsHoldingSomething();
+        }
+        else
+        {
+            hands = HandsInUse() && (Time.time - _lastControllerUse) > switchDelay;
+        }
 
         if (_initialised && hands == _handsActive) return;
 
@@ -71,9 +100,32 @@ public class InteractorModeSwitch : MonoBehaviour
     /// </summary>
     private bool ControllersInUse()
     {
-        foreach (var side in new[] { OVRInput.Controller.LTouch, OVRInput.Controller.RTouch })
+        for (int i = 0; i < Sides.Length; i++)
         {
-            if (Moving(side)) return true;
+            var side = Sides[i];
+
+            // Un mando que el visor no rastrea no puede estar en uso. Sus velocidades en ese
+            // estado no valen nada, y justo al recuperar el rastreo (al mirar hacia la mesa o
+            // darle un golpe) la pose salta y parece que se ha movido de golpe.
+            if (!Tracked(side))
+            {
+                _movingSince[i] = -1f;
+                _trackedSince[i] = -1f;
+                continue;
+            }
+            if (_trackedSince[i] < 0f) _trackedSince[i] = Time.time;
+
+            // El movimiento tiene que durar un poco y no contar recien recuperado el rastreo:
+            // un salto aislado de un fotograma no es una mano cogiendo el mando.
+            if (Moving(side) && Time.time - _trackedSince[i] > TrackingSettle)
+            {
+                if (_movingSince[i] < 0f) _movingSince[i] = Time.time;
+                if (Time.time - _movingSince[i] > SustainedMotion) return true;
+            }
+            else
+            {
+                _movingSince[i] = -1f;
+            }
 
             // Pulsaciones deliberadas, no el simple contacto.
             if (OVRInput.Get(OVRInput.Button.Any, side)) return true;
@@ -91,6 +143,12 @@ public class InteractorModeSwitch : MonoBehaviour
     /// Los umbrales son pequeños a propósito: se trata de distinguir "quieto en un mueble" de
     /// "en una mano", y una mano quieta tiembla bastante más que una mesa.
     /// </summary>
+    private static bool Tracked(OVRInput.Controller side)
+    {
+        return OVRInput.IsControllerConnected(side) &&
+               OVRInput.GetControllerPositionTracked(side);
+    }
+
     private static bool Moving(OVRInput.Controller side)
     {
         if (OVRInput.GetLocalControllerVelocity(side).magnitude > 0.04f) return true;
@@ -108,6 +166,20 @@ public class InteractorModeSwitch : MonoBehaviour
     {
         if (OVRInput.GetActiveController() == OVRInput.Controller.Hands) return true;
         return Confident(leftHand) || Confident(rightHand);
+    }
+
+    /// <summary>Si alguna mano tiene un objeto agarrado ahora mismo.</summary>
+    private bool HandsHoldingSomething()
+    {
+        foreach (var go in handInteractors)
+        {
+            if (go == null || !go.activeInHierarchy) continue;
+            foreach (var interactor in go.GetComponentsInChildren<IXRSelectInteractor>())
+            {
+                if (interactor.hasSelection) return true;
+            }
+        }
+        return false;
     }
 
     private static bool Confident(OVRHand hand)
