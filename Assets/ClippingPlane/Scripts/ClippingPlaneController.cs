@@ -3,9 +3,13 @@ using UnityEngine;
 
 /// <summary>
 /// Mueve un plano de corte (un Transform que el usuario agarra en VR) y actualiza,
-/// cada frame, la propiedad de plano del shader "APOSE/URP_ClippingPlane" en los
-/// renderers indicados. Usa MaterialPropertyBlock para no crear instancias nuevas
-/// de material por cada organo.
+/// cada frame, el plano de los shaders "APOSE/URP_ClippingPlane" y "MedicalViewer/VolumeRender".
+///
+/// El plano se publica como propiedad GLOBAL de shader (Shader.SetGlobalVector/Float) y no
+/// con MaterialPropertyBlock: un renderer con MaterialPropertyBlock queda fuera del SRP
+/// Batcher. Como el plano es el mismo para todos, una global basta y cuesta una sola
+/// llamada por frame. Consecuencia: corta todo material con esos shaders, este o no en
+/// "targets"; la lista se conserva para que "targets.Count == 0" siga desactivando el corte.
 ///
 /// El plano de corte del shader se define en espacio de mundo como
 /// dot(posicionMundo, normal) + distancia = 0. La normal y la distancia se derivan
@@ -17,7 +21,7 @@ public class ClippingPlaneController : MonoBehaviour
     [Tooltip("Transform que define el plano de corte (su eje Y = normal del plano).")]
     [SerializeField] private Transform planeHandle;
 
-    [Tooltip("Renderers a los que se les aplica el corte (el organo o los organos con Mat_ClippingPlane).")]
+    [Tooltip("Renderers con el corte. El plano es global: con la lista vacía no se corta nada.")]
     [SerializeField] private List<Renderer> targets = new List<Renderer>();
 
     [Tooltip("Si esta apagado, el plano no corta nada (se manda muy lejos).")]
@@ -31,12 +35,8 @@ public class ClippingPlaneController : MonoBehaviour
     // el corte, que es justo lo contrario de lo que se busca.
     private const float DisabledDistance = -100000f;
 
-    private MaterialPropertyBlock _mpb;
-
-    private void Awake()
-    {
-        _mpb = new MaterialPropertyBlock();
-    }
+    /// <summary>Si el corte está aplicándose ahora mismo. Lo consulta VolumeCutSlice.</summary>
+    public bool IsClipping => isActiveAndEnabled && clippingEnabled && planeHandle != null && targets.Count > 0;
 
     private void LateUpdate()
     {
@@ -47,15 +47,18 @@ public class ClippingPlaneController : MonoBehaviour
             ? -Vector3.Dot(normal, planeHandle.position)
             : DisabledDistance;
 
-        foreach (Renderer target in targets)
-        {
-            if (target == null) continue;
+        Shader.SetGlobalVector(PlaneNormalId, new Vector4(normal.x, normal.y, normal.z, 0f));
+        Shader.SetGlobalFloat(PlaneDistanceId, distance);
+    }
 
-            target.GetPropertyBlock(_mpb);
-            _mpb.SetVector(PlaneNormalId, new Vector4(normal.x, normal.y, normal.z, 0f));
-            _mpb.SetFloat(PlaneDistanceId, distance);
-            target.SetPropertyBlock(_mpb);
-        }
+    /// <summary>
+    /// Al apagarse (p. ej. al cambiar de vista en el menú) se deja el corte desactivado: la
+    /// global sobrevive al componente y, si no, los órganos y el volumen seguirían cortados.
+    /// </summary>
+    private void OnDisable()
+    {
+        Shader.SetGlobalVector(PlaneNormalId, new Vector4(0f, 1f, 0f, 0f));
+        Shader.SetGlobalFloat(PlaneDistanceId, DisabledDistance);
     }
 
     /// <summary>Enciende o apaga el efecto de corte sin desactivar el GameObject.</summary>

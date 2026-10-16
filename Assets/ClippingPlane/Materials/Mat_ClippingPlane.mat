@@ -29,9 +29,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _PlaneDistance: 1000
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _CapColor: {r: 1, g: 0, b: 0, a: 1}
-    - _PlaneNormal: {r: 0, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []

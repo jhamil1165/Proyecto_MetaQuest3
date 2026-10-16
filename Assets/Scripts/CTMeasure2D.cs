@@ -36,6 +36,7 @@ public class CTMeasure2D : MonoBehaviour
         public RectTransform line;
         public Vector2 ua;         // los mismos puntos, de 0 a 1 sobre la imagen
         public Vector2 ub;
+        public Vector2 drawnFor = new Vector2(-1f, -1f);   // tamaño de imagen de la última línea
     }
 
     [SerializeField] private CTPlaneView[] planes = new CTPlaneView[0];
@@ -86,7 +87,25 @@ public class CTMeasure2D : MonoBehaviour
 
     private void LateUpdate()
     {
-        RefreshLines();
+        // Escribir en los RectTransform ensucia el Canvas y UGUI lo reconstruye entero, así
+        // que las líneas solo se rehacen si algo cambió: este objeto, o el tamaño de la imagen
+        // bajo alguna medida (lo reparte el layout tarde y cambia al cargar otra imagen; sin
+        // mirarlo, una medida nueva se quedaría con la línea de largo cero).
+        if (transform.hasChanged || LinesOutdated())
+        {
+            RefreshLines();
+            transform.hasChanged = false;
+        }
+    }
+
+    private bool LinesOutdated()
+    {
+        foreach (var c in _done)
+        {
+            if (c.line == null || !c.root.gameObject.activeInHierarchy) continue;
+            if (c.plane.Display.rectTransform.rect.size != c.drawnFor) return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -96,7 +115,7 @@ public class CTMeasure2D : MonoBehaviour
     /// una línea inclinada no se puede anclar así: su largo y su ángulo dependen del tamaño
     /// real de la imagen, que lo reparte el layout de Unity y puede cambiar después de
     /// dibujarla (al cargar otra imagen, por ejemplo). Calculándola una sola vez salía con
-    /// largo cero. Son unas pocas líneas: rehacerlas cada fotograma no cuesta nada.
+    /// largo cero.
     /// </summary>
     private void RefreshLines()
     {
@@ -106,6 +125,7 @@ public class CTMeasure2D : MonoBehaviour
 
             Rect rect = c.plane.Display.rectTransform.rect;
             Vector2 delta = Vector2.Scale(c.ub - c.ua, rect.size);
+            c.drawnFor = rect.size;
 
             c.line.sizeDelta = new Vector2(delta.magnitude, lineWidth);
             c.line.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);

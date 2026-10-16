@@ -28,10 +28,8 @@ Shader "MedicalViewer/VolumeRender"
         _ColorBone ("Hueso", Color) = (0.95, 0.93, 0.88, 1)
         _BoneOpacity ("Opacidad del hueso", Range(0, 1)) = 0.0
 
-        // Mismos nombres que usa ClippingPlaneController: el mismo plano corta los
-        // modelos y el volumen.
-        _PlaneNormal ("Normal del plano (mundo)", Vector) = (0, 1, 0, 0)
-        _PlaneDistance ("Distancia del plano", Float) = -100000
+        // _PlaneNormal y _PlaneDistance son globales que publica ClippingPlaneController:
+        // el mismo plano corta los modelos y el volumen.
     }
 
     SubShader
@@ -75,9 +73,11 @@ Shader "MedicalViewer/VolumeRender"
                 float4 _ColorGallbladder;
                 float4 _ColorBone;
                 float _BoneOpacity;
-                float4 _PlaneNormal;
-                float _PlaneDistance;
             CBUFFER_END
+
+            // Plano de corte global, en espacio de mundo: dot(p, normal) + distancia = 0.
+            float4 _PlaneNormal;
+            float _PlaneDistance;
 
             struct Attributes
             {
@@ -93,6 +93,11 @@ Shader "MedicalViewer/VolumeRender"
                 // Posición del ojo en coordenadas del cubo. Se calcula en el vertex shader y
                 // no en el fragment: ver la explicación en vert().
                 float3 cameraOS    : TEXCOORD1;
+
+                // Plano de corte en coordenadas del cubo (xyz = normal, w = distancia). Es el
+                // mismo para todo el draw, así que se calcula una vez en el vertex shader y el
+                // bucle del rayo ya no transforma ningún punto a mundo.
+                float4 planeOS     : TEXCOORD2;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -122,6 +127,14 @@ Shader "MedicalViewer/VolumeRender"
                 // La posición del ojo es la misma para todos los vértices de un ojo, así que
                 // al interpolarla llega intacta a cada píxel.
                 OUT.cameraOS = TransformWorldToObject(GetCameraPositionWS());
+
+                // Plano de mundo a objeto. Con p_mundo = A * p_obj + t:
+                //   dot(normal, A * p_obj + t) + d = dot(A^T * normal, p_obj) + (dot(normal, t) + d)
+                // La normal resultante no se normaliza: solo se mira el signo, que no cambia.
+                float4x4 objectToWorld = GetObjectToWorldMatrix();
+                float3 planeNormalOS = mul(_PlaneNormal.xyz, (float3x3)objectToWorld);
+                float planeDistanceOS = dot(_PlaneNormal.xyz, objectToWorld._m03_m13_m23) + _PlaneDistance;
+                OUT.planeOS = float4(planeNormalOS, planeDistanceOS);
                 return OUT;
             }
 
@@ -207,13 +220,13 @@ Shader "MedicalViewer/VolumeRender"
                 float high = _WindowCenter + _WindowWidth * 0.5;
 
                 float4 accumulated = 0;
+                float4 planeOS = IN.planeOS;
 
                 [loop]
                 for (int i = 0; i < steps; i++)
                 {
-                    // El plano de corte se define en espacio de mundo, igual que en los modelos.
-                    float3 world = TransformObjectToWorld(position);
-                    if (dot(world, _PlaneNormal.xyz) + _PlaneDistance > 0)
+                    // El plano ya viene en coordenadas del cubo: sin matriz por paso.
+                    if (dot(position, planeOS.xyz) + planeOS.w > 0)
                     {
                         position += advance;
                         continue;
