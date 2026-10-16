@@ -89,6 +89,11 @@ Shader "MedicalViewer/VolumeRender"
             {
                 float4 positionHCS : SV_POSITION;
                 float3 positionOS  : TEXCOORD0;
+
+                // Posición del ojo en coordenadas del cubo. Se calcula en el vertex shader y
+                // no en el fragment: ver la explicación en vert().
+                float3 cameraOS    : TEXCOORD1;
+
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -103,6 +108,20 @@ Shader "MedicalViewer/VolumeRender"
 
                 OUT.positionOS = IN.positionOS.xyz;
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+
+                // De qué ojo sale el rayo. En el Quest los dos ojos se dibujan en la misma
+                // pasada (multiview), y el índice de ojo solo es fiable aquí, en el vertex
+                // shader. Antes se leía _WorldSpaceCameraPos en el fragment shader, donde ese
+                // índice no estaba recuperado: los dos ojos lanzaban los rayos desde el ojo
+                // izquierdo. En el editor no se notaba, porque hay una sola cámara; en el
+                // visor, el ojo derecho veía el volumen desde el sitio equivocado mientras el
+                // plano de corte y la imagen del TAC, que son geometría normal, salían bien.
+                // El corte y el volumen dejaban de coincidir entre un ojo y otro, y al mover
+                // el plano esa diferencia se desplazaba: la "deformación" que se veía.
+                //
+                // La posición del ojo es la misma para todos los vértices de un ojo, así que
+                // al interpolarla llega intacta a cada píxel.
+                OUT.cameraOS = TransformWorldToObject(GetCameraPositionWS());
                 return OUT;
             }
 
@@ -158,8 +177,9 @@ Shader "MedicalViewer/VolumeRender"
             half4 frag(Varyings IN) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
 
-                float3 camOS = TransformWorldToObject(_WorldSpaceCameraPos);
+                float3 camOS = IN.cameraOS;
                 float3 dir = normalize(IN.positionOS - camOS);
 
                 // Por dónde entra y sale el rayo de la caja.

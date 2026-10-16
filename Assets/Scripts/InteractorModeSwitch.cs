@@ -138,10 +138,8 @@ public class InteractorModeSwitch : MonoBehaviour
     }
 
     /// <summary>
-    /// Si el mando se está moviendo más de lo que se mueve algo apoyado en una mesa.
-    ///
-    /// Los umbrales son pequeños a propósito: se trata de distinguir "quieto en un mueble" de
-    /// "en una mano", y una mano quieta tiembla bastante más que una mesa.
+    /// Si el visor sabe dónde está el mando. Sin rastreo, sus velocidades no significan
+    /// nada.
     /// </summary>
     private static bool Tracked(OVRInput.Controller side)
     {
@@ -149,6 +147,12 @@ public class InteractorModeSwitch : MonoBehaviour
                OVRInput.GetControllerPositionTracked(side);
     }
 
+    /// <summary>
+    /// Si el mando se está moviendo más de lo que se mueve algo apoyado en una mesa.
+    ///
+    /// Los umbrales son pequeños a propósito: se trata de distinguir "quieto en un mueble" de
+    /// "en una mano", y una mano quieta tiembla bastante más que una mesa.
+    /// </summary>
     private static bool Moving(OVRInput.Controller side)
     {
         if (OVRInput.GetLocalControllerVelocity(side).magnitude > 0.04f) return true;
