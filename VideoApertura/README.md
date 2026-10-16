@@ -68,6 +68,16 @@ Para usar una toma nueva, colócala en `assets/captures/` y cambia los nombres d
 
 ## Audio
 
+**Locución incluida:** `assets/audio/voz_issa.mp3`, generada con ElevenLabs (modelo v4, voz «Issavoces», mujer joven peruana, tono calmado). `tools/mix_voice.py` la corta por sus pausas, coloca cada frase cuando aparece su texto, le da un tratamiento suave y la normaliza a -16 LUFS:
+
+```bash
+python3 tools/mix_voice.py assets/audio/voz_issa.mp3 out/video_apertura.mp4 out/video_apertura_voz.mp4
+```
+
+Si se cambia la toma de voz, hay que actualizar los cortes (`PHRASES`) con las pausas nuevas (`ffmpeg -i voz.mp3 -af silencedetect=noise=-40dB:d=0.25 -f null -`).
+
+### Música (opcional)
+
 El video se entiende sin sonido. Si quieren música:
 - Usen una pista ambiental de 70–80 BPM, con pad y algún piano suave, sin voz ni percusión marcada.
 - Fuentes sin costo: la Biblioteca de audio de YouTube o Pixabay Music. **Revisen la licencia de cada pista** antes de usarla.
