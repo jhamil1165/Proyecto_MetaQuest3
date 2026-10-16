@@ -27,18 +27,21 @@ Shader "MedicalViewer/HoloPlatform"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float2 uv         : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
                 float2 uv          : TEXCOORD0;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -50,7 +53,10 @@ Shader "MedicalViewer/HoloPlatform"
 
             Varyings vert(Attributes IN)
             {
-                Varyings OUT;
+                Varyings OUT = (Varyings)0;
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.uv = IN.uv;
                 return OUT;
@@ -58,6 +64,7 @@ Shader "MedicalViewer/HoloPlatform"
 
             half4 frag(Varyings IN) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
                 float d = length(IN.uv - 0.5) * 2.0; // 0 en el centro, 1 en el borde del quad
 
                 float ring = 1.0 - saturate(abs(d - _RingRadius) / max(_RingWidth, 0.001));
