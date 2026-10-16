@@ -110,6 +110,22 @@ public class CTMultiPlaneViewer : MonoBehaviour
         ApplyOrgan();
     }
 
+    /// <summary>
+    /// Lo que abarca en milímetros cada plano del estudio. El axial abarca la matriz DICOM
+    /// (512 píxeles del tamaño de píxel); el coronal y el sagital, ese mismo ancho y de alto
+    /// todos los cortes juntos.
+    /// </summary>
+    private static Vector2 FieldOfView(Study study, string plane)
+    {
+        if (study.pixelMm <= 0f) return Vector2.zero;
+
+        float width = 512f * study.pixelMm;
+        if (plane == "axial") return new Vector2(width, width);
+
+        if (study.sliceMm <= 0f || study.axial <= 0) return Vector2.zero;
+        return new Vector2(width, study.axial * study.sliceMm);
+    }
+
     private void ApplyOrgan()
     {
         if (Count == 0) return;
@@ -122,7 +138,9 @@ public class CTMultiPlaneViewer : MonoBehaviour
 
             foreach (var plane in planes)
             {
-                if (plane != null) plane.SetOrgan(study.folder, CountFor(study, plane.Plane));
+                if (plane == null) continue;
+                plane.FieldOfViewMm = FieldOfView(study, plane.Plane);
+                plane.SetOrgan(study.folder, CountFor(study, plane.Plane));
             }
             return;
         }
@@ -134,7 +152,9 @@ public class CTMultiPlaneViewer : MonoBehaviour
         // Los tres planos cambian a la vez: siempre muestran el mismo estudio.
         foreach (var plane in planes)
         {
-            if (plane != null) plane.SetOrgan(organ);
+            if (plane == null) continue;
+            plane.FieldOfViewMm = Vector2.zero;   // capturas de Slicer: sin escala conocida
+            plane.SetOrgan(organ);
         }
     }
 

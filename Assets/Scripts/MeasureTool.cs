@@ -158,6 +158,11 @@ public class MeasureTool : MonoBehaviour
         foreach (var ray in rays)
         {
             if (ray == null || !ray.isActiveAndEnabled) continue;
+
+            // Apuntando a un panel no se clava nada en 3D: es la regla 2D la que mide sobre
+            // las imágenes, y un punto 3D detrás del panel sería un error del usuario.
+            if (ray.TryGetCurrentUIRaycastResult(out var ui) && ui.gameObject != null) return;
+
             if (!ray.TryGetCurrent3DRaycastHit(out hit)) continue;
             used = ray;
             break;

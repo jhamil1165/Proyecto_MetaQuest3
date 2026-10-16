@@ -43,6 +43,33 @@ public class CTPlaneView : MonoBehaviour
     private Texture2D _overlayCurrent;
 
     public string Plane => plane;
+
+    /// <summary>La imagen del corte. La usa la regla 2D para saber dónde se ha apuntado.</summary>
+    public RawImage Display => display;
+
+    /// <summary>
+    /// Lo que mide de verdad, en milímetros, el campo que enseña la imagen (ancho, alto).
+    /// Lo pone el visor al cargar cada estudio; cero si no se sabe (capturas sin escala).
+    /// </summary>
+    public Vector2 FieldOfViewMm { get; set; }
+
+    /// <summary>
+    /// Milímetros por píxel de la imagen que se está viendo, o cero si no se sabe.
+    ///
+    /// Las imágenes son cuadradas y con el píxel cuadrado: el lado más largo del estudio llena
+    /// la imagen y el otro queda centrado. Comprobado contra el volumen DICOM: el coronal del
+    /// cuerpo completo mide 873 mm de alto y llena 512 filas (1,705 mm por píxel, también a lo
+    /// ancho), y el de tórax-abdomen llena el ancho y ocupa justo las 456 filas que predice.
+    /// </summary>
+    public float MillimetresPerPixel
+    {
+        get
+        {
+            Texture tex = display != null ? display.texture : null;
+            if (tex == null || FieldOfViewMm.x <= 0f || FieldOfViewMm.y <= 0f) return 0f;
+            return Mathf.Max(FieldOfViewMm.x, FieldOfViewMm.y) / Mathf.Max(tex.width, tex.height);
+        }
+    }
     public int SliceCount => sliceCount;
     public int Slice => _slice;
 
