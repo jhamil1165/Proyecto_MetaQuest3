@@ -1,0 +1,5 @@
+node_modules/
+out/
+# Se generan con tools/prepare_data.py a partir de Assets/StreamingAssets/CT
+assets/*
+!assets/captures/

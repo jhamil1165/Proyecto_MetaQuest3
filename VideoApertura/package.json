@@ -1,0 +1,16 @@
+{
+  "name": "video-apertura",
+  "version": "1.0.0",
+  "description": "Video de apertura del prototipo Medical Viewer (Meta Quest 3)",
+  "scripts": {
+    "datos": "python3 tools/prepare_data.py",
+    "fotos": "node tools/render.mjs --stills 2,5.5,10,14,19.5,23,29,36,39,46,57",
+    "video": "node tools/render.mjs --out out/video_apertura.mp4"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "playwright-core": "1.56",
+    "three": "^0.169.0"
+  },
+  "private": true
+}
