@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -22,8 +23,13 @@ public class OrganInfoPanelController : MonoBehaviour
     private Transform _currentTarget;
     private Transform _cameraTransform;
 
+    // Renderers del órgano mostrado. Se rellena al cambiar de órgano, no en cada frame:
+    // GetComponentsInChildren creaba un array nuevo por frame mientras se apuntaba.
+    private List<Renderer> _targetRenderers;
+
     private void Awake()
     {
+        _targetRenderers = new List<Renderer>();
         Instance = this;
         if (visual != null)
         {
@@ -41,6 +47,10 @@ public class OrganInfoPanelController : MonoBehaviour
 
     public void Show(Transform target, string title, string body)
     {
+        if (target != _currentTarget && target != null)
+        {
+            target.GetComponentsInChildren(_targetRenderers);
+        }
         _currentTarget = target;
 
         if (titleText != null) titleText.text = title;
@@ -60,6 +70,7 @@ public class OrganInfoPanelController : MonoBehaviour
         if (target != null && _currentTarget != target) return;
 
         _currentTarget = null;
+        _targetRenderers.Clear();
         if (visual != null)
         {
             visual.SetActive(false);
@@ -69,7 +80,16 @@ public class OrganInfoPanelController : MonoBehaviour
     private void LateUpdate()
     {
         if (_currentTarget == null) return;
-        PlaceNear(_currentTarget);
+
+        // Solo se recoloca si se movió el órgano (al agarrarlo) o la cabeza. El panel propio
+        // no sirve de referencia: lo mueve justo este método.
+        Transform cam = GetCameraTransform();
+        if (_currentTarget.hasChanged || (cam != null && cam.hasChanged))
+        {
+            PlaceNear(_currentTarget);
+            _currentTarget.hasChanged = false;
+            if (cam != null) cam.hasChanged = false;
+        }
     }
 
     private Transform GetCameraTransform()
@@ -88,7 +108,7 @@ public class OrganInfoPanelController : MonoBehaviour
         if (target == null) return;
 
         Transform cam = GetCameraTransform();
-        Bounds bounds = GetWorldBounds(target);
+        Bounds bounds = GetWorldBounds(target, _targetRenderers);
 
         Vector3 right = cam != null ? cam.right : Vector3.right;
         transform.position = bounds.center + right * (bounds.extents.magnitude + sideMargin);
@@ -100,16 +120,15 @@ public class OrganInfoPanelController : MonoBehaviour
         }
     }
 
-    private static Bounds GetWorldBounds(Transform target)
+    private static Bounds GetWorldBounds(Transform target, List<Renderer> renderers)
     {
-        var renderers = target.GetComponentsInChildren<Renderer>();
-        if (renderers.Length == 0)
+        if (renderers.Count == 0)
         {
             return new Bounds(target.position, Vector3.one * 0.1f);
         }
 
         Bounds bounds = renderers[0].bounds;
-        for (int i = 1; i < renderers.Length; i++)
+        for (int i = 1; i < renderers.Count; i++)
         {
             bounds.Encapsulate(renderers[i].bounds);
         }

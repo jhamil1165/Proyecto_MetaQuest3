@@ -12,8 +12,10 @@ using UnityEngine;
 /// desplazamiento se aplica al centro del volumen. Así el mando mueve las dos cosas a la vez
 /// y el usuario ve dónde está cortando, porque la rebanada se dibuja justo ahí.
 ///
-/// Se ejecuta después de ClippingPlaneController (por eso el orden 100): ese escribe el plano
-/// en todos sus objetos y aquí se corrige el del volumen.
+/// El plano que corta el volumen lo publica ClippingPlaneController como propiedad global
+/// de shader, igual que para los órganos; aquí ya no se escribe en el volumen (antes iba por
+/// MaterialPropertyBlock, que deja al renderer fuera del SRP Batcher). Este componente solo
+/// coloca la rebanada del TAC.
 /// </summary>
 [DefaultExecutionOrder(100)]
 public class VolumeCutSlice : MonoBehaviour
@@ -29,18 +31,12 @@ public class VolumeCutSlice : MonoBehaviour
              "cubrirlo gire como gire. Lo que sobra el shader lo descarta.")]
     [SerializeField] private float sliceSize = 1.2f;
 
-    private static readonly int PlaneNormalId = Shader.PropertyToID("_PlaneNormal");
-    private static readonly int PlaneDistanceId = Shader.PropertyToID("_PlaneDistance");
     private static readonly int WorldToObjectId = Shader.PropertyToID("_VolumeWorldToObject");
 
-    private const float DisabledDistance = -100000f;
-
-    private MaterialPropertyBlock _volumeMpb;
     private MaterialPropertyBlock _sliceMpb;
 
     private void Awake()
     {
-        _volumeMpb = new MaterialPropertyBlock();
         _sliceMpb = new MaterialPropertyBlock();
     }
 
@@ -48,14 +44,10 @@ public class VolumeCutSlice : MonoBehaviour
     {
         if (volume == null || planeHandle == null) return;
 
-        bool cutting = controller != null && controller.isActiveAndEnabled && IsCutting();
+        bool cutting = controller != null && controller.IsClipping;
 
         if (!cutting)
         {
-            volume.GetPropertyBlock(_volumeMpb);
-            _volumeMpb.SetFloat(PlaneDistanceId, DisabledDistance);
-            volume.SetPropertyBlock(_volumeMpb);
-
             if (slice != null && slice.enabled) slice.enabled = false;
             return;
         }
@@ -69,11 +61,6 @@ public class VolumeCutSlice : MonoBehaviour
         Vector3 normal = planeHandle.up.normalized;
         Vector3 cutPoint = planeHandle.position;
 
-        volume.GetPropertyBlock(_volumeMpb);
-        _volumeMpb.SetVector(PlaneNormalId, new Vector4(normal.x, normal.y, normal.z, 0f));
-        _volumeMpb.SetFloat(PlaneDistanceId, -Vector3.Dot(normal, cutPoint));
-        volume.SetPropertyBlock(_volumeMpb);
-
         if (slice == null) return;
 
         // La rebanada se pone justo en el corte, mirando hacia donde mira el plano.
@@ -86,16 +73,5 @@ public class VolumeCutSlice : MonoBehaviour
         slice.GetPropertyBlock(_sliceMpb);
         _sliceMpb.SetMatrix(WorldToObjectId, volume.transform.worldToLocalMatrix);
         slice.SetPropertyBlock(_sliceMpb);
-    }
-
-    /// <summary>
-    /// El controlador guarda si el corte está encendido en un campo privado, así que se
-    /// deduce de lo que acaba de escribir en el material: con el corte apagado pone una
-    /// distancia enorme y negativa.
-    /// </summary>
-    private bool IsCutting()
-    {
-        volume.GetPropertyBlock(_volumeMpb);
-        return _volumeMpb.GetFloat(PlaneDistanceId) > DisabledDistance * 0.5f;
     }
 }

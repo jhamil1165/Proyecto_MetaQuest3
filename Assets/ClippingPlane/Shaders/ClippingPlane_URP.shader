@@ -9,8 +9,8 @@ Shader "APOSE/URP_ClippingPlane"
         _BaseMap ("Texture", 2D) = "white" {}
         _BaseColor ("Tint", Color) = (1, 1, 1, 1)
         [HDR] _CapColor ("Color del corte (cutoff)", Color) = (1, 0, 0, 1)
-        _PlaneNormal ("Normal del plano (World Space)", Vector) = (0, 1, 0, 0)
-        _PlaneDistance ("Distancia del plano al origen", Float) = 1000
+        // _PlaneNormal y _PlaneDistance ya no son propiedades del material: son globales
+        // que publica ClippingPlaneController (Shader.SetGlobalVector/Float).
     }
 
     SubShader
@@ -43,9 +43,12 @@ Shader "APOSE/URP_ClippingPlane"
                 float4 _BaseMap_ST;
                 half4 _BaseColor;
                 half4 _CapColor;
-                float4 _PlaneNormal;
-                float _PlaneDistance;
             CBUFFER_END
+
+            // Plano de corte global (fuera de UnityPerMaterial, que solo admite propiedades
+            // del material). Mismo plano para todos los órganos y el volumen.
+            float4 _PlaneNormal;
+            float _PlaneDistance;
 
             struct Attributes
             {

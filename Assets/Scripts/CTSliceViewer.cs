@@ -49,6 +49,10 @@ public class CTSliceViewer : MonoBehaviour
     private Coroutine _loading;
     private Texture2D _current;
 
+    // Descarga en curso. StopCoroutine no ejecuta el Dispose de un "using", así que una
+    // descarga interrumpida al mover el deslizador seguía viva; se guarda para liberarla.
+    private UnityWebRequest _req;
+
     private void Start()
     {
         if (sliceSlider != null)
@@ -62,6 +66,7 @@ public class CTSliceViewer : MonoBehaviour
 
     private void OnDestroy()
     {
+        CancelReq();
         if (_current != null) Destroy(_current);
     }
 
@@ -130,29 +135,39 @@ public class CTSliceViewer : MonoBehaviour
         _loading = StartCoroutine(LoadSlice(path));
     }
 
+    private void CancelReq()
+    {
+        if (_req != null) { _req.Abort(); _req.Dispose(); _req = null; }
+    }
+
     private IEnumerator LoadSlice(string path)
     {
+        CancelReq();
+
         // UnityWebRequest funciona igual con rutas de disco y con el jar de Android.
         string url = path.Contains("://") ? path : "file://" + path;
 
-        using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(url))
+        // nonReadable: sin copia de los píxeles en la RAM; nadie los lee desde C#.
+        UnityWebRequest request = UnityWebRequestTexture.GetTexture(url, nonReadable: true);
+        _req = request;
+        yield return request.SendWebRequest();
+        if (request != _req) yield break;   // ya la liberó otra carga
+
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            yield return request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogWarning($"[CTSliceViewer] No se pudo cargar {url}: {request.error}");
-                yield break;
-            }
-
-            Texture2D tex = DownloadHandlerTexture.GetContent(request);
-            if (display != null) display.texture = tex;
-
-            // Liberar el corte anterior: si no, cada arrastre del deslizador deja una
-            // textura huérfana y la memoria se dispara.
-            if (_current != null && _current != tex) Destroy(_current);
-            _current = tex;
+            Debug.LogWarning($"[CTSliceViewer] No se pudo cargar {url}: {request.error}");
+            CancelReq();
+            yield break;
         }
+
+        Texture2D tex = DownloadHandlerTexture.GetContent(request);
+        CancelReq();
+        if (display != null) display.texture = tex;
+
+        // Liberar el corte anterior: si no, cada arrastre del deslizador deja una
+        // textura huérfana y la memoria se dispara.
+        if (_current != null && _current != tex) Destroy(_current);
+        _current = tex;
 
         _loading = null;
     }

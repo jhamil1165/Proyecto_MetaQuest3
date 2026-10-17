@@ -42,6 +42,12 @@ public class CTPlaneView : MonoBehaviour
     private Coroutine _overlayLoading;
     private Texture2D _overlayCurrent;
 
+    // Descargas en curso. StopCoroutine no ejecuta el Dispose de un "using", así que una
+    // descarga interrumpida al mover el deslizador seguía viva (descargando, decodificando
+    // y reteniendo su textura). Se guardan aquí para abortarlas y liberarlas a mano.
+    private UnityWebRequest _req;
+    private UnityWebRequest _overlayReq;
+
     public string Plane => plane;
 
     /// <summary>La imagen del corte. La usa la regla 2D para saber dónde se ha apuntado.</summary>
@@ -91,6 +97,8 @@ public class CTPlaneView : MonoBehaviour
 
     private void OnDestroy()
     {
+        CancelReq();
+        CancelOverlayReq();
         if (_current != null) Destroy(_current);
         if (_overlayCurrent != null) Destroy(_overlayCurrent);
     }
@@ -177,6 +185,7 @@ public class CTPlaneView : MonoBehaviour
         {
             StopCoroutine(_overlayLoading);
             _overlayLoading = null;
+            CancelOverlayReq();
         }
 
         RefreshOverlay();
@@ -194,61 +203,83 @@ public class CTPlaneView : MonoBehaviour
         _overlayLoading = StartCoroutine(LoadOverlay(path));
     }
 
+    private void CancelReq()
+    {
+        if (_req != null) { _req.Abort(); _req.Dispose(); _req = null; }
+    }
+
+    private void CancelOverlayReq()
+    {
+        if (_overlayReq != null) { _overlayReq.Abort(); _overlayReq.Dispose(); _overlayReq = null; }
+    }
+
     private IEnumerator LoadOverlay(string path)
     {
+        // Va con su propia petición: si compartiera la del corte, cargar la máscara
+        // abortaría la imagen que se acaba de pedir.
+        CancelOverlayReq();
+
         string url = path.Contains("://") ? path : "file://" + path;
 
-        using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(url))
+        // nonReadable: sin copia de los píxeles en la RAM; nadie los lee desde C#.
+        UnityWebRequest request = UnityWebRequestTexture.GetTexture(url, nonReadable: true);
+        _overlayReq = request;
+        yield return request.SendWebRequest();
+        if (request != _overlayReq) yield break;   // ya la liberó otra carga
+
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            yield return request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogWarning($"[CTPlaneView] No se pudo cargar la mascara {url}: {request.error}");
-                yield break;
-            }
-
-            Texture2D tex = DownloadHandlerTexture.GetContent(request);
-            if (overlay != null) overlay.texture = tex;
-
-            // Igual que con los cortes: liberar la máscara anterior para no acumular texturas.
-            if (_overlayCurrent != null && _overlayCurrent != tex) Destroy(_overlayCurrent);
-            _overlayCurrent = tex;
+            Debug.LogWarning($"[CTPlaneView] No se pudo cargar la mascara {url}: {request.error}");
+            CancelOverlayReq();
+            yield break;
         }
+
+        Texture2D tex = DownloadHandlerTexture.GetContent(request);
+        CancelOverlayReq();
+        if (overlay != null) overlay.texture = tex;
+
+        // Igual que con los cortes: liberar la máscara anterior para no acumular texturas.
+        if (_overlayCurrent != null && _overlayCurrent != tex) Destroy(_overlayCurrent);
+        _overlayCurrent = tex;
 
         _overlayLoading = null;
     }
 
     private IEnumerator LoadSlice(string path)
     {
+        CancelReq();
+
         string url = path.Contains("://") ? path : "file://" + path;
 
-        using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(url))
+        // nonReadable: sin copia de los píxeles en la RAM; la regla 2D solo usa el tamaño.
+        UnityWebRequest request = UnityWebRequestTexture.GetTexture(url, nonReadable: true);
+        _req = request;
+        yield return request.SendWebRequest();
+        if (request != _req) yield break;   // ya la liberó otra carga
+
+        if (request.result != UnityWebRequest.Result.Success)
         {
-            yield return request.SendWebRequest();
-
-            if (request.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogWarning($"[CTPlaneView] No se pudo cargar {url}: {request.error}");
-                yield break;
-            }
-
-            Texture2D tex = DownloadHandlerTexture.GetContent(request);
-            if (display != null)
-            {
-                display.texture = tex;
-
-                // Si la imagen lleva un AspectRatioFitter, respetar la proporción real del
-                // corte: las capturas de Slicer no son cuadradas y se verían estiradas.
-                if (tex.height > 0 && display.TryGetComponent(out AspectRatioFitter fitter))
-                    fitter.aspectRatio = (float)tex.width / tex.height;
-            }
-
-            // Liberar el corte anterior: sin esto, cada arrastre del deslizador deja
-            // una textura huérfana y la memoria se dispara.
-            if (_current != null && _current != tex) Destroy(_current);
-            _current = tex;
+            Debug.LogWarning($"[CTPlaneView] No se pudo cargar {url}: {request.error}");
+            CancelReq();
+            yield break;
         }
+
+        Texture2D tex = DownloadHandlerTexture.GetContent(request);
+        CancelReq();
+        if (display != null)
+        {
+            display.texture = tex;
+
+            // Si la imagen lleva un AspectRatioFitter, respetar la proporción real del
+            // corte: las capturas de Slicer no son cuadradas y se verían estiradas.
+            if (tex.height > 0 && display.TryGetComponent(out AspectRatioFitter fitter))
+                fitter.aspectRatio = (float)tex.width / tex.height;
+        }
+
+        // Liberar el corte anterior: sin esto, cada arrastre del deslizador deja
+        // una textura huérfana y la memoria se dispara.
+        if (_current != null && _current != tex) Destroy(_current);
+        _current = tex;
 
         _loading = null;
     }
