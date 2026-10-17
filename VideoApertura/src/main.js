@@ -1,4 +1,4 @@
-// Línea de tiempo del video de apertura.
+// Línea de tiempo del video de INMERSIA (pitch para la clínica).
 //
 // Todo el video es una función del tiempo: renderAt(t) deja la escena exactamente como debe
 // verse en el segundo t. La vista previa la llama en tiempo real; el exportador la llama
@@ -8,12 +8,12 @@ import { createEngine, W, H } from './gl.js';
 
 // Para cambiar textos sin tocar la animación.
 const CONFIG = {
-  name: 'Medical Viewer',
-  subtitle: 'Imágenes médicas en realidad mixta',
+  name: 'INMERSIA',
+  subtitle: 'Cirugía inmersiva',
   team: 'Ingeniería Biomédica · PUCP',
-  closing: 'Exploremos juntos el siguiente paso.',
+  clinic: 'Clínica Anglo Americana',
 };
-export const DURATION = 57;
+export const DURATION = 61;
 window.__duration = DURATION;
 
 const capture = new URLSearchParams(location.search).has('capture');
@@ -39,33 +39,45 @@ function track(t, keys) {
 // Envolvente de aparición/desaparición.
 const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (1 - easeInOut(prog(t, b, b + dout)));
 
-// ---------- textos ----------
-// Cada bloque: cuándo entra, cuándo sale, dónde va y sus líneas. <b> = palabra en azul.
-// Los tiempos siguen a la locución: cada línea aparece cuando la voz la dice
-// (ver VOICE_CUTS en tools/mix_audio.py). <b> = palabra en azul.
-const BLOCKS = [
-  { at: 1.2, out: 4.6, pos: 'left', lines: [['h1', 'Cientos de imágenes.'], ['h1 dim', 'Una sola pantalla.']], gaps: [0, 1.95] },
-  { at: 4.95, out: 7.85, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'tenerlas'], ['q', '<b>frente a ti?</b>']], gaps: [0, 0.75, 1.5] },
-  { at: 9.35, out: 13.6, pos: 'left', lines: [['h1', 'Cada corte, en su lugar…'], ['h1', '…y aparece el <b>cuerpo</b>.']], gaps: [0, 2.55] },
-  { at: 14.35, out: 18.9, pos: 'left', lines: [['kicker', 'Realidad mixta · Meta Quest 3'], ['h1', 'La anatomía, aquí.'], ['h1', '<b>En tu espacio.</b>'], ['sub', 'Sin perder de vista la sala.']], gaps: [0, 0.9, 3.25, 3.9] },
-  { at: 19.5, out: 22.4, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Activa solo lo'], ['h2', 'que necesitas ver.']], gaps: [0, 0.1, 1.1] },
-  { at: 22.7, out: 25.6, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Tómalo…'], ['h2', '…y <b>gíralo</b>.']], gaps: [0, 0.1, 0.8] },
-  { at: 26.1, out: 30.0, pos: 'left', lines: [['kicker', '02 · Plano de corte'], ['h2', 'Desliza un plano…'], ['h2', 'y la tomografía'], ['h2', '<b>te sigue.</b>']], gaps: [0, 0.1, 1.6, 2.3] },
-  { at: 30.7, out: 34.3, pos: 'tri', lines: [['kicker', '03 · Tres planos'], ['h2', 'Tres planos.'], ['h2', '<b>Un mismo punto.</b>']], gaps: [0, 0.1, 1.3] },
-  { at: 34.9, out: 38.3, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya funciona en Meta Quest 3.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.1, 0.9] },
-  { at: 38.9, out: 46.9, pos: 'possible', lines: [['kicker', 'Lo que sigue'], ['h2', 'Hoy, un prototipo.'], ['h2', 'La meta: <b>planificar cirugías.</b>']], gaps: [0, 0.1, 2.8] },
-  { at: 45.4, out: 46.9, pos: 'footnote', lines: [['sub', 'Objetivos por desarrollar y validar con ustedes.']], gaps: [0] },
-  { at: 47.4, out: 99, pos: 'left', lines: [['kicker', CONFIG.team], ['name', CONFIG.name], ['sub', CONFIG.subtitle], ['closing', CONFIG.closing]], gaps: [0, 0.2, 0.6, 1.6] },
-];
+// ---------- guion ----------
+// La música va a 120 BPM (un compás = 2 s) y cada escena empieza en un tiempo del compás:
+// los cambios de tools/compose_music.py (CUES) usan estos mismos segundos.
+//
+//    0  gancho: quirófano a las 9:00, 267 imágenes       20  órganos segmentados
+//    6  el problema: una por una, en la cabeza           23  tómalos con la mano
+//   10  ¿y si pudieran verlo completo? (nace el cuerpo)  26  corta donde quieras
+//   16  INMERSIA · Cirugía inmersiva                     30  tres planos, un punto
+//   34  captura real en Meta Quest 3                     38  el prototipo en cifras
+//   42  hoja de ruta: el siguiente paso, el quirófano    48  buscamos un aliado clínico
+//   52  construyámoslo con la clínica                    56  logo (quieto desde 57,6)
 
-// La animación de cada escena se estira o encoge (sin tocar la voz) para que sus momentos
-// clave caigan cuando la voz los nombra. [tiempo de animación, tiempo del video]
+// Cada bloque: cuándo entra, cuándo sale, dónde va y sus líneas (con el retraso de cada una).
+// Las palabras entran una por una. <b>…</b> = azul y subrayado; <s>…</s> = tachado;
+// <n>267</n> = número que cuenta desde cero.
+const BLOCKS = [
+  { at: 0.15, out: 3.2, pos: 'left', lines: [['kicker', 'Quirófano 3'], ['h1', 'Son las 7:00.'], ['h1 dim', 'Cirugía a las <b>9:00</b>.']], gaps: [0, 0.3, 1.35] },
+  { at: 3.45, out: 5.75, pos: 'left', lines: [['h1', 'Y el caso está en'], ['big', '<n>267</n>'], ['h1', 'imágenes.']], gaps: [0, 0.5, 1.45] },
+  { at: 6.05, out: 9.75, pos: 'left', lines: [['h1', 'Hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1', 'y el cuerpo se arma'], ['h1', '<s>en la cabeza</s>.']], gaps: [0, 0.55, 1.7, 2.35], strike: 8.85 },
+  { at: 10.15, out: 14.9, pos: 'left', lines: [['q', '¿Y si pudieran'], ['q', 'verlo <b>completo</b>?']], gaps: [0, 0.6] },
+  { at: 20.1, out: 22.75, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Órganos'], ['h2', '<b>segmentados.</b>']], gaps: [0, 0.1, 0.45] },
+  { at: 23.1, out: 25.75, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalos'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.45] },
+  { at: 26.1, out: 29.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Corta'], ['h2', '<b>donde quieras.</b>'], ['sub', 'La tomografía sigue al plano.']], gaps: [0, 0.1, 0.45, 1.3] },
+  { at: 30.45, out: 33.75, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos.'], ['h2', '<b>Un punto.</b>']], gaps: [0, 0.1, 0.9] },
+  { at: 34.15, out: 37.75, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya funciona en <b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.1, 1.2] },
+  { at: 38.15, out: 41.75, pos: 'stats', lines: [['kicker', 'El prototipo, hoy']], gaps: [0] },
+  { at: 42.15, out: 47.75, pos: 'road', lines: [['kicker', 'Hoja de ruta'], ['h2', 'El siguiente paso:'], ['h2', '<b>el quirófano.</b>']], gaps: [0, 0.1, 0.7] },
+  { at: 45.2, out: 47.75, pos: 'footnote', lines: [['sub', 'Fases por desarrollar y validar junto a la clínica.']], gaps: [0] },
+  { at: 48.1, out: 51.75, pos: 'ask', lines: [['kicker', 'Lo que buscamos'], ['h1', 'Un <b>aliado clínico.</b>']], gaps: [0, 0.1] },
+  { at: 52.1, out: 55.6, pos: 'left', lines: [['h2', 'Construyámoslo'], ['h2', 'junto a la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0, 0.45, 1.0] },
+];
+const WORD_STAGGER = 0.065, WORD_IN = 0.42;
+
+// Las escenas 3D se animaron en su propio reloj; aquí se estira o encoge cada tramo para que
+// caiga en su escena del guion. [tiempo de la animación 3D, tiempo del video]
 const WARP = [
-  [0, 0], [0.7, 1.0], [3.35, 4.6], [3.75, 4.9], [6.75, 7.9], [7.7, 9.3], [11.4, 13.4],
-  [12.8, 14.3], [16.6, 18.9], [17.4, 19.5], [18.3, 20.3], [20.1, 21.7], [21.1, 22.7],
-  [22.0, 23.4], [24.4, 25.6], [25.6, 26.1], [26.4, 26.7], [31.8, 30.3], [33.4, 30.7],
-  [37.6, 34.4], [38.3, 34.9], [41.6, 38.3], [42.6, 38.9], [51.4, 46.9], [52.3, 47.4],
-  [55.4, 52.0], [60, DURATION],
+  [0, 0], [6.75, 10.0], [12.8, 15.0], [13.6, 16.0], [16.6, 19.6], [17.4, 20.0], [20.6, 23.0],
+  [25.2, 26.0], [26.2, 26.5], [31.8, 29.9], [33.2, 30.6], [37.6, 34.0], [41.7, 38.0],
+  [51.6, 52.0], [55.4, 57.6], [55.4, DURATION],
 ];
 function warp(t) {
   if (t <= 0) return 0;
@@ -73,52 +85,108 @@ function warp(t) {
     const [a0, b0] = WARP[i], [a1, b1] = WARP[i + 1];
     if (t <= b1) return a0 + (a1 - a0) * (t - b0) / (b1 - b0);
   }
-  return 60;
+  return WARP[WARP.length - 1][0];
 }
 
 const POS = {
   left: 'left:150px; top:540px; transform:translateY(-50%);',
   tri: 'left:1150px; top:120px;',
   top: 'left:180px; top:92px;',
-  possible: 'left:150px; top:200px;',
-  footnote: 'left:150px; top:930px;',
+  stats: 'left:150px; top:170px;',
+  road: 'left:150px; top:150px;',
+  footnote: 'left:150px; top:880px;',
+  ask: 'left:150px; top:250px;',
 };
+
+// Arma una línea palabra por palabra.
+function buildLine(lineEl, html, b) {
+  let parent = lineEl, group = null;
+  for (const tok of html.split(/(<\/?[bsn]>)/)) {
+    if (tok === '<b>' || tok === '<s>') {
+      group = { el: document.createElement('span'), bar: document.createElement('i'), kind: tok[1], words: [] };
+      group.el.className = tok === '<b>' ? 'hl' : 'st';
+      lineEl.appendChild(group.el);
+      parent = group.el;
+      b.groups.push(group);
+    } else if (tok === '</b>' || tok === '</s>') {
+      group.el.appendChild(group.bar);
+      parent = lineEl; group = null;
+    } else if (tok === '<n>' || tok === '</n>') {
+      b.nextIsCount = tok === '<n>';
+    } else {
+      for (const w of tok.split(/(\s+)/)) {
+        if (!w) continue;
+        if (/^\s+$/.test(w)) { parent.appendChild(document.createTextNode(' ')); continue; }
+        const span = document.createElement('span');
+        span.className = 'w';
+        span.textContent = w;
+        parent.appendChild(span);
+        const word = { el: span, count: b.nextIsCount ? +w : null };
+        if (word.count !== null) span.textContent = '0';
+        b.words.push(word);
+        if (group) group.words.push(word);
+        word.line = b.lineEls.length;
+      }
+    }
+  }
+}
 
 const textRoot = document.getElementById('text');
 for (const b of BLOCKS) {
   const el = document.createElement('div');
   el.className = 'block';
   el.style.cssText = POS[b.pos];
-  b.lineEls = b.lines.map(([cls, html]) => {
+  b.el = el; b.words = []; b.groups = []; b.lineEls = [];
+  b.lines.forEach(([cls, html]) => {
     const l = document.createElement('div');
     l.className = 'line ' + cls;
-    l.innerHTML = html.replace(/<b>/g, '<span class="acc">').replace(/<\/b>/g, '</span>');
+    l.style.opacity = 1;
     el.appendChild(l);
-    return l;
+    buildLine(l, html, b);
+    b.lineEls.push(l);
   });
+  // cuándo entra cada palabra
+  const nInLine = {};
+  for (const w of b.words) {
+    const k = nInLine[w.line] = (nInLine[w.line] ?? -1) + 1;
+    w.at = b.at + b.gaps[w.line] + k * WORD_STAGGER;
+  }
+  for (const g of b.groups) g.at = g.kind === 's' ? b.strike : g.words[g.words.length - 1].at + 0.25;
   textRoot.appendChild(el);
 }
 
 function updateText(t) {
   for (const b of BLOCKS) {
-    b.lineEls.forEach((el, i) => {
-      const start = b.at + (b.gaps ? b.gaps[i] : i * b.gap);
-      const vin = easeOut(prog(t, start, start + 0.75));
-      const vout = easeInOut(prog(t, b.out, b.out + 0.55));
-      el.style.opacity = (vin * (1 - vout)).toFixed(4);
-      el.style.transform = `translateY(${((1 - vin) * 30 - vout * 16).toFixed(2)}px)`;
-    });
+    const on = t >= b.at - 0.05 && t <= b.out + 0.5;
+    b.el.style.display = on ? '' : 'none';
+    if (!on) continue;
+    const vout = easeInOut(prog(t, b.out, b.out + 0.4));
+    b.el.style.opacity = (1 - vout).toFixed(4);
+    b.el.style.filter = vout > 0 ? `blur(${(vout * 8).toFixed(2)}px)` : 'none';
+    for (const w of b.words) {
+      const vin = easeOut(prog(t, w.at, w.at + WORD_IN));
+      w.el.style.opacity = vin.toFixed(4);
+      w.el.style.transform = `translateY(${((1 - vin) * 34 - vout * 22).toFixed(2)}px)`;
+      w.el.style.filter = vin < 1 ? `blur(${((1 - vin) * 10).toFixed(2)}px)` : 'none';
+      if (w.count !== null) w.el.textContent = Math.round(w.count * easeOut(prog(t, w.at, w.at + 1.1)));
+    }
+    for (const g of b.groups) {
+      const k = easeInOut(prog(t, g.at, g.at + 0.45));
+      g.bar.style.transform = `scaleX(${k.toFixed(4)})`;
+      if (g.kind === 's') g.el.style.color = `rgba(168, 177, 188, ${lerp(1, 0.75, k).toFixed(3)})`;
+    }
   }
 }
 
 // Etiqueta discreta que dice qué es real y qué es ilustración.
 const TAGS = [
-  [0.4, 7.9, 'Cortes reales de la tomografía del proyecto', ''],
-  [8.2, 22.6, 'Ilustración en 3D con los datos del proyecto', ''],
-  [22.7, 25.6, 'Representación de la interacción · órganos segmentados del proyecto', ''],
-  [26.0, 34.3, 'Ilustración en 3D con los datos del proyecto', ''],
-  [34.9, 38.3, 'Captura real del prototipo · Meta Quest 3', 'real'],
-  [38.9, 46.9, 'Ilustración en 3D con los datos del proyecto', ''],
+  [0.3, 9.9, 'Cortes reales de la tomografía del proyecto', ''],
+  [10.2, 22.9, 'Ilustración en 3D con los datos del proyecto', ''],
+  [23.1, 25.9, 'Representación de la interacción · órganos segmentados del proyecto', ''],
+  [26.1, 33.8, 'Ilustración en 3D con los datos del proyecto', ''],
+  [34.2, 37.8, 'Captura real del prototipo · Meta Quest 3', 'real'],
+  [38.2, 41.8, 'Ilustración en 3D con los datos del proyecto', ''],
+  [48.2, 55.6, 'Ilustración en 3D con los datos del proyecto', ''],
 ];
 const tagEl = document.getElementById('tag');
 function updateTag(t) {
@@ -128,6 +196,59 @@ function updateTag(t) {
   tagEl.textContent = shown[2];
   tagEl.className = shown[3];
   tagEl.style.opacity = (0.85 * env(t, shown[0], shown[1], 0.4, 0.3)).toFixed(3);
+}
+
+// ---------- marca ----------
+// El símbolo es una esfera hecha de cortes: las imágenes que se vuelven un volumen.
+const MARK_BARS = 7;
+const markBars = [];
+{
+  const g = document.getElementById('markBars');
+  for (let i = 0; i < MARK_BARS; i++) {
+    const y = -1 + ((i + 0.5) * 2) / MARK_BARS;
+    const hw = Math.sqrt(1 - y * y);
+    const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    r.setAttribute('x', -hw); r.setAttribute('y', -0.085); r.setAttribute('width', 2 * hw); r.setAttribute('height', 0.17);
+    r.setAttribute('rx', 0.085);
+    g.appendChild(r);
+    markBars.push({ el: r, y });
+  }
+  const name = document.getElementById('brandName');
+  for (const ch of CONFIG.name) {
+    const s = document.createElement('span');
+    s.textContent = ch;
+    name.appendChild(s);
+  }
+  document.getElementById('brandSub').textContent = CONFIG.subtitle;
+  document.getElementById('brandTeam').textContent = CONFIG.team;
+}
+
+// Presentación de la marca a partir de t0 (golpe de la música en t0).
+function brandAt(tv, t0, outAt, zoom) {
+  const el = document.getElementById('brand');
+  const vis = easeOut(prog(tv, t0 - 0.8, t0 - 0.3)) * (1 - easeInOut(prog(tv, outAt, outAt + 0.4)));
+  el.style.opacity = vis.toFixed(4);
+  if (vis <= 0) return 0;
+  el.style.transform = `scale(${lerp(0.985, 1.025, easeOut(prog(tv, t0, t0 + zoom))).toFixed(5)})`;
+  markBars.forEach((b, i) => {
+    const s = t0 - 0.05 + Math.abs(i - (MARK_BARS - 1) / 2) * 0.07;
+    const k = easeOut(prog(tv, s, s + 0.55));
+    b.el.setAttribute('transform', `translate(0 ${b.y}) scale(${k.toFixed(4)} 1)`);
+    b.el.setAttribute('opacity', Math.min(1, k * 1.6).toFixed(3));
+  });
+  const letters = document.querySelectorAll('#brandName span');
+  letters.forEach((s, i) => {
+    const a = t0 + 0.05 + i * 0.045;
+    const k = easeOut(prog(tv, a, a + 0.6));
+    s.style.opacity = k.toFixed(4);
+    s.style.transform = `translateX(${((i - (letters.length - 1) / 2) * 34 * (1 - k)).toFixed(2)}px)`;
+    s.style.filter = k < 1 ? `blur(${((1 - k) * 14).toFixed(2)}px)` : 'none';
+  });
+  const sub = easeOut(prog(tv, t0 + 0.6, t0 + 1.2));
+  const subEl = document.getElementById('brandSub');
+  subEl.style.opacity = sub.toFixed(4);
+  subEl.style.transform = `translateY(${((1 - sub) * 18).toFixed(2)}px)`;
+  return vis;
 }
 
 // ---------- imágenes 2D ----------
@@ -242,8 +363,8 @@ const CAM = [
   [37.8, -50, 23, 2.4, 'abd', 600],
   [38.4, -30, 12, 2.75, 0, 1250],
   [42.0, -30, 12, 2.75, 0, 1250],
-  [51.6, 8, 12, 2.7, 0, 1270],
-  [55.4, 16, 12, 2.85, 0, 1430],
+  [51.6, 8, 12, 2.7, 0, 1250],
+  [55.4, 16, 12, 2.85, 0, 1250],
 ];
 function camAt(t) {
   const col = (k) => CAM.map((r) => [r[0], r[k] === 'abd' ? abdomenY : r[k]]);
@@ -278,18 +399,20 @@ function cardPose() {
 
 let ctCardLayout = null;
 function renderAt(tv) {
-  // tv: tiempo del video (textos, etiquetas). t: tiempo de la animación, ajustado a la voz.
+  // tv: tiempo del video (guion, textos, paneles 2D). t: reloj de la animación 3D (ver WARP).
   const t = warp(tv);
   const T = E.THREE;
   placeCamera(t);
 
-  // ===== 1 · pantalla con cortes (0 – 7 s) =====
+  // ===== 1 · pantalla con cortes (0 – 10 s del video) =====
   const card = $('ctCard');
   const cardIn = easeOut(prog(t, 0.2, 1.0));
   const cardOut = prog(t, 6.75, 7.05);
   card.style.opacity = (cardIn * (1 - cardOut)).toFixed(3);
   card.style.transform = `translateY(${(1 - cardIn) * 24}px) scale(${lerp(0.97, 1, cardIn)})`;
-  const z = Math.round(track(t, [[0.5, 22], [3.9, HANDOFF]]));
+  // pasa rápido mientras cuenta «267» y luego avanza de a un corte por tiempo de la música
+  const z = tv < 6 ? Math.round(track(tv, [[0.3, 22], [3.9, 44], [5.1, HANDOFF - 12], [5.9, HANDOFF - 7]]))
+    : Math.min(HANDOFF, HANDOFF - 7 + Math.floor((tv - 6) / 0.5));
   if (t < 7.2) {
     drawSlice($('ctCanvas'), z);
     $('ctCount').textContent = `Corte ${pad(z + 1, 3)} / ${NSLICES}`;
@@ -434,8 +557,14 @@ function renderAt(tv) {
     $('triMeta').textContent = `${Math.round(sagCol)} · ${Math.round(corRow)} · ${zi + 1}`;
   }
 
+  // velo que oscurece la escena: captura real, marca, hoja de ruta y logo
+  $('dim').style.opacity = Math.max(
+    env(t, 37.8, 41.7, 0.6, 0.6),
+    0.7 * env(tv, 15.2, 19.5, 0.6, 0.5),
+    0.8 * env(tv, 42.0, 47.75, 0.5, 0.5),
+    0.9 * env(tv, 55.4, 99, 0.6)).toFixed(3);
+
   // captura real
-  $('dim').style.opacity = (env(t, 37.8, 41.7, 0.6, 0.6)).toFixed(3);
   const capVis = env(t, 38.2, 41.5, 0.7, 0.5);
   const cap = $('capture');
   cap.style.opacity = capVis.toFixed(3);
@@ -446,13 +575,51 @@ function renderAt(tv) {
   $('capA').style.transform = `scale(${lerp(1.0, 1.06, prog(t, 38.2, 40.4))})`;
   $('capB').style.transform = `scale(${lerp(1.02, 1.08, prog(t, 39.9, 41.8))})`;
 
-  // posibilidades
-  document.querySelectorAll('.chip').forEach((c, i) => {
-    const a = 43.2 + i * 0.6;
-    const v = env(tv, a, 46.9, 0.7, 0.5);
-    c.style.opacity = v.toFixed(3);
-    c.style.transform = `translateX(${(1 - easeOut(prog(tv, a, a + 0.7))) * -24}px)`;
+  // el prototipo en cifras
+  document.querySelectorAll('.stat').forEach((row, i) => {
+    const a = 38.55 + i * 0.5;
+    row.style.opacity = env(tv, a, 41.75, 0.5, 0.4).toFixed(3);
+    row.style.transform = `translateX(${((1 - easeOut(prog(tv, a, a + 0.6))) * -30).toFixed(2)}px)`;
+    const n = row.querySelector('.sn');
+    n.textContent = Math.round(+n.dataset.n * easeOut(prog(tv, a, a + 1.0)));
   });
+
+  // hoja de ruta: la línea avanza de hoy a la validación clínica
+  const road = $('road');
+  road.style.opacity = env(tv, 42.9, 47.75, 0.3, 0.4).toFixed(3);
+  const fill = easeInOut(prog(tv, 43.3, 45.1));
+  $('roadFill').style.transform = `scaleX(${fill.toFixed(4)})`;
+  road.querySelectorAll('.node').forEach((nd, i) => {
+    const a = i === 0 ? 42.95 : 43.3 + (i / 3) * 1.8 - 0.15;
+    const k = easeOut(prog(tv, a, a + 0.5));
+    nd.style.opacity = k.toFixed(3);
+    nd.style.transform = `translateY(${((1 - k) * 24).toFixed(2)}px)`;
+    // cada fase se enciende cuando la línea la alcanza
+    if (i > 0) nd.querySelector('b').style.borderColor = `rgba(76, 141, 255, ${(0.3 + 0.7 * easeOut(prog(fill, i / 3 - 0.02, i / 3 + 0.08))).toFixed(3)})`;
+  });
+
+  // lo que buscamos
+  document.querySelectorAll('.chip').forEach((c, i) => {
+    const a = 48.75 + i * 0.4;
+    const v = env(tv, a, 51.75, 0.55, 0.4);
+    c.style.opacity = v.toFixed(3);
+    c.style.transform = `translateX(${(1 - easeOut(prog(tv, a, a + 0.6))) * -28}px)`;
+  });
+
+  // marca: presentación (16 s) y logo final (56 s), con el golpe de la música
+  if (tv < 30) {
+    brandAt(tv, 16.0, 19.5, 3.8);
+    $('brandPre').style.opacity = easeOut(prog(tv, 15.25, 15.75)).toFixed(3);
+    $('brandPre').style.display = '';
+    $('brandTeam').style.display = 'none';
+  } else {
+    brandAt(tv, 56.0, 99, 1.6);
+    $('brandPre').style.display = 'none';
+    $('brandTeam').style.display = '';
+    const k = easeOut(prog(tv, 56.9, 57.5));
+    $('brandTeam').style.opacity = k.toFixed(3);
+    $('brandTeam').style.transform = `translateY(${((1 - k) * 14).toFixed(2)}px)`;
+  }
 
   // gesto de pinza sobre el hígado (representación)
   const pinch = $('pinch');
@@ -496,11 +663,10 @@ init().then(() => {
   const scrub = $('scrub'), time = $('time'), play = $('play');
   scrub.max = DURATION;
   let playing = false, t0 = 0, start = 0;
-  // La banda sonora (voz + música, desde el segundo 0) manda el reloj mientras suena.
-  const voice = new Audio('../assets/audio/banda_sonora.mp3');
-  const VOICE_OFFSET = 0;
+  // La música (tools/mix_audio.py) manda el reloj mientras suena; sin ella, corre el reloj solo.
+  const music = new Audio('../out/musica_master.mp3');
   const show = (t) => { renderAt(t); scrub.value = t; time.textContent = t.toFixed(2) + ' s'; };
-  const stop = () => { playing = false; voice.pause(); play.textContent = 'Reproducir'; };
+  const stop = () => { playing = false; music.pause(); play.textContent = 'Reproducir'; };
   scrub.addEventListener('input', () => { stop(); show(+scrub.value); });
   play.addEventListener('click', () => {
     if (playing) return stop();
@@ -511,10 +677,9 @@ init().then(() => {
   function loop(now) {
     if (!playing) return;
     let t = t0 + (now - start) / 1000;
-    const vt = t - VOICE_OFFSET;
-    if (vt >= 0 && vt < voice.duration) {
-      if (voice.paused) { voice.currentTime = vt; voice.play().catch(() => {}); }
-      else t = voice.currentTime + VOICE_OFFSET;
+    if (t < music.duration) {
+      if (music.paused) { music.currentTime = t; music.play().catch(() => {}); }
+      else t = music.currentTime;
     }
     if (t >= DURATION) { show(DURATION); stop(); return; }
     show(t);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Video de apertura · Medical Viewer</title>
+<title>INMERSIA · Video de apertura</title>
 <link rel="stylesheet" href="../node_modules/@fontsource-variable/inter/index.css">
 <style>
   :root {
@@ -30,6 +30,15 @@
   .acc { color: var(--accent); }
   .name { font-size: 112px; font-weight: 720; letter-spacing: -0.035em; line-height: 1; }
   .closing { font-size: 46px; font-weight: 620; color: var(--accent); margin-top: 46px; letter-spacing: -0.015em; }
+  .big { font-size: 168px; font-weight: 720; letter-spacing: -0.045em; line-height: 0.98; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* palabras que entran una por una; <b> se subraya, <s> se tacha */
+  .w { display: inline-block; }
+  .hl, .st { position: relative; display: inline-block; }
+  .hl > i, .st > i { position: absolute; left: -0.04em; right: -0.04em; transform-origin: 0 50%; transform: scaleX(0); border-radius: 0.04em; }
+  .hl { color: var(--accent); }
+  .hl > i { bottom: -0.03em; height: 0.075em; background: var(--accent); box-shadow: 0 0 24px rgba(76, 141, 255, 0.55); }
+  .st > i { top: 53%; height: 0.075em; background: var(--text); }
 
   /* ---------- vidrio oscuro, como los paneles del visor ---------- */
   .glass {
@@ -66,10 +75,39 @@
   #capture { left: 180px; top: 300px; width: 1560px; height: 696px; border-radius: 30px; overflow: hidden; padding: 0; }
   #capture img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
-  #chips { position: absolute; left: 150px; top: 560px; display: flex; flex-direction: column; gap: 16px; }
+  #chips { position: absolute; left: 150px; top: 440px; display: flex; flex-direction: column; gap: 16px; }
   .chip { display: flex; align-items: center; gap: 18px; font-size: 32px; font-weight: 540; padding: 18px 30px 18px 24px;
           border-radius: 22px; background: rgba(30,34,40,0.72); border: 1px solid var(--rim); opacity: 0; width: fit-content; }
-  .chip i { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px rgba(76,141,255,0.8); }
+  .chip i { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 22px rgba(76,141,255,0.6);
+            display: grid; place-items: center; font-style: normal; font-size: 22px; font-weight: 800; color: #fff; }
+
+  /* ---------- marca ---------- */
+  #brand { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; }
+  #brandPre { font-size: 26px; font-weight: 620; letter-spacing: 0.32em; text-transform: uppercase; color: var(--text2); margin-bottom: 40px; }
+  #brandRow { display: flex; align-items: center; gap: 44px; }
+  #mark { width: 132px; height: 132px; overflow: visible; }
+  #brandName { font-size: 150px; font-weight: 600; letter-spacing: 0.1em; margin-right: -0.1em; line-height: 1; white-space: nowrap; }
+  #brandName span { display: inline-block; }
+  #brandSub { font-size: 38px; font-weight: 520; letter-spacing: 0.03em; color: var(--accent); margin-top: 30px; }
+  #brandTeam { font-size: 22px; font-weight: 620; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text2); margin-top: 72px; }
+
+  /* ---------- cifras del prototipo ---------- */
+  #stats { position: absolute; left: 150px; top: 290px; display: flex; flex-direction: column; gap: 46px; }
+  .stat { display: flex; align-items: center; gap: 34px; opacity: 0; }
+  .sn { font-size: 124px; font-weight: 720; letter-spacing: -0.045em; line-height: 0.9; color: var(--accent); width: 250px; text-align: right; font-variant-numeric: tabular-nums; }
+  .sl { font-size: 34px; font-weight: 560; line-height: 1.22; letter-spacing: -0.01em; }
+
+  /* ---------- hoja de ruta ---------- */
+  #road { position: absolute; left: 150px; top: 520px; width: 1700px; height: 320px; opacity: 0; }
+  #roadLine { position: absolute; left: 32px; top: 30px; width: 1410px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.14); overflow: hidden; }
+  #roadFill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #4C8DFF, rgba(76,141,255,0.45)); }
+  .node { position: absolute; top: 0; width: 330px; opacity: 0; }
+  .node b { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3);
+            background: var(--bg); font-size: 26px; font-weight: 700; color: var(--text2); }
+  .node.done b { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 34px rgba(76,141,255,0.65); }
+  .node .when { display: inline-block; margin-top: 26px; font-size: 17px; font-weight: 680; letter-spacing: 0.2em; color: var(--text2); }
+  .node.done .when { color: #fff; background: var(--accent); border-radius: 12px; padding: 4px 12px; }
+  .node .lbl { margin-top: 12px; font-size: 30px; font-weight: 600; line-height: 1.22; letter-spacing: -0.01em; }
 
   #dim { position: absolute; inset: 0; background: var(--bg); opacity: 0; }
   #tag { position: absolute; left: 56px; bottom: 44px; display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 600;
@@ -133,10 +171,42 @@
       <div id="dim"></div>
       <div class="glass" id="capture"><img id="capA" alt=""><img id="capB" alt=""></div>
 
+      <!-- lo que buscamos -->
       <div id="chips">
-        <div class="chip"><i></i>Preparar una cirugía en 3D, en equipo</div>
-        <div class="chip"><i></i>Revisar el caso antes de entrar al quirófano</div>
-        <div class="chip"><i></i>Explicar el procedimiento al paciente</div>
+        <div class="chip"><i>✓</i>Cirujanos que lo prueben y nos guíen</div>
+        <div class="chip"><i>✓</i>Casos anonimizados para desarrollarlo</div>
+        <div class="chip"><i>✓</i>Apoyo para la siguiente fase</div>
+      </div>
+
+      <!-- el prototipo en cifras (datos del proyecto) -->
+      <div id="stats">
+        <div class="stat"><div class="sn" data-n="267">0</div><div class="sl">cortes de tomografía…<br><span class="acc">en un solo cuerpo 3D</span></div></div>
+        <div class="stat"><div class="sn" data-n="4">0</div><div class="sl">órganos<br>segmentados</div></div>
+        <div class="stat"><div class="sn" data-n="3">0</div><div class="sl">planos<br>sincronizados</div></div>
+      </div>
+
+      <!-- hoja de ruta -->
+      <div id="road">
+        <div id="roadLine"><i id="roadFill"></i></div>
+        <div class="node done" style="left:0"><b>✓</b><span class="when">HOY</span><div class="lbl">Visualización 3D<br>de la tomografía</div></div>
+        <div class="node" style="left:470px"><b>2</b><span class="when">FASE 2</span><div class="lbl">Precisión y<br>estabilidad del visor</div></div>
+        <div class="node" style="left:940px"><b>3</b><span class="when">FASE 3</span><div class="lbl">Planificación quirúrgica<br>con cirujanos</div></div>
+        <div class="node" style="left:1410px"><b>4</b><span class="when">FASE 4</span><div class="lbl">Validación<br>clínica</div></div>
+      </div>
+
+      <!-- marca: cortes que forman un volumen -->
+      <div id="brand">
+        <div id="brandPre">Les presentamos</div>
+        <div id="brandRow">
+          <svg id="mark" viewBox="-1.1 -1.1 2.2 2.2">
+            <defs><linearGradient id="markGrad" x1="0" y1="-1" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#8DB8FF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient></defs>
+            <g id="markBars" fill="url(#markGrad)"></g>
+          </svg>
+          <div id="brandName"></div>
+        </div>
+        <div id="brandSub"></div>
+        <div id="brandTeam"></div>
       </div>
 
       <svg id="pinch" viewBox="-80 -80 160 160">
@@ -152,7 +222,7 @@
 </div>
 <div id="controls">
   <button id="play">Reproducir</button>
-  <input id="scrub" type="range" min="0" max="60" step="0.0333" value="0">
+  <input id="scrub" type="range" min="0" max="61" step="0.0333" value="0">
   <output id="time">0.00 s</output>
 </div>
 <div id="loading">Cargando datos del TAC…</div>
