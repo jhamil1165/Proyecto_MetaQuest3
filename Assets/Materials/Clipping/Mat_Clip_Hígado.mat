@@ -28,7 +28,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats:
+    m_Floats: []
     m_Colors:
     - _BaseColor: {r: 0.5738643, g: 0.44912308, b: 0.39879584, a: 1}
     - _CapColor: {r: 0.31562537, g: 0.20210539, b: 0.17945813, a: 1}
