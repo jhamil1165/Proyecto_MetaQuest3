@@ -20,7 +20,8 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) =>
   return acc;
 }, []));
 const FPS = +(args.fps || 30);
-const FROM = +(args.from || 0), TO = +(args.to || 60);
+const FROM = +(args.from || 0);
+let TO = args.to ? +args.to : null; // por defecto, la duración que declara la página
 
 // ---------- servidor estático ----------
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
@@ -61,6 +62,7 @@ page.on('pageerror', (e) => console.log('[error]', e.message));
 await page.goto(url);
 await page.waitForFunction(() => window.__ready === true, null, { timeout: 180000 });
 const stage = await page.$('#stage');
+if (TO === null) TO = await page.evaluate(() => window.__duration || 60);
 
 async function frame(t) {
   await page.evaluate((tt) => window.__render(tt), t);

@@ -13,7 +13,8 @@ const CONFIG = {
   team: 'Ingeniería Biomédica · PUCP',
   closing: 'Exploremos juntos el siguiente paso.',
 };
-export const DURATION = 60;
+export const DURATION = 57;
+window.__duration = DURATION;
 
 const capture = new URLSearchParams(location.search).has('capture');
 if (capture) document.body.classList.add('capture');
@@ -40,31 +41,31 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 
 // ---------- textos ----------
 // Cada bloque: cuándo entra, cuándo sale, dónde va y sus líneas. <b> = palabra en azul.
-// Los tiempos siguen a la locución (assets/audio/locucion.mp3, que entra en VOICE_OFFSET):
-// cada línea aparece cuando la voz la dice. <b> = palabra en azul.
+// Los tiempos siguen a la locución: cada línea aparece cuando la voz la dice
+// (ver VOICE_CUTS en tools/mix_audio.py). <b> = palabra en azul.
 const BLOCKS = [
-  { at: 1.6, out: 6.6, pos: 'left', lines: [['h1', 'Cientos de imágenes.'], ['h1 dim', 'De una en una.']], gaps: [0, 3.5] },
-  { at: 7.5, out: 11.3, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'explorarlas'], ['q', '<b>frente a ti?</b>']], gaps: [0, 0.85, 2.6] },
-  { at: 12.5, out: 16.9, pos: 'left', lines: [['h1', 'Cada corte, en su lugar…'], ['h1', '…y aparece un <b>cuerpo</b>.']], gaps: [0, 2.45] },
-  { at: 17.55, out: 23.8, pos: 'left', lines: [['kicker', 'Realidad mixta · Meta Quest 3'], ['h1', 'La anatomía, aquí,'], ['h1', '<b>en tu espacio.</b>'], ['sub', 'Sin dejar de ver la sala.']], gaps: [0, 1.6, 3.4, 4.9] },
-  { at: 24.6, out: 27.7, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Activa solo los órganos'], ['h2', 'que necesitas ver.']], gaps: [0, 0.1, 1.3] },
-  { at: 28.0, out: 31.3, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Tómalo con la mano…'], ['h2', '…y <b>gíralo</b>.']], gaps: [0, 0.1, 2.2] },
-  { at: 31.6, out: 37.0, pos: 'left', lines: [['kicker', '02 · Plano de corte'], ['h2', 'Desliza el plano…'], ['h2', 'y la tomografía'], ['h2', '<b>te sigue.</b>']], gaps: [0, 0.15, 2.6, 3.7] },
-  { at: 37.5, out: 40.9, pos: 'tri', lines: [['kicker', '03 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.1, 2.35] },
-  { at: 41.4, out: 44.7, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya funciona en Meta Quest 3.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.95, 1.5] },
-  { at: 45.7, out: 52.0, pos: 'possible', lines: [['kicker', 'Lo que sigue'], ['h2', 'Hoy es un prototipo.'], ['h2', '<b>¿Hasta dónde puede llegar?</b>']], gaps: [0, 0.15, 2.0] },
-  { at: 50.6, out: 52.0, pos: 'footnote', lines: [['sub', 'Posibilidades por explorar y validar con ustedes.']], gaps: [0] },
-  { at: 52.3, out: 99, pos: 'left', lines: [['kicker', CONFIG.team], ['name', CONFIG.name], ['sub', CONFIG.subtitle], ['closing', CONFIG.closing]], gaps: [0, 0.15, 0.4, 0.75] },
+  { at: 1.2, out: 4.6, pos: 'left', lines: [['h1', 'Cientos de imágenes.'], ['h1 dim', 'Una sola pantalla.']], gaps: [0, 1.95] },
+  { at: 4.95, out: 7.85, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'tenerlas'], ['q', '<b>frente a ti?</b>']], gaps: [0, 0.75, 1.5] },
+  { at: 9.35, out: 13.6, pos: 'left', lines: [['h1', 'Cada corte, en su lugar…'], ['h1', '…y aparece el <b>cuerpo</b>.']], gaps: [0, 2.55] },
+  { at: 14.35, out: 18.9, pos: 'left', lines: [['kicker', 'Realidad mixta · Meta Quest 3'], ['h1', 'La anatomía, aquí.'], ['h1', '<b>En tu espacio.</b>'], ['sub', 'Sin perder de vista la sala.']], gaps: [0, 0.9, 3.25, 3.9] },
+  { at: 19.5, out: 22.4, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Activa solo lo'], ['h2', 'que necesitas ver.']], gaps: [0, 0.1, 1.1] },
+  { at: 22.7, out: 25.6, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Tómalo…'], ['h2', '…y <b>gíralo</b>.']], gaps: [0, 0.1, 0.8] },
+  { at: 26.1, out: 30.0, pos: 'left', lines: [['kicker', '02 · Plano de corte'], ['h2', 'Desliza un plano…'], ['h2', 'y la tomografía'], ['h2', '<b>te sigue.</b>']], gaps: [0, 0.1, 1.6, 2.3] },
+  { at: 30.7, out: 34.3, pos: 'tri', lines: [['kicker', '03 · Tres planos'], ['h2', 'Tres planos.'], ['h2', '<b>Un mismo punto.</b>']], gaps: [0, 0.1, 1.3] },
+  { at: 34.9, out: 38.3, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya funciona en Meta Quest 3.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.1, 0.9] },
+  { at: 38.9, out: 46.9, pos: 'possible', lines: [['kicker', 'Lo que sigue'], ['h2', 'Hoy, un prototipo.'], ['h2', 'La meta: <b>planificar cirugías.</b>']], gaps: [0, 0.1, 2.8] },
+  { at: 45.4, out: 46.9, pos: 'footnote', lines: [['sub', 'Objetivos por desarrollar y validar con ustedes.']], gaps: [0] },
+  { at: 47.4, out: 99, pos: 'left', lines: [['kicker', CONFIG.team], ['name', CONFIG.name], ['sub', CONFIG.subtitle], ['closing', CONFIG.closing]], gaps: [0, 0.2, 0.6, 1.6] },
 ];
 
-// La locución y el montaje: la animación de cada escena se estira o encoge (sin tocar la voz)
-// para que sus momentos clave caigan cuando la voz los nombra. [tiempo de animación, tiempo del video]
-export const VOICE_OFFSET = 0.5;
+// La animación de cada escena se estira o encoge (sin tocar la voz) para que sus momentos
+// clave caigan cuando la voz los nombra. [tiempo de animación, tiempo del video]
 const WARP = [
-  [0, 0], [0.7, 0.55], [3.35, 6.7], [3.75, 7.5], [6.75, 11.4], [7.7, 12.55], [11.4, 16.4],
-  [12.8, 17.6], [16.6, 23.9], [17.4, 24.7], [18.3, 25.85], [20.1, 27.2], [21.1, 28.1],
-  [25.6, 31.75], [26.4, 32.4], [31.8, 36.4], [33.4, 37.55], [37.6, 40.9], [38.3, 41.5],
-  [41.6, 44.6], [42.6, 45.8], [51.4, 52.2], [52.3, 52.75], [55.4, 56.4], [60, 60],
+  [0, 0], [0.7, 1.0], [3.35, 4.6], [3.75, 4.9], [6.75, 7.9], [7.7, 9.3], [11.4, 13.4],
+  [12.8, 14.3], [16.6, 18.9], [17.4, 19.5], [18.3, 20.3], [20.1, 21.7], [21.1, 22.7],
+  [22.0, 23.4], [24.4, 25.6], [25.6, 26.1], [26.4, 26.7], [31.8, 30.3], [33.4, 30.7],
+  [37.6, 34.4], [38.3, 34.9], [41.6, 38.3], [42.6, 38.9], [51.4, 46.9], [52.3, 47.4],
+  [55.4, 52.0], [60, DURATION],
 ];
 function warp(t) {
   if (t <= 0) return 0;
@@ -112,12 +113,12 @@ function updateText(t) {
 
 // Etiqueta discreta que dice qué es real y qué es ilustración.
 const TAGS = [
-  [0.4, 11.3, 'Cortes reales de la tomografía del proyecto', ''],
-  [11.8, 27.8, 'Ilustración en 3D con los datos del proyecto', ''],
-  [28.0, 31.5, 'Representación de la interacción · órganos segmentados del proyecto', ''],
-  [31.8, 40.9, 'Ilustración en 3D con los datos del proyecto', ''],
-  [41.4, 44.7, 'Captura real del prototipo · Meta Quest 3', 'real'],
-  [45.6, 52.0, 'Ilustración en 3D con los datos del proyecto', ''],
+  [0.4, 7.9, 'Cortes reales de la tomografía del proyecto', ''],
+  [8.2, 22.6, 'Ilustración en 3D con los datos del proyecto', ''],
+  [22.7, 25.6, 'Representación de la interacción · órganos segmentados del proyecto', ''],
+  [26.0, 34.3, 'Ilustración en 3D con los datos del proyecto', ''],
+  [34.9, 38.3, 'Captura real del prototipo · Meta Quest 3', 'real'],
+  [38.9, 46.9, 'Ilustración en 3D con los datos del proyecto', ''],
 ];
 const tagEl = document.getElementById('tag');
 function updateTag(t) {
@@ -310,7 +311,7 @@ function renderAt(tv) {
     E.loose.scale.set(lerp(from.scale, E.size.x, lt), lerp(from.scale, E.size.z, lt), 1);
     E.loose.material.opacity = 1 - easeInOut(prog(t, 9.6, 10.8));
   }
-  E.looseKey.value = easeInOut(prog(t, 6.9, 7.8));
+  E.looseKey.value = easeInOut(prog(t, 6.85, 7.3));
   E.looseR.value = (HANDOFF + 0.5) / NSLICES;
   E.looseOpacity.value = E.loose.material.opacity;
 
@@ -447,8 +448,8 @@ function renderAt(tv) {
 
   // posibilidades
   document.querySelectorAll('.chip').forEach((c, i) => {
-    const a = 48.2 + i * 0.6;
-    const v = env(tv, a, 52.0, 0.7, 0.5);
+    const a = 43.2 + i * 0.6;
+    const v = env(tv, a, 46.9, 0.7, 0.5);
     c.style.opacity = v.toFixed(3);
     c.style.transform = `translateX(${(1 - easeOut(prog(tv, a, a + 0.7))) * -24}px)`;
   });
@@ -495,8 +496,9 @@ init().then(() => {
   const scrub = $('scrub'), time = $('time'), play = $('play');
   scrub.max = DURATION;
   let playing = false, t0 = 0, start = 0;
-  // La voz manda el reloj de la vista previa mientras suena, para que no se desfase.
-  const voice = new Audio('../assets/audio/locucion.mp3');
+  // La banda sonora (voz + música, desde el segundo 0) manda el reloj mientras suena.
+  const voice = new Audio('../assets/audio/banda_sonora.mp3');
+  const VOICE_OFFSET = 0;
   const show = (t) => { renderAt(t); scrub.value = t; time.textContent = t.toFixed(2) + ' s'; };
   const stop = () => { playing = false; voice.pause(); play.textContent = 'Reproducir'; };
   scrub.addEventListener('input', () => { stop(); show(+scrub.value); });
