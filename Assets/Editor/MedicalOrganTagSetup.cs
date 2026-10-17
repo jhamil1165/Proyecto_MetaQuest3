@@ -56,6 +56,7 @@ public static class MedicalOrganTagSetup
             var so = new SerializedObject(tag);
             so.FindProperty("title").stringValue = data.title;
             so.FindProperty("millilitres").floatValue = data.ml;
+            so.FindProperty("idleAlpha").floatValue = 0f;   // solo al apuntar o agarrar
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(tag);
             tags.Add(tag);
@@ -140,6 +141,7 @@ public static class MedicalOrganTagSetup
             if (!t.gameObject.activeInHierarchy) continue;
             awake.Invoke(t, null);
             ((CanvasGroup)groupField.GetValue(t)).alpha = 1f;
+            ((Transform)tagField.GetValue(t)).GetComponent<Canvas>().enabled = true;
             var go = ((Transform)tagField.GetValue(t)).gameObject;
             built.Add(go);
         }

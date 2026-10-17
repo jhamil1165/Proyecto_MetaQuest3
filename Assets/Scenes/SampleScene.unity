@@ -3742,7 +3742,7 @@ MonoBehaviour:
   title: "Est\xF3mago"
   millilitres: 436
   gap: 0.01
-  idleAlpha: 0.6
+  idleAlpha: 0
   fadeSpeed: 6
 --- !u!1 &172953320
 GameObject:
@@ -12308,7 +12308,7 @@ MonoBehaviour:
   title: "Ves\xEDcula"
   millilitres: 12
   gap: 0.01
-  idleAlpha: 0.6
+  idleAlpha: 0
   fadeSpeed: 6
 --- !u!1 &581123408
 GameObject:
@@ -20420,7 +20420,7 @@ MonoBehaviour:
   title: "Coraz\xF3n"
   millilitres: 0
   gap: 0.01
-  idleAlpha: 0.6
+  idleAlpha: 0
   fadeSpeed: 6
 --- !u!1 &790718363
 GameObject:
@@ -33070,7 +33070,7 @@ MonoBehaviour:
   title: "Est\xF3mago"
   millilitres: 436
   gap: 0.01
-  idleAlpha: 0.6
+  idleAlpha: 0
   fadeSpeed: 6
 --- !u!1 &1376956910
 GameObject:
@@ -36531,7 +36531,7 @@ MonoBehaviour:
   title: "P\xE1ncreas"
   millilitres: 67
   gap: 0.01
-  idleAlpha: 0.6
+  idleAlpha: 0
   fadeSpeed: 6
 --- !u!1 &1550584732
 GameObject:
@@ -46995,7 +46995,7 @@ MonoBehaviour:
   title: "H\xEDgado"
   millilitres: 1665
   gap: 0.01
-  idleAlpha: 0.6
+  idleAlpha: 0
   fadeSpeed: 6
 --- !u!1 &1962252470
 GameObject:

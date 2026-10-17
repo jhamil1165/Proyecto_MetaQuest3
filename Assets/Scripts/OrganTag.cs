@@ -12,8 +12,8 @@ using UnityEngine.XR.Interaction.Toolkit;
 /// 476 veces, y con eso de padre el texto saldría deformado. Se crea suelta y en cada
 /// fotograma se coloca sobre la parte de arriba del órgano, con una patita que lo señala.
 ///
-/// Apagada a medias cuando nadie la mira, para que cinco etiquetas no tapen el modelo; se
-/// enciende del todo al apuntar al órgano o al agarrarlo.
+/// Solo aparece al apuntar al órgano o al agarrarlo, y se desvanece al soltarlo: con las
+/// cinco siempre puestas el modelo quedaba tapado de texto.
 /// </summary>
 [DisallowMultipleComponent]
 public class OrganTag : MonoBehaviour
@@ -26,9 +26,9 @@ public class OrganTag : MonoBehaviour
     [Tooltip("Separación entre la parte de arriba del órgano y la punta de la patita, en metros.")]
     [SerializeField] private float gap = 0.01f;
 
-    [Tooltip("Opacidad cuando no se está apuntando al órgano.")]
+    [Tooltip("Opacidad cuando no se está apuntando al órgano. 0 = oculta.")]
     [Range(0f, 1f)]
-    [SerializeField] private float idleAlpha = 0.6f;
+    [SerializeField] private float idleAlpha = 0f;
 
     [SerializeField] private float fadeSpeed = 6f;
 
@@ -43,6 +43,7 @@ public class OrganTag : MonoBehaviour
 
     private Transform _tag;
     private CanvasGroup _group;
+    private Canvas _canvas;
     private TMP_Text _text;
     private Renderer[] _renderers;
     private XRBaseInteractable _interactable;
@@ -109,6 +110,11 @@ public class OrganTag : MonoBehaviour
         _alpha = Mathf.MoveTowards(_alpha, lit ? 1f : idleAlpha, Time.deltaTime * fadeSpeed);
         _group.alpha = _alpha;
 
+        // Oculta del todo: ni se dibuja ni se recoloca.
+        bool visible = _alpha > 0.001f;
+        if (_canvas.enabled != visible) _canvas.enabled = visible;
+        if (!visible) return;
+
         Place();
     }
 
@@ -171,9 +177,10 @@ public class OrganTag : MonoBehaviour
         var root = new GameObject("Etiqueta_" + name, typeof(RectTransform));
         _tag = root.transform;
 
-        var canvas = root.AddComponent<Canvas>();
+        var canvas = _canvas = root.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
         canvas.sortingOrder = 5;
+        canvas.enabled = _alpha > 0.001f;
         // Sin GraphicRaycaster: la etiqueta no debe quitarle el rayo al órgano.
 
         _group = root.AddComponent<CanvasGroup>();
