@@ -40,20 +40,40 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 
 // ---------- textos ----------
 // Cada bloque: cuándo entra, cuándo sale, dónde va y sus líneas. <b> = palabra en azul.
+// Los tiempos siguen a la locución (assets/audio/locucion.mp3, que entra en VOICE_OFFSET):
+// cada línea aparece cuando la voz la dice. <b> = palabra en azul.
 const BLOCKS = [
-  { at: 0.7, out: 3.35, pos: 'left', lines: [['h1', 'Cientos de cortes.'], ['h1 dim', 'Una imagen a la vez.']], gap: 1.0 },
-  { at: 3.75, out: 6.75, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'explorarlos'], ['q', '<b>frente a ti?</b>']], gap: 0.16 },
-  { at: 7.7, out: 12.2, pos: 'left', lines: [['h1', 'De cortes planos…'], ['h1', '…a un <b>volumen</b>.']], gap: 1.5 },
-  { at: 12.8, out: 16.6, pos: 'left', lines: [['kicker', 'Realidad mixta · Meta Quest 3'], ['h1', 'La anatomía aparece'], ['h1', '<b>en tu espacio.</b>'], ['sub', 'Sin perder de vista la sala.']], gap: 0.14 },
-  { at: 17.4, out: 20.7, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Activa solo lo'], ['h2', 'que quieres ver.']], gap: 0.14 },
-  { at: 21.1, out: 24.8, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Agárralo.'], ['h2', 'Gíralo.'], ['sub', 'Míralo desde cualquier ángulo.']], gap: 0.45 },
-  { at: 25.6, out: 32.6, pos: 'left', lines: [['kicker', '02 · Plano de corte'], ['h2', 'Desliza el plano.'], ['h2', 'La tomografía'], ['h2', '<b>te sigue.</b>']], gap: 0.16 },
-  { at: 33.4, out: 37.6, pos: 'tri', lines: [['kicker', '03 · Tres planos'], ['h2', 'Tres cortes,'], ['h2', '<b>un mismo punto.</b>']], gap: 0.16 },
-  { at: 38.3, out: 41.6, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya corre en Meta Quest 3.'], ['sub', 'Prototipo en desarrollo.']], gap: 0.16 },
-  { at: 42.6, out: 51.4, pos: 'possible', lines: [['kicker', 'Lo que sigue'], ['h2', '¿Dónde podría aportar'], ['h2', '<b>en la clínica?</b>']], gap: 0.16 },
-  { at: 47.6, out: 51.4, pos: 'footnote', lines: [['sub', 'Posibilidades por explorar y validar juntos.']], gap: 0 },
-  { at: 52.3, out: 99, pos: 'left', lines: [['kicker', CONFIG.team], ['name', CONFIG.name], ['sub', CONFIG.subtitle], ['closing', CONFIG.closing]], gaps: [0, 0.25, 0.7, 1.9] },
+  { at: 1.6, out: 6.6, pos: 'left', lines: [['h1', 'Cientos de imágenes.'], ['h1 dim', 'De una en una.']], gaps: [0, 3.5] },
+  { at: 7.5, out: 11.3, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'explorarlas'], ['q', '<b>frente a ti?</b>']], gaps: [0, 0.85, 2.6] },
+  { at: 12.5, out: 16.9, pos: 'left', lines: [['h1', 'Cada corte, en su lugar…'], ['h1', '…y aparece un <b>cuerpo</b>.']], gaps: [0, 2.45] },
+  { at: 17.55, out: 23.8, pos: 'left', lines: [['kicker', 'Realidad mixta · Meta Quest 3'], ['h1', 'La anatomía, aquí,'], ['h1', '<b>en tu espacio.</b>'], ['sub', 'Sin dejar de ver la sala.']], gaps: [0, 1.6, 3.4, 4.9] },
+  { at: 24.6, out: 27.7, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Activa solo los órganos'], ['h2', 'que necesitas ver.']], gaps: [0, 0.1, 1.3] },
+  { at: 28.0, out: 31.3, pos: 'left', lines: [['kicker', '01 · Órganos'], ['h2', 'Tómalo con la mano…'], ['h2', '…y <b>gíralo</b>.']], gaps: [0, 0.1, 2.2] },
+  { at: 31.6, out: 37.0, pos: 'left', lines: [['kicker', '02 · Plano de corte'], ['h2', 'Desliza el plano…'], ['h2', 'y la tomografía'], ['h2', '<b>te sigue.</b>']], gaps: [0, 0.15, 2.6, 3.7] },
+  { at: 37.5, out: 40.9, pos: 'tri', lines: [['kicker', '03 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.1, 2.35] },
+  { at: 41.4, out: 44.7, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya funciona en Meta Quest 3.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.95, 1.5] },
+  { at: 45.7, out: 52.0, pos: 'possible', lines: [['kicker', 'Lo que sigue'], ['h2', 'Hoy es un prototipo.'], ['h2', '<b>¿Hasta dónde puede llegar?</b>']], gaps: [0, 0.15, 2.0] },
+  { at: 50.6, out: 52.0, pos: 'footnote', lines: [['sub', 'Posibilidades por explorar y validar con ustedes.']], gaps: [0] },
+  { at: 52.3, out: 99, pos: 'left', lines: [['kicker', CONFIG.team], ['name', CONFIG.name], ['sub', CONFIG.subtitle], ['closing', CONFIG.closing]], gaps: [0, 0.15, 0.4, 0.75] },
 ];
+
+// La locución y el montaje: la animación de cada escena se estira o encoge (sin tocar la voz)
+// para que sus momentos clave caigan cuando la voz los nombra. [tiempo de animación, tiempo del video]
+export const VOICE_OFFSET = 0.5;
+const WARP = [
+  [0, 0], [0.7, 0.55], [3.35, 6.7], [3.75, 7.5], [6.75, 11.4], [7.7, 12.55], [11.4, 16.4],
+  [12.8, 17.6], [16.6, 23.9], [17.4, 24.7], [18.3, 25.85], [20.1, 27.2], [21.1, 28.1],
+  [25.6, 31.75], [26.4, 32.4], [31.8, 36.4], [33.4, 37.55], [37.6, 40.9], [38.3, 41.5],
+  [41.6, 44.6], [42.6, 45.8], [51.4, 52.2], [52.3, 52.75], [55.4, 56.4], [60, 60],
+];
+function warp(t) {
+  if (t <= 0) return 0;
+  for (let i = 0; i < WARP.length - 1; i++) {
+    const [a0, b0] = WARP[i], [a1, b1] = WARP[i + 1];
+    if (t <= b1) return a0 + (a1 - a0) * (t - b0) / (b1 - b0);
+  }
+  return 60;
+}
 
 const POS = {
   left: 'left:150px; top:540px; transform:translateY(-50%);',
@@ -92,12 +112,12 @@ function updateText(t) {
 
 // Etiqueta discreta que dice qué es real y qué es ilustración.
 const TAGS = [
-  [0.4, 6.9, 'Cortes reales de la tomografía del proyecto', ''],
-  [7.3, 20.8, 'Ilustración en 3D con los datos del proyecto', ''],
-  [21.0, 24.9, 'Representación de la interacción · órganos segmentados del proyecto', ''],
-  [25.3, 37.7, 'Ilustración en 3D con los datos del proyecto', ''],
-  [38.3, 41.7, 'Captura real del prototipo · Meta Quest 3', 'real'],
-  [42.4, 51.3, 'Ilustración en 3D con los datos del proyecto', ''],
+  [0.4, 11.3, 'Cortes reales de la tomografía del proyecto', ''],
+  [11.8, 27.8, 'Ilustración en 3D con los datos del proyecto', ''],
+  [28.0, 31.5, 'Representación de la interacción · órganos segmentados del proyecto', ''],
+  [31.8, 40.9, 'Ilustración en 3D con los datos del proyecto', ''],
+  [41.4, 44.7, 'Captura real del prototipo · Meta Quest 3', 'real'],
+  [45.6, 52.0, 'Ilustración en 3D con los datos del proyecto', ''],
 ];
 const tagEl = document.getElementById('tag');
 function updateTag(t) {
@@ -256,7 +276,9 @@ function cardPose() {
 }
 
 let ctCardLayout = null;
-function renderAt(t) {
+function renderAt(tv) {
+  // tv: tiempo del video (textos, etiquetas). t: tiempo de la animación, ajustado a la voz.
+  const t = warp(tv);
   const T = E.THREE;
   placeCamera(t);
 
@@ -425,10 +447,10 @@ function renderAt(t) {
 
   // posibilidades
   document.querySelectorAll('.chip').forEach((c, i) => {
-    const a = 45.0 + i * 0.6;
-    const v = env(t, a, 51.4, 0.7, 0.5);
+    const a = 48.2 + i * 0.6;
+    const v = env(tv, a, 52.0, 0.7, 0.5);
     c.style.opacity = v.toFixed(3);
-    c.style.transform = `translateX(${(1 - easeOut(prog(t, a, a + 0.7))) * -24}px)`;
+    c.style.transform = `translateX(${(1 - easeOut(prog(tv, a, a + 0.7))) * -24}px)`;
   });
 
   // gesto de pinza sobre el hígado (representación)
@@ -450,8 +472,8 @@ function renderAt(t) {
   // sombra en el suelo
   E.shadow.material.opacity = track(t, [[11.0, 0], [12.8, 0.9], [37.8, 0.9], [38.3, 0], [42.0, 0], [42.8, 0.9]]);
 
-  updateText(t);
-  updateTag(t);
+  updateText(tv);
+  updateTag(tv);
   E.render();
 }
 
@@ -473,17 +495,26 @@ init().then(() => {
   const scrub = $('scrub'), time = $('time'), play = $('play');
   scrub.max = DURATION;
   let playing = false, t0 = 0, start = 0;
+  // La voz manda el reloj de la vista previa mientras suena, para que no se desfase.
+  const voice = new Audio('../assets/audio/locucion.mp3');
   const show = (t) => { renderAt(t); scrub.value = t; time.textContent = t.toFixed(2) + ' s'; };
-  scrub.addEventListener('input', () => { playing = false; play.textContent = 'Reproducir'; show(+scrub.value); });
+  const stop = () => { playing = false; voice.pause(); play.textContent = 'Reproducir'; };
+  scrub.addEventListener('input', () => { stop(); show(+scrub.value); });
   play.addEventListener('click', () => {
-    playing = !playing;
-    play.textContent = playing ? 'Pausa' : 'Reproducir';
-    if (playing) { t0 = +scrub.value >= DURATION ? 0 : +scrub.value; start = performance.now(); requestAnimationFrame(loop); }
+    if (playing) return stop();
+    playing = true;
+    play.textContent = 'Pausa';
+    t0 = +scrub.value >= DURATION ? 0 : +scrub.value; start = performance.now(); requestAnimationFrame(loop);
   });
   function loop(now) {
     if (!playing) return;
-    const t = t0 + (now - start) / 1000;
-    if (t >= DURATION) { show(DURATION); playing = false; play.textContent = 'Reproducir'; return; }
+    let t = t0 + (now - start) / 1000;
+    const vt = t - VOICE_OFFSET;
+    if (vt >= 0 && vt < voice.duration) {
+      if (voice.paused) { voice.currentTime = vt; voice.play().catch(() => {}); }
+      else t = voice.currentTime + VOICE_OFFSET;
+    }
+    if (t >= DURATION) { show(DURATION); stop(); return; }
     show(t);
     requestAnimationFrame(loop);
   }
