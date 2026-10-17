@@ -19,7 +19,7 @@ import numpy as np
 from scipy.signal import butter, fftconvolve, sosfilt
 
 SR = 48000
-DUR = 61.0
+DUR = 63.0
 BEAT = 0.5          # 120 BPM
 BAR = 4 * BEAT      # 2 s
 RNG = np.random.default_rng(11)
@@ -27,7 +27,7 @@ RNG = np.random.default_rng(11)
 # Escenas del guion (segundos del video; deben coincidir con src/main.js).
 CUES = {
     "hook": 0.0,        # quirófano 3, 7:00 → 9:00
-    "count": 3.95,      # «267» cuenta desde cero
+    "count": 4.2,       # «267» cuenta desde cero
     "problem": 6.0,     # una por una… en la cabeza
     "question": 10.0,   # ¿y si pudieran verlo completo?
     "brand": 16.0,      # INMERSIA (golpe)
@@ -35,12 +35,12 @@ CUES = {
     "real": 34.0,       # captura real (respiro)
     "stats": 38.0,      # cifras
     "road": 42.0,       # hoja de ruta
-    "ask": 48.0,        # buscamos un aliado clínico
-    "close": 52.0,      # construyámoslo junto a la clínica
-    "logo": 56.0,       # logo (golpe final)
+    "ask": 50.0,        # buscamos un aliado clínico
+    "close": 54.0,      # construyámoslo junto a la clínica
+    "logo": 58.0,       # logo (golpe final)
 }
 # Entradas de bloques de texto: un soplo suave en cada cambio de escena.
-WHOOSH = [3.4, 6.0, 10.1, 20.0, 23.0, 26.0, 30.4, 34.1, 38.1, 42.1, 48.0, 52.0]
+WHOOSH = [2.85, 6.55, 10.45, 20.0, 23.0, 26.0, 30.4, 34.1, 38.1, 42.1, 49.7, 54.0]
 
 N = int(SR * DUR)
 t = np.arange(N) / SR
@@ -259,7 +259,7 @@ def harmony(t0, t1, level, bass_level=0.2, eighths=True, bells_on=True):
 
 # --- Gancho: reloj y un fondo tenso en Si menor ---
 pad_chord(["B1", "F#2", "B2", "F#3"], 0.0, C["question"] + 0.8, 0.32, a=0.25, r=1.2)
-for s in np.arange(0.0, C["count"] - 0.1, 1.0):
+for s in np.arange(0.0, C["count"] - 0.5, 1.0):
     tick(s, high=int(s) % 2 == 0, gain=0.22)
     place(drums, s, KICK, 0.16)
 # «267»: los clics se aceleran mientras cuenta
@@ -272,8 +272,6 @@ for s in np.arange(C["problem"] + 0.5, C["question"] - 0.4, BEAT):
     tick(s, high=False, gain=0.17)
 pad_chord(["G1", "D2", "B2", "D3"], C["problem"], C["question"] - C["problem"] + 0.8, 0.2, a=0.8, r=1.0)
 place(drums, C["problem"], KICK, 0.35)
-# «en la cabeza» tachado: un golpe seco
-place(drums, 8.85, KICK, 0.3)
 
 # --- La pregunta: se abre, y sube hacia la marca ---
 pad_chord(["E2", "B2", "D3", "F#3", "G3"], C["question"], 2 * BAR + 0.6, 0.22, a=0.6, r=0.8)

@@ -13,7 +13,7 @@ const CONFIG = {
   team: 'Ingeniería Biomédica · PUCP',
   clinic: 'Clínica Anglo Americana',
 };
-export const DURATION = 61;
+export const DURATION = 63;
 window.__duration = DURATION;
 
 const capture = new URLSearchParams(location.search).has('capture');
@@ -41,34 +41,36 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 
 // ---------- guion ----------
 // La música va a 120 BPM (un compás = 2 s) y cada escena empieza en un tiempo del compás:
-// los cambios de tools/compose_music.py (CUES) usan estos mismos segundos.
+// los cambios de tools/compose_music.py (CUES) usan estos mismos segundos. Cada frase de la
+// locución entra en su escena (VOICE_CUTS en tools/mix_audio.py) y el texto aparece cuando
+// la voz lo dice.
 //
 //    0  gancho: quirófano a las 9:00, 267 imágenes       20  órganos segmentados
 //    6  el problema: una por una, en la cabeza           23  tómalos con la mano
 //   10  ¿y si pudieran verlo completo? (nace el cuerpo)  26  corta donde quieras
-//   16  INMERSIA · Cirugía inmersiva                     30  tres planos, un punto
+//   16  INMERSIA · Cirugía inmersiva                     30  tres planos, un mismo punto
 //   34  captura real en Meta Quest 3                     38  el prototipo en cifras
-//   42  hoja de ruta: el siguiente paso, el quirófano    48  buscamos un aliado clínico
-//   52  construyámoslo con la clínica                    56  logo (quieto desde 57,6)
+//   42  hoja de ruta: el siguiente paso, el quirófano    50  buscamos un aliado clínico
+//   54  construyámoslo con la clínica                    58  logo (quieto desde 59,6)
 
 // Cada bloque: cuándo entra, cuándo sale, dónde va y sus líneas (con el retraso de cada una).
 // Las palabras entran una por una. <b>…</b> = azul y subrayado; <s>…</s> = tachado;
 // <n>267</n> = número que cuenta desde cero.
 const BLOCKS = [
-  { at: 0.15, out: 3.2, pos: 'left', lines: [['kicker', 'Quirófano 3'], ['h1', 'Son las 7:00.'], ['h1 dim', 'Cirugía a las <b>9:00</b>.']], gaps: [0, 0.3, 1.35] },
-  { at: 3.45, out: 5.75, pos: 'left', lines: [['h1', 'Y el caso está en'], ['big', '<n>267</n>'], ['h1', 'imágenes.']], gaps: [0, 0.5, 1.45] },
-  { at: 6.05, out: 9.75, pos: 'left', lines: [['h1', 'Hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1', 'y el cuerpo se arma'], ['h1', '<s>en la cabeza</s>.']], gaps: [0, 0.55, 1.7, 2.35], strike: 8.85 },
-  { at: 10.15, out: 14.9, pos: 'left', lines: [['q', '¿Y si pudieran'], ['q', 'verlo <b>completo</b>?']], gaps: [0, 0.6] },
-  { at: 20.1, out: 22.75, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Órganos'], ['h2', '<b>segmentados.</b>']], gaps: [0, 0.1, 0.45] },
-  { at: 23.1, out: 25.75, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalos'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.45] },
+  { at: 0.15, out: 2.6, pos: 'left', lines: [['kicker', 'Quirófano 3'], ['h1', 'Son las 7:00.'], ['h1 dim', 'Cirugía a las <b>9:00</b>.']], gaps: [0, 0.25, 1.2] },
+  { at: 2.85, out: 6.35, pos: 'left', lines: [['h1', 'Y el caso está en'], ['big', '<n>267</n>'], ['h1', 'imágenes.']], gaps: [0, 1.35, 2.9] },
+  { at: 6.55, out: 10.35, pos: 'left', lines: [['h1', 'Hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1', 'y el cuerpo se arma'], ['h1', '<s>en la cabeza</s>.']], gaps: [0, 1.0, 1.9, 2.98], strike: 10.05 },
+  { at: 10.45, out: 14.9, pos: 'left', lines: [['q', '¿Y si pudieran'], ['q', 'verlo <b>completo</b>?']], gaps: [0, 0.8] },
+  { at: 20.1, out: 22.75, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Órganos'], ['h2', '<b>segmentados.</b>']], gaps: [0, 0.1, 0.5] },
+  { at: 23.1, out: 25.75, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalos'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.5] },
   { at: 26.1, out: 29.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Corta'], ['h2', '<b>donde quieras.</b>'], ['sub', 'La tomografía sigue al plano.']], gaps: [0, 0.1, 0.45, 1.3] },
-  { at: 30.45, out: 33.75, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos.'], ['h2', '<b>Un punto.</b>']], gaps: [0, 0.1, 0.9] },
-  { at: 34.15, out: 37.75, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya funciona en <b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.1, 1.2] },
+  { at: 30.45, out: 33.75, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos.'], ['h2', '<b>Un mismo punto.</b>']], gaps: [0, 0.1, 1.0] },
+  { at: 34.15, out: 37.75, pos: 'top', lines: [['kicker', 'Captura real del visor'], ['h2', 'Ya funciona en <b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.1, 1.5] },
   { at: 38.15, out: 41.75, pos: 'stats', lines: [['kicker', 'El prototipo, hoy']], gaps: [0] },
-  { at: 42.15, out: 47.75, pos: 'road', lines: [['kicker', 'Hoja de ruta'], ['h2', 'El siguiente paso:'], ['h2', '<b>el quirófano.</b>']], gaps: [0, 0.1, 0.7] },
-  { at: 45.2, out: 47.75, pos: 'footnote', lines: [['sub', 'Fases por desarrollar y validar junto a la clínica.']], gaps: [0] },
-  { at: 48.1, out: 51.75, pos: 'ask', lines: [['kicker', 'Lo que buscamos'], ['h1', 'Un <b>aliado clínico.</b>']], gaps: [0, 0.1] },
-  { at: 52.1, out: 55.6, pos: 'left', lines: [['h2', 'Construyámoslo'], ['h2', 'junto a la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0, 0.45, 1.0] },
+  { at: 42.15, out: 49.35, pos: 'road', lines: [['kicker', 'Hoja de ruta'], ['h2', 'El siguiente paso:'], ['h2', '<b>el quirófano.</b>']], gaps: [0, 0.15, 1.6] },
+  { at: 47.9, out: 49.35, pos: 'footnote', lines: [['sub', 'Fases por desarrollar y validar junto a la clínica.']], gaps: [0] },
+  { at: 49.7, out: 53.7, pos: 'ask', lines: [['kicker', 'Lo que buscamos'], ['h1', 'Un <b>aliado clínico.</b>']], gaps: [0, 1.5] },
+  { at: 54.1, out: 57.75, pos: 'left', lines: [['h2', 'Construyámoslo juntos…'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0, 1.6, 1.9] },
 ];
 const WORD_STAGGER = 0.065, WORD_IN = 0.42;
 
@@ -77,7 +79,7 @@ const WORD_STAGGER = 0.065, WORD_IN = 0.42;
 const WARP = [
   [0, 0], [6.75, 10.0], [12.8, 15.0], [13.6, 16.0], [16.6, 19.6], [17.4, 20.0], [20.6, 23.0],
   [25.2, 26.0], [26.2, 26.5], [31.8, 29.9], [33.2, 30.6], [37.6, 34.0], [41.7, 38.0],
-  [51.6, 52.0], [55.4, 57.6], [55.4, DURATION],
+  [51.6, 54.0], [55.4, 59.6], [55.4, DURATION],
 ];
 function warp(t) {
   if (t <= 0) return 0;
@@ -186,7 +188,7 @@ const TAGS = [
   [26.1, 33.8, 'Ilustración en 3D con los datos del proyecto', ''],
   [34.2, 37.8, 'Captura real del prototipo · Meta Quest 3', 'real'],
   [38.2, 41.8, 'Ilustración en 3D con los datos del proyecto', ''],
-  [48.2, 55.6, 'Ilustración en 3D con los datos del proyecto', ''],
+  [49.8, 57.6, 'Ilustración en 3D con los datos del proyecto', ''],
 ];
 const tagEl = document.getElementById('tag');
 function updateTag(t) {
@@ -411,7 +413,7 @@ function renderAt(tv) {
   card.style.opacity = (cardIn * (1 - cardOut)).toFixed(3);
   card.style.transform = `translateY(${(1 - cardIn) * 24}px) scale(${lerp(0.97, 1, cardIn)})`;
   // pasa rápido mientras cuenta «267» y luego avanza de a un corte por tiempo de la música
-  const z = tv < 6 ? Math.round(track(tv, [[0.3, 22], [3.9, 44], [5.1, HANDOFF - 12], [5.9, HANDOFF - 7]]))
+  const z = tv < 6 ? Math.round(track(tv, [[0.3, 22], [4.2, 44], [5.3, HANDOFF - 12], [5.95, HANDOFF - 7]]))
     : Math.min(HANDOFF, HANDOFF - 7 + Math.floor((tv - 6) / 0.5));
   if (t < 7.2) {
     drawSlice($('ctCanvas'), z);
@@ -561,8 +563,8 @@ function renderAt(tv) {
   $('dim').style.opacity = Math.max(
     env(t, 37.8, 41.7, 0.6, 0.6),
     0.7 * env(tv, 15.2, 19.5, 0.6, 0.5),
-    0.8 * env(tv, 42.0, 47.75, 0.5, 0.5),
-    0.9 * env(tv, 55.4, 99, 0.6)).toFixed(3);
+    0.8 * env(tv, 42.0, 49.35, 0.5, 0.5),
+    0.9 * env(tv, 57.4, 99, 0.6)).toFixed(3);
 
   // captura real
   const capVis = env(t, 38.2, 41.5, 0.7, 0.5);
@@ -584,13 +586,14 @@ function renderAt(tv) {
     n.textContent = Math.round(+n.dataset.n * easeOut(prog(tv, a, a + 1.0)));
   });
 
-  // hoja de ruta: la línea avanza de hoy a la validación clínica
+  // hoja de ruta: la línea avanza de hoy a la validación clínica, al ritmo de la voz
   const road = $('road');
-  road.style.opacity = env(tv, 42.9, 47.75, 0.3, 0.4).toFixed(3);
-  const fill = easeInOut(prog(tv, 43.3, 45.1));
+  road.style.opacity = env(tv, 42.9, 49.35, 0.3, 0.4).toFixed(3);
+  const ROAD_AT = [42.95, 44.55, 45.45, 47.6];
+  const fill = track(tv, [[43.4, 0], [ROAD_AT[1], 1 / 3], [ROAD_AT[2], 2 / 3], [ROAD_AT[3], 1]]);
   $('roadFill').style.transform = `scaleX(${fill.toFixed(4)})`;
   road.querySelectorAll('.node').forEach((nd, i) => {
-    const a = i === 0 ? 42.95 : 43.3 + (i / 3) * 1.8 - 0.15;
+    const a = ROAD_AT[i] - (i ? 0.15 : 0);
     const k = easeOut(prog(tv, a, a + 0.5));
     nd.style.opacity = k.toFixed(3);
     nd.style.transform = `translateY(${((1 - k) * 24).toFixed(2)}px)`;
@@ -600,23 +603,23 @@ function renderAt(tv) {
 
   // lo que buscamos
   document.querySelectorAll('.chip').forEach((c, i) => {
-    const a = 48.75 + i * 0.4;
-    const v = env(tv, a, 51.75, 0.55, 0.4);
+    const a = 51.7 + i * 0.35;
+    const v = env(tv, a, 53.7, 0.55, 0.4);
     c.style.opacity = v.toFixed(3);
     c.style.transform = `translateX(${(1 - easeOut(prog(tv, a, a + 0.6))) * -28}px)`;
   });
 
-  // marca: presentación (16 s) y logo final (56 s), con el golpe de la música
+  // marca: presentación (16 s) y logo final (58 s), con el golpe de la música
   if (tv < 30) {
     brandAt(tv, 16.0, 19.5, 3.8);
     $('brandPre').style.opacity = easeOut(prog(tv, 15.25, 15.75)).toFixed(3);
     $('brandPre').style.display = '';
     $('brandTeam').style.display = 'none';
   } else {
-    brandAt(tv, 56.0, 99, 1.6);
+    brandAt(tv, 58.0, 99, 1.6);
     $('brandPre').style.display = 'none';
     $('brandTeam').style.display = '';
-    const k = easeOut(prog(tv, 56.9, 57.5));
+    const k = easeOut(prog(tv, 58.9, 59.5));
     $('brandTeam').style.opacity = k.toFixed(3);
     $('brandTeam').style.transform = `translateY(${((1 - k) * 14).toFixed(2)}px)`;
   }
@@ -663,8 +666,8 @@ init().then(() => {
   const scrub = $('scrub'), time = $('time'), play = $('play');
   scrub.max = DURATION;
   let playing = false, t0 = 0, start = 0;
-  // La música (tools/mix_audio.py) manda el reloj mientras suena; sin ella, corre el reloj solo.
-  const music = new Audio('../out/musica_master.mp3');
+  // La banda sonora (tools/mix_audio.py) manda el reloj mientras suena; sin ella, corre solo.
+  const music = new Audio('../out/banda_sonora.mp3');
   const show = (t) => { renderAt(t); scrub.value = t; time.textContent = t.toFixed(2) + ' s'; };
   const stop = () => { playing = false; music.pause(); play.textContent = 'Reproducir'; };
   scrub.addEventListener('input', () => { stop(); show(+scrub.value); });
