@@ -1239,6 +1239,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 68292596}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4455b90e5d50acb44819dc18cdbf37d6,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 579225268}
   m_SourcePrefab: {fileID: 100100000, guid: 4455b90e5d50acb44819dc18cdbf37d6, type: 3}
 --- !u!4 &68292590 stripped
 Transform:
@@ -1686,6 +1690,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 80695183}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 756b8534d8914bc44b768947b96af157,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 172822986}
   m_SourcePrefab: {fileID: 100100000, guid: 756b8534d8914bc44b768947b96af157, type: 3}
 --- !u!4 &80695177 stripped
 Transform:
@@ -3719,6 +3727,23 @@ MeshRenderer:
     type: 3}
   m_PrefabInstance: {fileID: 80695176}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &172822986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 80695178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181dffc00d6b33d4abf0f2dfaa81c016, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  title: "Est\xF3mago"
+  millilitres: 436
+  gap: 0.01
+  idleAlpha: 0.6
+  fadeSpeed: 6
 --- !u!1 &172953320
 GameObject:
   m_ObjectHideFlags: 0
@@ -12268,6 +12293,23 @@ MeshRenderer:
     type: 3}
   m_PrefabInstance: {fileID: 68292589}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &579225268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 68292591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181dffc00d6b33d4abf0f2dfaa81c016, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  title: "Ves\xEDcula"
+  millilitres: 12
+  gap: 0.01
+  idleAlpha: 0.6
+  fadeSpeed: 6
 --- !u!1 &581123408
 GameObject:
   m_ObjectHideFlags: 0
@@ -15591,6 +15633,7 @@ GameObject:
   - component: {fileID: 680220478}
   - component: {fileID: 680220477}
   - component: {fileID: 680220476}
+  - component: {fileID: 680220481}
   m_Layer: 0
   m_Name: '[BuildingBlock] Camera Rig'
   m_TagString: Untagged
@@ -15763,6 +15806,19 @@ Transform:
   - {fileID: 798807487}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!114 &680220481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680220475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eeebbd76fc1fc74409a9dc543604e8cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  checkAfter: 3
 --- !u!1 &684260951
 GameObject:
   m_ObjectHideFlags: 0
@@ -19993,6 +20049,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 788514056}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 549a66128bc4b6f4cb95b958139cfd48,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 788514057}
   m_SourcePrefab: {fileID: 100100000, guid: 549a66128bc4b6f4cb95b958139cfd48, type: 3}
 --- !u!1 &788514049 stripped
 GameObject:
@@ -20345,6 +20405,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.021711351, y: 0.032106373, z: 0.017642599}
   m_Center: {x: 0.00072281435, y: 0.0001569055, z: 0.0008609011}
+--- !u!114 &788514057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 788514049}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181dffc00d6b33d4abf0f2dfaa81c016, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  title: "Coraz\xF3n"
+  millilitres: 0
+  gap: 0.01
+  idleAlpha: 0.6
+  fadeSpeed: 6
 --- !u!1 &790718363
 GameObject:
   m_ObjectHideFlags: 0
@@ -26098,6 +26175,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1071914510}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2f07990d8503fc84095d604e7ac9125e,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1547089156}
   m_SourcePrefab: {fileID: 100100000, guid: 2f07990d8503fc84095d604e7ac9125e, type: 3}
 --- !u!4 &1071914504 stripped
 Transform:
@@ -32624,6 +32705,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1374885151}
+    - targetCorrespondingSourceObject: {fileID: 3646756828439103569, guid: 3607e5d265cc8fe47b58d76c9ce093c9,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1374885152}
   m_SourcePrefab: {fileID: 100100000, guid: 3607e5d265cc8fe47b58d76c9ce093c9, type: 3}
 --- !u!1 &1374885144 stripped
 GameObject:
@@ -32970,6 +33055,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.9915424, y: 1.3667744, z: 1.4471374}
   m_Center: {x: -0.60204345, y: -0.28802365, z: -4.0227833}
+--- !u!114 &1374885152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1374885144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181dffc00d6b33d4abf0f2dfaa81c016, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  title: "Est\xF3mago"
+  millilitres: 436
+  gap: 0.01
+  idleAlpha: 0.6
+  fadeSpeed: 6
 --- !u!1 &1376956910
 GameObject:
   m_ObjectHideFlags: 0
@@ -36414,6 +36516,23 @@ MeshRenderer:
     type: 3}
   m_PrefabInstance: {fileID: 1071914503}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1547089156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1071914505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181dffc00d6b33d4abf0f2dfaa81c016, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  title: "P\xE1ncreas"
+  millilitres: 67
+  gap: 0.01
+  idleAlpha: 0.6
+  fadeSpeed: 6
 --- !u!1 &1550584732
 GameObject:
   m_ObjectHideFlags: 0
@@ -46606,6 +46725,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1955620867}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6eb4e1b3e6b1cc64b922d95df961ade8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1955620868}
   m_SourcePrefab: {fileID: 100100000, guid: 6eb4e1b3e6b1cc64b922d95df961ade8, type: 3}
 --- !u!4 &1955620861 stripped
 Transform:
@@ -46857,6 +46980,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.0017763006, y: 0.0018002898, z: 0.0015331551}
   m_Center: {x: 0.00036782023, y: 0.000068608875, z: -0.003968675}
+--- !u!114 &1955620868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1955620862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181dffc00d6b33d4abf0f2dfaa81c016, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  title: "H\xEDgado"
+  millilitres: 1665
+  gap: 0.01
+  idleAlpha: 0.6
+  fadeSpeed: 6
 --- !u!1 &1962252470
 GameObject:
   m_ObjectHideFlags: 0
