@@ -8,7 +8,7 @@ using UnityEngine;
 public class ReticleScaler : MonoBehaviour
 {
     [Tooltip("Diámetro del círculo visto a 1 metro, en metros.")]
-    [SerializeField] private float sizeAtOneMetre = 0.03f;
+    [SerializeField] private float sizeAtOneMetre = 0.045f;
 
     [SerializeField] private float minSize = 0.012f;
     [SerializeField] private float maxSize = 0.12f;

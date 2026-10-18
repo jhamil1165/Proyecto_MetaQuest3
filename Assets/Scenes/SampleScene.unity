@@ -3757,6 +3757,8 @@ GameObject:
   - component: {fileID: 172953324}
   - component: {fileID: 172953323}
   - component: {fileID: 172953322}
+  - component: {fileID: 172953326}
+  - component: {fileID: 172953327}
   m_Layer: 0
   m_Name: HandInteractor
   m_TagString: Untagged
@@ -3919,8 +3921,7 @@ MonoBehaviour:
   m_SmoothMovement: 0
   m_FollowTightness: 10
   m_SnapThresholdDistance: 10
-  m_Reticle: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
-    type: 3}
+  m_Reticle: {fileID: 0}
   m_BlockedReticle: {fileID: 0}
   m_StopLineAtFirstRaycastHit: 1
   m_StopLineAtSelection: 0
@@ -4188,10 +4189,45 @@ MonoBehaviour:
   m_ModelSelectTransition: 
   m_ModelDeSelectTransition: 
   hand: {fileID: 626229959}
-  pinchThreshold: 0.7
-  releaseThreshold: 0.3
+  pinchThreshold: 0.45
+  releaseThreshold: 0.25
+  pitchOffset: 15
+  smoothing: 14
+  pinchFreeze: 0.18
+  pinchLookBack: 0.1
   interactorsToGate:
   - {fileID: 172953324}
+--- !u!114 &172953326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 172953320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25df13f0abd97a4da97d00e1a2dc70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reticlePrefab: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
+    type: 3}
+  idleDistance: 1.2
+  idleAlpha: 0.45
+  followSpeed: 14
+--- !u!114 &172953327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 172953320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92e98f52d3919bd48a10c08875e7d92b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ray: {fileID: 172953324}
+  direct: {fileID: 1286150720}
 --- !u!1 &176138331
 GameObject:
   m_ObjectHideFlags: 0
@@ -10449,6 +10485,7 @@ GameObject:
   - component: {fileID: 519843401}
   - component: {fileID: 519843400}
   - component: {fileID: 519843404}
+  - component: {fileID: 519843405}
   m_Layer: 0
   m_Name: RightControllerAnchor
   m_TagString: Untagged
@@ -10611,8 +10648,7 @@ MonoBehaviour:
   m_SmoothMovement: 0
   m_FollowTightness: 10
   m_SnapThresholdDistance: 10
-  m_Reticle: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
-    type: 3}
+  m_Reticle: {fileID: 0}
   m_BlockedReticle: {fileID: 0}
   m_StopLineAtFirstRaycastHit: 1
   m_StopLineAtSelection: 0
@@ -11111,6 +11147,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: 2
   rig: {fileID: 680220478}
+--- !u!114 &519843405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519843398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25df13f0abd97a4da97d00e1a2dc70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reticlePrefab: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
+    type: 3}
+  idleDistance: 1.2
+  idleAlpha: 0.45
+  followSpeed: 14
 --- !u!1 &520492324
 GameObject:
   m_ObjectHideFlags: 0
@@ -19374,6 +19427,8 @@ GameObject:
   - component: {fileID: 783189475}
   - component: {fileID: 783189474}
   - component: {fileID: 783189473}
+  - component: {fileID: 783189477}
+  - component: {fileID: 783189478}
   m_Layer: 0
   m_Name: HandInteractor
   m_TagString: Untagged
@@ -19536,8 +19591,7 @@ MonoBehaviour:
   m_SmoothMovement: 0
   m_FollowTightness: 10
   m_SnapThresholdDistance: 10
-  m_Reticle: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
-    type: 3}
+  m_Reticle: {fileID: 0}
   m_BlockedReticle: {fileID: 0}
   m_StopLineAtFirstRaycastHit: 1
   m_StopLineAtSelection: 0
@@ -19805,10 +19859,45 @@ MonoBehaviour:
   m_ModelSelectTransition: 
   m_ModelDeSelectTransition: 
   hand: {fileID: 1579199802}
-  pinchThreshold: 0.7
-  releaseThreshold: 0.3
+  pinchThreshold: 0.45
+  releaseThreshold: 0.25
+  pitchOffset: 15
+  smoothing: 14
+  pinchFreeze: 0.18
+  pinchLookBack: 0.1
   interactorsToGate:
   - {fileID: 783189475}
+--- !u!114 &783189477
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783189471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25df13f0abd97a4da97d00e1a2dc70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reticlePrefab: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
+    type: 3}
+  idleDistance: 1.2
+  idleAlpha: 0.45
+  followSpeed: 14
+--- !u!114 &783189478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783189471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92e98f52d3919bd48a10c08875e7d92b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ray: {fileID: 783189475}
+  direct: {fileID: 121623823}
 --- !u!1 &786455615
 GameObject:
   m_ObjectHideFlags: 0
@@ -38484,6 +38573,7 @@ GameObject:
   - component: {fileID: 1648151890}
   - component: {fileID: 1648151889}
   - component: {fileID: 1648151893}
+  - component: {fileID: 1648151894}
   m_Layer: 0
   m_Name: LeftControllerAnchor
   m_TagString: Untagged
@@ -38646,8 +38736,7 @@ MonoBehaviour:
   m_SmoothMovement: 0
   m_FollowTightness: 10
   m_SnapThresholdDistance: 10
-  m_Reticle: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
-    type: 3}
+  m_Reticle: {fileID: 0}
   m_BlockedReticle: {fileID: 0}
   m_StopLineAtFirstRaycastHit: 1
   m_StopLineAtSelection: 0
@@ -39146,6 +39235,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controller: 1
   rig: {fileID: 680220478}
+--- !u!114 &1648151894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1648151887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25df13f0abd97a4da97d00e1a2dc70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reticlePrefab: {fileID: 6775242331942810936, guid: 6309add86ccceaf4fb6263f3a7a9b72a,
+    type: 3}
+  idleDistance: 1.2
+  idleAlpha: 0.45
+  followSpeed: 14
 --- !u!1 &1651301633
 GameObject:
   m_ObjectHideFlags: 0

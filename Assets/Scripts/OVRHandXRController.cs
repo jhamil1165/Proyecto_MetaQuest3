@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -30,6 +31,23 @@ public class OVRHandXRController : XRBaseController
     [Range(0.05f, 1f)]
     [SerializeField] private float releaseThreshold = 0.3f;
 
+    [Header("Rayo")]
+    [Tooltip("Grados que se levanta el rayo respecto al de Meta. El de Meta sale del hombro " +
+             "y pasa por la mano: con la mano relajada a la altura de la mesa apunta al suelo, " +
+             "y había que estirar el brazo hacia los paneles para que apareciera el círculo.")]
+    [Range(0f, 30f)]
+    [SerializeField] private float pitchOffset = 15f;
+
+    [Tooltip("Rapidez con la que el rayo sigue a la mano. Más bajo = más estable pero más lento.")]
+    [SerializeField] private float smoothing = 14f;
+
+    [Tooltip("Segundos que el rayo se queda quieto al empezar la pinza. Al juntar los dedos " +
+             "la mano se mueve y el rayo se iba del botón justo en el momento de pulsar.")]
+    [SerializeField] private float pinchFreeze = 0.18f;
+
+    [Tooltip("Cuánto antes de la pinza se toma la dirección que se congela, en segundos.")]
+    [SerializeField] private float pinchLookBack = 0.1f;
+
     [Tooltip("Interactores que se apagan cuando la mano no está rastreada.")]
     [SerializeField] private XRBaseInteractor[] interactorsToGate;
 
@@ -46,6 +64,13 @@ public class OVRHandXRController : XRBaseController
     private bool _wasTracked;
     private bool _pinchLatched;
     private Transform _attachedTo;
+
+    private Quaternion _aim;
+    private bool _hasAim;
+    private int _aimFrame = -1;
+    private float _pinchStart = -1f;
+    private Quaternion _frozenAim;
+    private readonly Queue<(float time, Quaternion rotation)> _aimHistory = new Queue<(float, Quaternion)>();
 
     protected override void Awake()
     {
@@ -82,6 +107,7 @@ public class OVRHandXRController : XRBaseController
         if (pointer == null) return;
 
         AttachToPointer(pointer);
+        Aim(pointer);
 
         // La pose NO se copia. Copiarla obligaba a convertir entre espacios y cada
         // conversion era una oportunidad de que el rayo saliera de otro sitio. Ahora
@@ -117,10 +143,61 @@ public class OVRHandXRController : XRBaseController
         // Histéresis: cuesta más soltar que agarrar. Con un único umbral, el ruido del
         // tracking hacía que el objeto se soltara solo a media manipulación.
         float threshold = _pinchLatched ? releaseThreshold : pinchThreshold;
+        bool wasPinching = _pinchLatched;
         _pinchLatched = rawPinch || PinchStrength >= threshold;
         IsPinching = _pinchLatched;
 
+        // Al empezar la pinza se congela el rayo en la dirección de un instante antes.
+        if (_pinchLatched && !wasPinching)
+        {
+            _pinchStart = Time.time;
+            _frozenAim = AimBefore(Time.time - pinchLookBack);
+        }
+
         SetStates(controllerState, IsPinching, PinchStrength);
+    }
+
+    /// <summary>
+    /// Orienta el rayo: el de Meta un poco levantado, suavizado contra el temblor, y quieto
+    /// un instante al pinzar. La posición sigue siendo la de Meta (este objeto cuelga de su
+    /// PointerPose); solo se corrige la dirección.
+    /// </summary>
+    private void Aim(Transform pointer)
+    {
+        Quaternion target = pointer.rotation * Quaternion.Euler(-pitchOffset, 0f, 0f);
+
+        // XRI pide la pose dos veces por fotograma (Update y antes de dibujar): el filtro
+        // avanza una sola vez por fotograma para no ir el doble de rápido.
+        if (_aimFrame != Time.frameCount)
+        {
+            _aimFrame = Time.frameCount;
+
+            if (!_hasAim) { _aim = target; _hasAim = true; }
+
+            // Filtro adaptativo: los giros pequeños (temblor) se suavizan mucho y los
+            // grandes (mover el brazo a otro panel) se siguen casi al momento.
+            float angle = Quaternion.Angle(_aim, target);
+            float speed = smoothing * Mathf.Lerp(0.35f, 2f, Mathf.InverseLerp(0.5f, 10f, angle));
+            _aim = Quaternion.Slerp(_aim, target, 1f - Mathf.Exp(-speed * Time.deltaTime));
+
+            _aimHistory.Enqueue((Time.time, _aim));
+            while (_aimHistory.Count > 0 && Time.time - _aimHistory.Peek().time > 0.4f) _aimHistory.Dequeue();
+        }
+
+        bool frozen = _pinchStart >= 0f && Time.time - _pinchStart < pinchFreeze;
+        transform.rotation = frozen ? _frozenAim : _aim;
+    }
+
+    /// <summary>Dirección que tenía el rayo en el instante dado, o la más antigua guardada.</summary>
+    private Quaternion AimBefore(float time)
+    {
+        Quaternion result = _aim;
+        foreach (var entry in _aimHistory)
+        {
+            if (entry.time > time) break;
+            result = entry.rotation;
+        }
+        return result;
     }
 
     private static void SetStates(XRControllerState state, bool active, float value)
@@ -142,6 +219,7 @@ public class OVRHandXRController : XRBaseController
         transform.SetParent(pointer, false);
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
+        _hasAim = false;
     }
 
     private void GateInteractors(bool tracked)
