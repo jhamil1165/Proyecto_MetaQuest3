@@ -3,7 +3,7 @@ Compone la música del video de INMERSIA: una pieza original, sintetizada aquí 
 derechos de terceros.
 
 Estilo de anuncio corto (reel), pero sobrio: 120 BPM, un compás = 2 s. Empieza con un reloj
-y un fondo tenso (son las 7:00, la cirugía es a las 9:00), suena un clic por cada corte que se
+y un fondo tenso (toda cirugía empieza antes del quirófano), suena un clic por cada corte que se
 revisa «uno por uno», sube hasta un golpe en Re mayor cuando aparece INMERSIA y entra el ritmo
 durante la demostración. Respira en la captura real, suena el clic del botón «Modo cirugía» y
 un destello por cada marca (zona, márgenes, abordaje), y cierra con un último golpe en el logo,
@@ -27,10 +27,10 @@ RNG = np.random.default_rng(11)
 
 # Escenas del guion (segundos del video; deben coincidir con src/main.js).
 CUES = {
-    "hook": 0.0,        # son las 7:00, la cirugía es a las 9:00
-    "count": 5.2,       # «267» cuenta desde cero
-    "problem": 8.0,     # una por una… en la cabeza
-    "question": 14.0,   # ¿y si pudieran verlo completo? (nace el cuerpo)
+    "hook": 0.0,        # toda cirugía empieza antes del quirófano
+    "count": 7.1,       # «267» cuenta desde cero
+    "problem": 9.5,     # una por una… imaginando el resto
+    "question": 13.3,   # ¿y si pudieras verlo completo? (nace el cuerpo)
     "brand": 20.0,      # INMERSIA (golpe)
     "demo": 24.0,       # órganos, mano, plano, tres planos
     "real": 37.0,       # captura real (respiro)
@@ -41,9 +41,9 @@ CUES = {
     "logo": 60.0,       # logo (golpe final)
 }
 # Marcas del modo cirugía: zona a tratar, márgenes y los tres puntos del abordaje.
-MARKS = [44.3, 45.8, 46.5, 46.75, 47.0]
+MARKS = [44.3, 45.95, 46.8, 47.05, 47.3]
 # Cambios de escena y de bloque de texto: un soplo suave.
-WHOOSH = [3.95, 8.25, 14.35, 24.2, 27.9, 30.3, 33.8, 37.2, 41.0, 50.5, 53.4, 56.5]
+WHOOSH = [4.75, 9.85, 13.3, 24.2, 27.95, 30.3, 33.9, 37.2, 41.0, 50.5, 53.4, 56.5]
 
 N = int(SR * DUR)
 t = np.arange(N) / SR
@@ -280,7 +280,7 @@ for j, s in enumerate(times):
     tick(s, high=True, gain=0.08 + 0.06 * j / 30)
 bell("F#5", C["count"] + 1.25, gain=0.05, decay=1.6)
 # «una por una»: un clic por cada corte que avanza (uno por tiempo)
-for s in np.arange(C["problem"] + 0.5, C["question"] - 1.0, BEAT):
+for s in np.arange(C["problem"] + 0.5, C["question"], BEAT):
     tick(s, high=False, gain=0.17)
 pad_chord(["G1", "D2", "B2", "D3"], C["problem"], C["question"] - C["problem"] + 0.8, 0.2, a=0.8, r=1.0)
 place(drums, C["problem"], KICK, 0.35)

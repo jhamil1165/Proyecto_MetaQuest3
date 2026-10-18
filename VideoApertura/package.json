@@ -4,7 +4,7 @@
   "description": "Video de apertura de INMERSIA (Meta Quest 3), pitch académico",
   "scripts": {
     "datos": "python3 tools/prepare_data.py",
-    "fotos": "node tools/render.mjs --stills 2.5,6,10.5,13.3,16.5,20.6,26.6,29.2,32,35.5,39,42.9,48.2,52.6,55.4,58.8,63",
+    "fotos": "node tools/render.mjs --stills 1.5,3.8,6,8,10.8,12.6,14.5,18.8,21.5,26.9,31,35.6,39,42.7,47.5,54.9,58.8,63",
     "video": "node tools/render.mjs --out out/video_apertura.mp4"
   },
   "dependencies": {

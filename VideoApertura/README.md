@@ -1,8 +1,9 @@
 # INMERSIA · video de apertura
 
 Pitch de 66 s para presentar el proyecto, de carácter **académico**, a la Clínica Anglo
-Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Camila», frases
-fluidas), texto que entra palabra por palabra cuando la voz lo dice y música original a 120 BPM.
+Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Camila», dirigida
+como la del video de 57 s: suave, de anuncio, frases cortas con pausas), texto que entra palabra
+por palabra cuando la voz lo dice y música original a 120 BPM.
 Estilo de reel: fondo negro con brillo azul, plataforma holográfica bajo el cuerpo, polvo de luz,
 etiquetas con el volumen de cada órgano (como en el visor) y un modo cirugía como concepto.
 Todo se dibuja con código a partir de los datos reales del proyecto.
@@ -11,15 +12,16 @@ Todo se dibuja con código a partir de los datos reales del proyecto.
 
 | Segundo | Escena | Voz / qué se ve |
 |---|---|---|
-| 0 – 8 | Gancho | «Son las siete de la mañana. La cirugía es a las nueve… y todo el caso está en **267** imágenes.» La pantalla de cortes flota inclinada y el número cuenta desde cero. |
-| 8 – 14 | El problema | «Hoy se revisan una por una, y el cuerpo se termina armando… ~~en la cabeza~~.» Un clic por cada corte que avanza. |
-| 14 – 19 | La pregunta | «¿Y si pudieran verlo completo?» El corte sale de la pantalla y los cortes forman el cuerpo sobre la plataforma de luz. |
-| 19 – 24 | Marca | «Les presentamos **Inmersia**. Cirugía inmersiva.» Golpe de la música en 20 s, destello y logo. |
-| 24 – 37 | Demostración | «Cada órgano aparece segmentado, con su volumen» (Hígado 1665 mL · Estómago 436 mL · Páncreas 67 mL · Vesícula 12 mL) · «Lo toman con la mano» · «lo cortan donde quieran… y la tomografía los acompaña» · «en tres planos». |
+| 0 – 5 | Gancho | «Toda cirugía… empieza **antes** del quirófano.» Texto grande al centro, sobre el negro. |
+| 5 – 10 | La tomografía | «Empieza en una tomografía: **267** imágenes…» La pantalla de cortes flota inclinada y el número cuenta desde cero. |
+| 10 – 13 | El problema | «…que hoy se revisan una por una… imaginando el resto.» Un clic por cada corte que avanza; «imaginando el resto» queda borroso. |
+| 13 – 18 | La pregunta | «¿Y si pudieras verlo completo… frente a ti?» El corte sale de la pantalla y los cortes forman el cuerpo sobre la plataforma de luz. |
+| 18 – 24 | Marca | «Te presentamos… **Inmersia**. Cirugía inmersiva.» Golpe de la música en 20 s, destello y logo. |
+| 24 – 37 | Demostración | «Cada órgano, segmentado… y con su volumen» (Hígado 1665 mL · Estómago 436 mL · Páncreas 67 mL · Vesícula 12 mL) · «Tómalo con la mano» · «córtalo donde quieras… y la tomografía te sigue» · «Tres planos. Un mismo punto.» |
 | 37 – 41 | Meta Quest 3 | «Y esto ya funciona en Meta Quest 3.» El cuerpo completo con sus órganos y el plano. |
-| 41 – 50,5 | Modo cirugía (concepto) | «Lo que viene es el modo cirugía: marcar la zona a tratar, ver sus márgenes y planificar el abordaje… antes de entrar al quirófano.» La mano pulsa el botón, el hígado se vuelve de vidrio y aparecen la zona, los márgenes y tres trayectorias. |
-| 50,5 – 56 | Lo que buscamos | «Hoy es un prototipo. Para llevarlo al quirófano, buscamos un aliado clínico.» Hoja de ruta corta y tres píldoras: cirujanos que lo prueben y nos guíen, casos anonimizados para investigar, validarlo juntos con rigor académico. |
-| 56 – 60 | Invitación | «Construyámoslo juntos, con la Clínica Anglo Americana.» |
+| 41 – 50,5 | Modo cirugía (concepto) | «Lo que viene… es el modo cirugía. Marca la zona a tratar… mira sus márgenes… y planifica el abordaje… antes de entrar al quirófano.» La mano pulsa el botón, el hígado se vuelve de vidrio y aparecen la zona, los márgenes y tres trayectorias. |
+| 50,5 – 56 | Lo que buscamos | «Hoy, es un prototipo. Para llevarlo al quirófano… buscamos un aliado clínico.» Hoja de ruta corta y tres píldoras: cirujanos que lo prueben y nos guíen, casos anonimizados para investigar, validarlo juntos con rigor académico. |
+| 56 – 60 | Invitación | «Construyámoslo juntos… con la Clínica Anglo Americana.» |
 | 60 – 66 | Logo | «Inmersia.» INMERSIA · Cirugía inmersiva · Proyecto de investigación · Ingeniería Biomédica · PUCP. Quieto desde 61,8 s. |
 
 ## Qué es real, qué es ilustración y qué es concepto

@@ -45,11 +45,12 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 // frases de la voz (VOICE_CUTS en tools/mix_audio.py) usan estos mismos segundos, y el texto
 // aparece cuando la voz lo dice.
 //
-//    0  gancho: son las 7:00, cirugía a las 9:00, 267 imágenes
-//    8  el problema: una por una… y el cuerpo se arma en la cabeza
-//   14  ¿y si pudieran verlo completo? (los cortes forman el cuerpo)
-//   19  les presentamos INMERSIA · Cirugía inmersiva (golpe en 20)
-//   24  cada órgano con su volumen · lo toman con la mano · lo cortan · tres planos
+//    0  gancho: toda cirugía empieza antes del quirófano
+//    5  empieza en una tomografía: 267 imágenes
+//   10  que hoy se revisan una por una… imaginando el resto
+//   13  ¿y si pudieras verlo completo, frente a ti? (los cortes forman el cuerpo)
+//   18  te presentamos INMERSIA · Cirugía inmersiva (golpe en 20)
+//   24  cada órgano con su volumen · tómalo con la mano · córtalo · tres planos
 //   37  ya funciona en Meta Quest 3
 //   41  lo que viene: modo cirugía (concepto): zona, márgenes, abordaje
 //   50  hoy, un prototipo · buscamos un aliado clínico
@@ -58,22 +59,22 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 
 // Cada bloque: cuándo entra, cuándo sale, dónde va y sus líneas (con el retraso de cada una).
 // Las palabras entran una por una. <b>…</b> = azul y subrayado; <s>…</s> = tachado;
-// <n>267</n> = número que cuenta desde cero.
+// <n>267</n> = número que cuenta desde cero. Una línea 'ghost' queda borrosa, como imaginada.
 const BLOCKS = [
-  { at: 0.25, out: 3.9, pos: 'left', lines: [['kicker', 'Quirófano 3'], ['h1', 'Son las 7:00.'], ['h1 dim', 'Cirugía a las <b>9:00</b>.']], gaps: [0, 0.25, 1.85] },
-  { at: 4.0, out: 7.9, pos: 'left', lines: [['h1', 'Y todo el caso está en'], ['big', '<n>267</n>'], ['h1', 'imágenes.']], gaps: [0, 1.2, 2.85] },
-  { at: 8.3, out: 13.8, pos: 'left', lines: [['h1', 'Hoy se revisan'], ['h1', '<b>una por una</b>,'], ['h1', 'y el cuerpo se arma'], ['h1', '<s>en la cabeza</s>.']], gaps: [0, 1.0, 2.15, 4.4], strike: 13.15 },
-  { at: 14.35, out: 18.45, pos: 'left', lines: [['q', '¿Y si pudieran'], ['q', 'verlo <b>completo</b>?']], gaps: [0, 0.75] },
-  { at: 24.25, out: 27.6, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Cada órgano,'], ['h2', '<b>con su volumen.</b>']], gaps: [0, 0.05, 1.95] },
-  { at: 27.95, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Lo toman'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.05, 0.6] },
-  { at: 30.35, out: 33.7, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Lo cortan'], ['h2', '<b>donde quieran.</b>'], ['sub', 'Y la tomografía los acompaña.']], gaps: [0, 0.05, 0.65, 1.7] },
-  { at: 33.85, out: 36.9, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.05, 0.9] },
-  { at: 37.45, out: 40.75, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.15, 1.45, 2.2] },
-  { at: 41.45, out: 48.05, pos: 'surg', lines: [['kicker', 'Lo que viene · concepto'], ['xl', '<b>Modo cirugía</b>']], gaps: [0, 1.4] },
-  { at: 48.3, out: 50.25, pos: 'surg', lines: [['h2', 'Antes de entrar'], ['h2', '<b>al quirófano.</b>']], gaps: [0, 0.85] },
-  { at: 50.7, out: 53.25, pos: 'ask', lines: [['kicker', 'Proyecto de investigación'], ['h1', 'Hoy, un <b>prototipo</b>.']], gaps: [0, 0.35] },
-  { at: 53.45, out: 56.35, pos: 'ask', lines: [['kicker', 'Lo que buscamos'], ['h1', 'Un <b>aliado clínico</b>.']], gaps: [0, 0.8] },
-  { at: 56.5, out: 59.6, pos: 'left', lines: [['h2', 'Construyámoslo juntos,'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.05, 1.45, 1.75] },
+  { at: 0.45, out: 4.45, pos: 'center', lines: [['q', 'Toda cirugía…'], ['q', 'empieza <b>antes</b>'], ['q', 'del quirófano.']], gaps: [0.05, 1.66, 3.0] },
+  { at: 4.85, out: 9.55, pos: 'left', lines: [['h1', 'Empieza en una tomografía:'], ['big', '<n>267</n>'], ['h1', 'imágenes…']], gaps: [0.05, 2.25, 3.8] },
+  { at: 9.9, out: 13.2, pos: 'left', lines: [['h1', 'Que hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1 ghost', 'imaginando el resto.']], gaps: [0.05, 1.25, 2.13] },
+  { at: 13.25, out: 18.0, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'verlo <b>completo</b>…'], ['h2 dim', 'frente a ti?']], gaps: [0.05, 0.78, 1.98] },
+  { at: 24.25, out: 27.8, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Cada órgano,'], ['h2', 'segmentado…'], ['h2', '<b>y con su volumen.</b>']], gaps: [0, 0.05, 1.12, 2.6] },
+  { at: 28.0, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalo'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.5] },
+  { at: 30.35, out: 33.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Córtalo'], ['h2', '<b>donde quieras.</b>'], ['sub', 'Y la tomografía te sigue.']], gaps: [0, 0.05, 0.53, 1.81] },
+  { at: 33.95, out: 36.9, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.05, 1.41] },
+  { at: 37.5, out: 40.75, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.18, 1.34, 2.2] },
+  { at: 40.95, out: 48.05, pos: 'surg', lines: [['kicker', 'Lo que viene · concepto'], ['xl', '<b>Modo cirugía</b>']], gaps: [0, 1.65] },
+  { at: 48.25, out: 50.25, pos: 'surg', lines: [['h2', 'Antes de entrar'], ['h2', '<b>al quirófano.</b>']], gaps: [0.03, 0.97] },
+  { at: 50.85, out: 53.25, pos: 'ask', lines: [['kicker', 'Proyecto de investigación'], ['h1', 'Hoy, un <b>prototipo</b>.']], gaps: [0, 0.1] },
+  { at: 53.45, out: 56.4, pos: 'ask', lines: [['kicker', 'Lo que buscamos'], ['h1', 'Un <b>aliado clínico</b>.']], gaps: [0, 1.15] },
+  { at: 56.5, out: 59.6, pos: 'left', lines: [['h2', 'Construyámoslo juntos…'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.1, 1.43, 1.75] },
 ];
 const WORD_STAGGER = 0.065, WORD_IN = 0.42;
 
@@ -81,7 +82,7 @@ const WORD_STAGGER = 0.065, WORD_IN = 0.42;
 // caiga en su escena del guion. [tiempo de la animación 3D, tiempo del video]. Donde el
 // reloj 3D salta (37,2 s, 41 s y 50,5 s) hay un corte, tapado con un barrido de luz.
 const WARP = [
-  [0, 0], [1.0, 1.0], [6.75, 14.0], [12.8, 18.6], [16.6, 23.6], [18.2, 24.3], [20.1, 26.0], [20.7, 27.8],
+  [0, 0], [0.2, 4.6], [1.0, 5.4], [6.75, 13.3], [12.8, 18.4], [16.6, 23.6], [18.2, 24.3], [20.1, 26.0], [20.7, 27.8],
   [21.5, 28.2], [24.4, 30.0], [25.2, 30.5], [26.4, 31.0], [31.8, 33.8], [33.2, 34.3], [37.6, 37.2],
   [42.3, 37.2], [44.0, 41.0],                  // el cuerpo completo: ya funciona en Meta Quest 3
   [60.0, 41.0], [69.5, 50.5],                  // modo cirugía
@@ -99,6 +100,7 @@ const CUTS = [37.2, 41.0, 50.5];
 
 const POS = {
   left: 'left:150px; top:540px; transform:translateY(-50%);',
+  center: 'left:0; right:0; top:540px; transform:translateY(-50%); align-items:center; text-align:center;',
   tri: 'left:1150px; top:120px;',
   surg: 'left:150px; top:150px;',
   ask: 'left:150px; top:250px;',
@@ -127,7 +129,7 @@ function buildLine(lineEl, html, b) {
         span.className = 'w';
         span.textContent = w;
         parent.appendChild(span);
-        const word = { el: span, count: b.nextIsCount ? +w : null };
+        const word = { el: span, count: b.nextIsCount ? +w : null, ghost: lineEl.classList.contains('ghost') };
         if (word.count !== null) span.textContent = '0';
         b.words.push(word);
         if (group) group.words.push(word);
@@ -170,9 +172,11 @@ function updateText(t) {
     b.el.style.filter = vout > 0 ? `blur(${(vout * 8).toFixed(2)}px)` : 'none';
     for (const w of b.words) {
       const vin = easeOut(prog(t, w.at, w.at + WORD_IN));
-      w.el.style.opacity = vin.toFixed(4);
-      w.el.style.transform = `translateY(${((1 - vin) * 34 - vout * 22).toFixed(2)}px) scale(${lerp(0.92, 1, vin).toFixed(4)})`;
-      w.el.style.filter = vin < 1 ? `blur(${((1 - vin) * 10).toFixed(2)}px)` : 'none';
+      const drift = w.ghost ? Math.sin(t * 2.2 + w.at * 7) * 3 * vin : 0;
+      w.el.style.opacity = (w.ghost ? vin * 0.55 : vin).toFixed(4);
+      w.el.style.transform = `translate(${drift.toFixed(2)}px, ${((1 - vin) * 34 - vout * 22).toFixed(2)}px) scale(${lerp(0.92, 1, vin).toFixed(4)})`;
+      const blur = (1 - vin) * 10 + (w.ghost ? 2.6 * vin : 0);
+      w.el.style.filter = blur > 0.01 ? `blur(${blur.toFixed(2)}px)` : 'none';
       if (w.count !== null) w.el.textContent = Math.round(w.count * easeOut(prog(t, w.at, w.at + 1.1)));
     }
     for (const g of b.groups) {
@@ -185,8 +189,8 @@ function updateText(t) {
 
 // Etiqueta discreta que dice qué es real, qué es ilustración y qué es concepto.
 const TAGS = [
-  [0.3, 13.9, 'Cortes reales de la tomografía del proyecto', ''],
-  [14.2, 24.0, 'Ilustración en 3D con los datos del proyecto', ''],
+  [4.7, 13.3, 'Cortes reales de la tomografía del proyecto', ''],
+  [13.6, 24.0, 'Ilustración en 3D con los datos del proyecto', ''],
   [24.2, 27.7, 'Ilustración en 3D · volúmenes medidos en la segmentación del proyecto', ''],
   [27.9, 30.3, 'Representación de la interacción · órganos segmentados del proyecto', ''],
   [30.4, 40.8, 'Ilustración en 3D con los datos del proyecto', ''],
@@ -232,7 +236,7 @@ const markBars = [];
 function brandAt(tv, t0, outAt, zoom) {
   const el = document.getElementById('brand');
   const out = easeInOut(prog(tv, outAt, outAt + 0.4));
-  const vis = easeOut(prog(tv, t0 - 1.1, t0 - 0.6)) * (1 - out);
+  const vis = easeOut(prog(tv, t0 - 1.65, t0 - 1.15)) * (1 - out);
   el.style.opacity = vis.toFixed(4);
   if (vis <= 0) return 0;
   el.style.transform = `scale(${(lerp(0.985, 1.025, easeOut(prog(tv, t0, t0 + zoom))) + out * 0.35).toFixed(5)})`;
@@ -251,7 +255,7 @@ function brandAt(tv, t0, outAt, zoom) {
     s.style.transform = `translateX(${((i - (letters.length - 1) / 2) * 34 * (1 - k)).toFixed(2)}px)`;
     s.style.filter = k < 1 ? `blur(${((1 - k) * 14).toFixed(2)}px)` : 'none';
   });
-  const sub = easeOut(prog(tv, t0 + 0.75, t0 + 1.35));
+  const sub = easeOut(prog(tv, t0 + 1.15, t0 + 1.75));
   const subEl = document.getElementById('brandSub');
   subEl.style.opacity = sub.toFixed(4);
   subEl.style.transform = `translateY(${((1 - sub) * 18).toFixed(2)}px)`;
@@ -565,18 +569,18 @@ function renderAt(tv) {
   const cardOut = prog(t, 6.75, 7.05);
   card.style.opacity = (cardIn * (1 - cardOut)).toFixed(3);
   // flota inclinada en 3D y se endereza antes de soltar el corte
-  const tilt = 1 - easeInOut(prog(tv, 11.5, 13.6));
+  const tilt = 1 - easeInOut(prog(tv, 11.2, 13.0));
   card.style.transform = `perspective(1700px) translateY(${((1 - cardIn) * 30 + Math.sin(tv * 1.3) * 6 * tilt).toFixed(2)}px) ` +
     `rotateY(${(-17 * tilt).toFixed(3)}deg) rotateX(${(4 * tilt).toFixed(3)}deg) scale(${lerp(0.96, 1, cardIn).toFixed(4)})`;
   // pasa rápido mientras cuenta «267» y luego avanza de a un corte por tiempo de la música
-  const z = tv < 8 ? Math.round(track(tv, [[0.3, 22], [5.0, 44], [6.4, HANDOFF - 12], [7.8, HANDOFF - 9]]))
-    : Math.min(HANDOFF, HANDOFF - 9 + Math.floor((tv - 8) / 0.5));
-  const step = tv >= 8.5 && tv < 13 ? Math.exp(-((tv - 8) % 0.5) / 0.1) : 0;
+  const z = tv < 9.5 ? Math.round(track(tv, [[4.6, 22], [7.1, 40], [8.4, HANDOFF - 14], [9.5, HANDOFF - 7]]))
+    : Math.min(HANDOFF, HANDOFF - 7 + Math.floor((tv - 9.5) / 0.5));
+  const step = tv >= 10.0 && tv < 13.2 ? Math.exp(-((tv - 9.5) % 0.5) / 0.1) : 0;
   card.style.borderColor = `rgba(127, 178, 255, ${(0.22 + 0.5 * step).toFixed(3)})`;
   const scan = $('ctScan');
-  const fast = tv >= 5.2 && tv < 6.4;
+  const fast = tv >= 7.1 && tv < 8.3;
   scan.style.opacity = (fast ? 0.9 : step * 0.9).toFixed(3);
-  scan.style.top = `${(118 + 600 * (fast ? ((tv - 5.2) * 2.5) % 1 : 1 - step)).toFixed(1)}px`;
+  scan.style.top = `${(118 + 600 * (fast ? ((tv - 7.1) * 2.5) % 1 : 1 - step)).toFixed(1)}px`;
   if (t < 7.2) {
     drawSlice($('ctCanvas'), z);
     $('ctCount').textContent = `Corte ${pad(z + 1, 3)} / ${NSLICES}`;
@@ -684,12 +688,12 @@ function renderAt(tv) {
   const k = kick(tv);
   E.platU.uTime.value = tv;
   // más tenue cuando la cámara está cerca (la plataforma queda grande en primer plano)
-  E.platU.uOpacity.value = track(tv, [[16.0, 0], [18.6, 0.75], [23.6, 0.75], [24.3, 0.4], [33.6, 0.4], [34.4, 0.75],
+  E.platU.uOpacity.value = track(tv, [[15.6, 0], [18.4, 0.75], [23.6, 0.75], [24.3, 0.4], [33.6, 0.4], [34.4, 0.75],
     [41.0, 0.75], [43.2, 0.4], [50.5, 0.75], [59.6, 0.75], [60.4, 0.2]]);
   E.platU.uPulse.value = k * 0.7;
   E.dustU.uTime.value = tv;
-  E.dustU.uOpacity.value = track(tv, [[0, 0], [1.5, 0.7], [14, 0.7], [18.6, 1]]);
-  E.bloom.uStrength.value = (tv > 14 && tv < 19 ? 0.4 : surg ? 0.5 : 0.7) + 0.2 * k;
+  E.dustU.uOpacity.value = track(tv, [[0, 0.2], [1.5, 0.8], [14, 0.7], [18.6, 1]]);
+  E.bloom.uStrength.value = (tv > 13.3 && tv < 19 ? 0.4 : surg ? 0.5 : 0.7) + 0.2 * k;
 
   // ===== paneles 2D =====
   // etiquetas de los órganos: nombre y volumen medido, como en el visor
@@ -743,7 +747,7 @@ function renderAt(tv) {
   }
 
   // velo que oscurece la escena detrás de la marca y del logo
-  $('dim').style.opacity = Math.max(0.68 * env(tv, 18.9, 23.3, 0.5, 0.4), 0.9 * env(tv, 59.6, 99, 0.45)).toFixed(3);
+  $('dim').style.opacity = Math.max(0.68 * env(tv, 18.35, 23.3, 0.5, 0.4), 0.9 * env(tv, 59.6, 99, 0.45)).toFixed(3);
 
   // ===== modo cirugía (concepto) =====
   updateSurgery(tv, surg);
@@ -751,10 +755,10 @@ function renderAt(tv) {
   // hoja de ruta corta: hoy prototipo → validación con cirujanos → quirófano
   const road = $('road');
   road.style.opacity = env(tv, 50.8, 53.25, 0.35, 0.4).toFixed(3);
-  const fill = track(tv, [[51.3, 0], [52.3, 0.5], [53.0, 1]]);
+  const fill = track(tv, [[51.3, 0], [52.45, 0.5], [53.2, 1]]);
   $('roadFill').style.transform = `scaleX(${fill.toFixed(4)})`;
   road.querySelectorAll('.node').forEach((nd, i) => {
-    const a = [50.9, 52.15, 52.85][i];
+    const a = [50.9, 52.3, 53.05][i];
     const kk = easeOut(prog(tv, a, a + 0.45));
     nd.style.opacity = kk.toFixed(3);
     nd.style.transform = `translateY(${((1 - kk) * 24).toFixed(2)}px)`;
@@ -763,8 +767,8 @@ function renderAt(tv) {
 
   // lo que buscamos: píldoras que se apilan
   document.querySelectorAll('.chip').forEach((c, i) => {
-    const a = 54.55 + i * 0.4;
-    const v = env(tv, a, 56.35, 0.5, 0.4);
+    const a = 54.6 + i * 0.35;
+    const v = env(tv, a, 56.4, 0.5, 0.4);
     const pop = easeBack(prog(tv, a, a + 0.5));
     c.style.opacity = v.toFixed(3);
     c.style.transform = `translateY(${((1 - easeOut(prog(tv, a, a + 0.5))) * 40).toFixed(2)}px) scale(${lerp(0.7, 1, pop).toFixed(4)})`;
@@ -787,7 +791,7 @@ function renderAt(tv) {
   // marca: presentación (golpe en 20 s) y logo final (golpe en 60 s)
   if (tv < 40) {
     brandAt(tv, 20.0, 23.3, 3.3);
-    $('brandPre').style.opacity = easeOut(prog(tv, 18.95, 19.45)).toFixed(3);
+    $('brandPre').style.opacity = easeOut(prog(tv, 18.4, 18.9)).toFixed(3);
     $('brandPre').style.display = '';
     $('brandTeam').style.display = 'none';
   } else {
@@ -804,7 +808,8 @@ function renderAt(tv) {
   let wk = 0;
   for (const c of CUTS) wk = Math.max(wk, 1 - Math.abs(tv - c) / 0.24);
   wk = easeInOut(clamp01(wk));
-  $('cam').style.transform = wk > 0 ? `scale(${(1 + 0.07 * wk).toFixed(4)})` : '';
+  const push = tv < 4.8 ? 0.04 * easeOut(prog(tv, 0, 4.4)) * (1 - easeInOut(prog(tv, 4.4, 4.8))) : 0;
+  $('cam').style.transform = wk > 0 || push > 0 ? `scale(${(1 + 0.07 * wk + push).toFixed(4)})` : '';
   $('cam').style.filter = wk > 0 ? `blur(${(wk * 14).toFixed(2)}px)` : 'none';
   $('flash').style.opacity = Math.min(1, hit(20.0, 0.55) + hit(42.8, 0.3) + hit(60.0, 0.6) + 0.35 * wk).toFixed(3);
 
@@ -873,12 +878,12 @@ function updateSurgery(tv, surg) {
   S.pulse.scale.setScalar(lerp(0.6, 2.2, pp));
   S.pulse.material.opacity = zv * (1 - pp) * 0.9;
   S.pulse.quaternion.copy(E.camera.quaternion);
-  const mk = easeOut(prog(tv, 45.8, 46.5));
+  const mk = easeOut(prog(tv, 45.95, 46.65));
   S.margin.visible = mk > 0;
   S.margin.scale.setScalar(Math.max(0.001, lerp(0.5, 1, mk)));
   S.margin.material.uniforms.uOpacity.value = mk * (1 - easeInOut(prog(tv, 50.1, 50.5)));
   for (const p of S.ports) {
-    const a = 46.5 + p.i * 0.25;
+    const a = 46.8 + p.i * 0.25;
     const pk = easeBack(prog(tv, a, a + 0.4));
     p.grp.visible = pk > 0.001;
     p.grp.scale.setScalar(Math.max(0.001, pk));
@@ -894,7 +899,7 @@ function updateSurgery(tv, surg) {
     E.project(S.target.clone().add(new T.Vector3(0.032, 0, 0).applyQuaternion(E.camera.quaternion))),
     E.project(S.ports[2].p),
   ];
-  [44.35, 45.85, 46.75].forEach((a, i) => {
+  [44.35, 46.0, 47.35].forEach((a, i) => {
     const el = $('sl' + i);
     const v = env(tv, a + 0.25, 50.05, 0.45, 0.4);
     el.style.opacity = v.toFixed(3);

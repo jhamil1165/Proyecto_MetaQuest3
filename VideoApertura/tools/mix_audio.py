@@ -31,22 +31,21 @@ VOICE = "assets/audio/locucion_inmersia.mp3"
 MUSIC = "out/musica.wav"
 
 # (inicio en la toma, fin en la toma, segundo del video donde entra)
-# Toma de ElevenLabs v4, voz «Camila», 48,4 s, con frases enteras y fluidas. Se corta solo en
-# los silencios entre frases (medidos: todos por debajo de -80 dB) y el texto de src/main.js
-# aparece cuando la voz lo dice.
+# Toma de ElevenLabs v4, voz «Camila», 52,6 s, dirigida como la del video de 57 s: suave, de
+# anuncio, frases cortas con pausas. Se corta solo en los silencios entre frases (todos por
+# debajo de -75 dB) y el texto de src/main.js aparece cuando la voz lo dice.
 VOICE_CUTS = [
-    (0.085, 7.785, 0.425),    # Son las siete de la mañana. La cirugía es a las nueve… y todo el caso está en 267 imágenes.
-    (7.785, 13.14, 8.245),    # Hoy se revisan una por una, y el cuerpo se termina armando… en la cabeza.
-    (13.14, 15.355, 13.86),   # ¿Y si pudieran verlo completo?
-    (15.355, 18.855, 18.875),  # Les presentamos Inmersia. Cirugía inmersiva. («Inmersia» con el golpe, en 20 s)
-    (18.855, 22.145, 24.203),  # Cada órgano aparece segmentado, con su volumen.
-    (22.145, 23.435, 27.985),  # Lo toman con la mano,
-    (23.435, 28.54, 30.315),  # lo cortan donde quieran… y la tomografía los acompaña, en tres planos.
-    (28.54, 31.11, 37.5),     # Y esto ya funciona en Meta Quest tres.
-    (31.11, 39.71, 41.43),    # Lo que viene es el modo cirugía: marcar la zona… antes de entrar al quirófano.
-    (39.71, 44.39, 50.95),    # Hoy es un prototipo. Para llevarlo al quirófano, buscamos un aliado clínico.
-    (44.39, 47.705, 56.59),   # Construyámoslo juntos, con la Clínica Anglo Americana.
-    (47.705, 48.4, 60.095),   # Inmersia.
+    (0.18, 16.265, 0.45),      # Toda cirugía… empieza antes del quirófano. … 267 imágenes… ¿Y si pudieras verlo completo… frente a ti?
+    (16.265, 20.545, 18.425),  # Te presentamos… Inmersia. Cirugía inmersiva. («Inmersia» con el golpe, en 20 s)
+    (20.545, 24.36, 24.205),   # Cada órgano, segmentado… y con su volumen.
+    (24.74, 26.3, 28.04),      # Tómalo con la mano…
+    (26.3, 29.785, 30.38),     # córtalo donde quieras… y la tomografía te sigue.
+    (29.785, 32.26, 33.945),   # Tres planos. Un mismo punto.
+    (32.26, 34.565, 37.54),    # Y ya funciona en Meta Quest tres.
+    (34.565, 43.61, 40.845),   # Lo que viene… es el modo cirugía. Marca la zona… antes de entrar al quirófano.
+    (43.61, 48.305, 50.88),    # Hoy, es un prototipo. Para llevarlo al quirófano… buscamos un aliado clínico.
+    (48.305, 51.75, 56.475),   # Construyámoslo juntos… con la Clínica Anglo Americana.
+    (51.75, 52.64, 60.06),     # Inmersia.
 ]
 SR = 48000
 FADE = 0.015   # fundido en cada corte, para que no haga clic
