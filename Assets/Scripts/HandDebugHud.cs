@@ -92,5 +92,12 @@ public class HandDebugHud : MonoBehaviour
         }
 
         _sb.Append("  seleccionando: ").AppendLine(ray.hasSelection ? "SÍ" : "no");
+
+        // Lo que hace falta para saber por qué un botón no responde: si el rayo ve el botón
+        // y si tiene permiso para pulsar (HandNearFar se lo quita al agarrar de cerca).
+        string ui = ray.TryGetCurrentUIRaycastResult(out var hit) && hit.gameObject != null ? hit.gameObject.name : "-";
+        _sb.Append("  interfaz: ").AppendLine(ui);
+        _sb.Append("  puede apuntar/pulsar: ").Append(ray.allowHover ? "sí" : "NO").Append(" / ")
+           .AppendLine(ray.allowSelect ? "sí" : "NO");
     }
 }

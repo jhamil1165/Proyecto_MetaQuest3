@@ -36,20 +36,22 @@ public class OVRHandXRController : XRBaseController
              "y pasa por la mano: con la mano relajada a la altura de la mesa apunta al suelo, " +
              "y había que estirar el brazo hacia los paneles para que apareciera el círculo.")]
     [Range(0f, 30f)]
-    [SerializeField] private float pitchOffset = 15f;
+    [SerializeField] private float pitchOffset = 6f;
 
     [Tooltip("Rapidez con la que el rayo sigue a la mano. Más bajo = más estable pero más lento.")]
-    [SerializeField] private float smoothing = 14f;
+    [SerializeField] private float smoothing = 9f;
 
     [Tooltip("Segundos que el rayo se queda quieto al empezar la pinza. Al juntar los dedos " +
              "la mano se mueve y el rayo se iba del botón justo en el momento de pulsar.")]
     [SerializeField] private float pinchFreeze = 0.18f;
 
-    [Tooltip("Por debajo de esta fuerza, con la pinza aún cerrada, se entiende que se está " +
-             "soltando y el rayo se queda quieto hasta soltar del todo. Al abrir los dedos " +
-             "la mano también se mueve, y el clic se perdía porque el botón se suelta fuera.")]
-    [Range(0.3f, 1f)]
-    [SerializeField] private float releaseFreezeBelow = 0.65f;
+    [Tooltip("Cuánto tiene que caer la fuerza respecto al máximo de esta pinza para entender " +
+             "que se está soltando; entonces el rayo se queda quieto hasta soltar del todo. Al " +
+             "abrir los dedos la mano también se mueve, y el clic se perdía fuera del botón. " +
+             "Es relativo y no un valor fijo: una pinza sostenida ronda 0,5-0,7, y con un " +
+             "umbral fijo el rayo se congelaba mientras se arrastraba una barra.")]
+    [Range(0.1f, 0.6f)]
+    [SerializeField] private float releaseDrop = 0.3f;
 
     [Tooltip("Cuánto antes de la pinza se toma la dirección que se congela, en segundos.")]
     [SerializeField] private float pinchLookBack = 0.1f;
@@ -77,6 +79,7 @@ public class OVRHandXRController : XRBaseController
     private float _pinchStart = -1f;
     private Quaternion _frozenAim;
     private bool _releasing;
+    private float _pinchPeak;
     private readonly Queue<(float time, Quaternion rotation)> _aimHistory = new Queue<(float, Quaternion)>();
 
     protected override void Awake()
@@ -159,11 +162,13 @@ public class OVRHandXRController : XRBaseController
         {
             _pinchStart = Time.time;
             _frozenAim = AimBefore(Time.time - pinchLookBack);
+            _pinchPeak = PinchStrength;
         }
+        if (_pinchLatched) _pinchPeak = Mathf.Max(_pinchPeak, PinchStrength);
 
         // Soltando: los dedos ya se separan pero la pinza sigue cerrada. Se congela el rayo
         // en la dirección de justo antes de empezar a abrir, hasta que suelte del todo.
-        bool releasing = _pinchLatched && PinchStrength < releaseFreezeBelow && Time.time - _pinchStart > pinchFreeze;
+        bool releasing = _pinchLatched && PinchStrength < Mathf.Min(_pinchPeak - releaseDrop, releaseThreshold + 0.15f) && Time.time - _pinchStart > pinchFreeze;
         if (releasing && !_releasing) _frozenAim = AimBefore(Time.time - pinchLookBack);
         _releasing = releasing;
         if (!_pinchLatched) _releasing = false;

@@ -4191,10 +4191,10 @@ MonoBehaviour:
   hand: {fileID: 626229959}
   pinchThreshold: 0.45
   releaseThreshold: 0.25
-  pitchOffset: 15
-  smoothing: 14
+  pitchOffset: 6
+  smoothing: 9
   pinchFreeze: 0.18
-  releaseFreezeBelow: 0.65
+  releaseDrop: 0.3
   pinchLookBack: 0.1
   interactorsToGate:
   - {fileID: 172953324}
@@ -4214,7 +4214,7 @@ MonoBehaviour:
     type: 3}
   idleDistance: 1.2
   idleAlpha: 0.45
-  followSpeed: 14
+  followSpeed: 8
 --- !u!114 &172953327
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8622,7 +8622,7 @@ RectTransform:
   m_GameObject: {fileID: 452260559}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.0012, y: 0.0012, z: 0.0012}
+  m_LocalScale: {x: 0.0005, y: 0.0005, z: 0.0005}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 12869949}
@@ -11164,7 +11164,7 @@ MonoBehaviour:
     type: 3}
   idleDistance: 1.2
   idleAlpha: 0.45
-  followSpeed: 14
+  followSpeed: 8
 --- !u!1 &520492324
 GameObject:
   m_ObjectHideFlags: 0
@@ -19862,10 +19862,10 @@ MonoBehaviour:
   hand: {fileID: 1579199802}
   pinchThreshold: 0.45
   releaseThreshold: 0.25
-  pitchOffset: 15
-  smoothing: 14
+  pitchOffset: 6
+  smoothing: 9
   pinchFreeze: 0.18
-  releaseFreezeBelow: 0.65
+  releaseDrop: 0.3
   pinchLookBack: 0.1
   interactorsToGate:
   - {fileID: 783189475}
@@ -19885,7 +19885,7 @@ MonoBehaviour:
     type: 3}
   idleDistance: 1.2
   idleAlpha: 0.45
-  followSpeed: 14
+  followSpeed: 8
 --- !u!114 &783189478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21080,15 +21080,27 @@ MonoBehaviour:
   - label: "H\xEDgado"
     root: {fileID: 1955620861}
     displayScale: 1.1106765
+    approximate: 0
   - label: "Est\xF3mago"
     root: {fileID: 80695177}
     displayScale: 1.410284
+    approximate: 0
   - label: "P\xE1ncreas"
     root: {fileID: 1071914504}
     displayScale: 1.9688847
+    approximate: 0
   - label: "Ves\xEDcula"
     root: {fileID: 68292590}
     displayScale: 4.677167
+    approximate: 0
+  - label: "Coraz\xF3n"
+    root: {fileID: 788514053}
+    displayScale: 1.5
+    approximate: 1
+  - label: Volumen
+    root: {fileID: 1664319395}
+    displayScale: 1.0000062
+    approximate: 0
   toggleButton: {fileID: 710816499}
   onColor: {r: 0.29803923, g: 0.5529412, b: 1, a: 1}
   offColor: {r: 1, g: 1, b: 1, a: 0.1}
@@ -21096,6 +21108,9 @@ MonoBehaviour:
   offText: {r: 0.9411765, g: 0.9490196, b: 0.9607843, a: 1}
   ignored:
   - {fileID: 1664319393}
+  volumeRoot: {fileID: 1664319395}
+  volumeSurfaces:
+  - {fileID: 1280679479}
   measuring: 0
 --- !u!1 &826558384
 GameObject:
@@ -30671,6 +30686,9 @@ MonoBehaviour:
   deadZone: 0.2
   grab: {fileID: 0}
   cutting: 0
+  lockToAnatomical: 1
+  volume: {fileID: 1664319395}
+  snapSpeed: 360
 --- !u!1 &1284971440
 GameObject:
   m_ObjectHideFlags: 0
@@ -39246,7 +39264,7 @@ MonoBehaviour:
     type: 3}
   idleDistance: 1.2
   idleAlpha: 0.45
-  followSpeed: 14
+  followSpeed: 8
 --- !u!1 &1651301633
 GameObject:
   m_ObjectHideFlags: 0
@@ -39267,7 +39285,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1651301634
 RectTransform:
   m_ObjectHideFlags: 0

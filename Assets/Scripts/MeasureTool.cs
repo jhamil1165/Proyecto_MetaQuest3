@@ -45,6 +45,10 @@ public class MeasureTool : MonoBehaviour
 
         [Tooltip("Veces que se muestra más grande que en la tomografía. 0 = sin comprobar.")]
         public float displayScale;
+
+        [Tooltip("La escala sale de un tamaño de referencia, no de la tomografía del paciente: " +
+                 "las medidas se marcan con ≈.")]
+        public bool approximate;
     }
 
     /// <summary>Una medida, terminada o a medias, colgada de su órgano.</summary>
@@ -86,6 +90,15 @@ public class MeasureTool : MonoBehaviour
     [Tooltip("Objetos que el rayo no debe medir, como la caja del volumen 3D.")]
     [SerializeField] private Collider[] ignored = new Collider[0];
 
+    [Header("Medir dentro del volumen")]
+    [Tooltip("El volumen 3D. Las medidas sobre su corte cuelgan de él.")]
+    [SerializeField] private Transform volumeRoot;
+
+    [Tooltip("Superficies que están dentro del volumen: el plano de corte. Sobre la caja del " +
+             "volumen no se mide (es una caja invisible), pero sobre el corte sí: es la " +
+             "imagen del TAC del paciente.")]
+    [SerializeField] private Collider[] volumeSurfaces = new Collider[0];
+
     [SerializeField] private bool measuring;
 
     private readonly List<Measurement> _done = new List<Measurement>();
@@ -93,6 +106,12 @@ public class MeasureTool : MonoBehaviour
     private Transform _camera;
     private Transform _hand;
     private string _message;
+
+    // La ayuda solo se enseña hasta el primer punto: después ya se sabe usar y el texto
+    // estorbaba en medio de la vista. Los avisos de error salen un momento y se van.
+    private bool _learned;
+    private float _messageUntil;
+    private const float MessageSeconds = 1.8f;
 
     private void OnEnable()
     {
@@ -113,6 +132,12 @@ public class MeasureTool : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (_learned && !string.IsNullOrEmpty(_message) && Time.time > _messageUntil)
+        {
+            _message = null;
+            Refresh();
+        }
+
         PlaceHint();
         FaceUser();
     }
@@ -177,15 +202,27 @@ public class MeasureTool : MonoBehaviour
         if (used == null) { Say("Apunta a un órgano"); return; }
         _hand = used.transform;
 
-        if (IsIgnored(hit.collider)) { Say("Sobre el volumen no se puede medir"); return; }
-
-        OrganScale organ = Owner(hit.collider.transform);
+        OrganScale organ;
+        if (IsIgnored(hit.collider) || IsVolumeSurface(hit.collider))
+        {
+            // El rayo choca primero con la caja que envuelve el volumen. Se mira si, siguiendo
+            // el mismo rayo, más adentro está el plano de corte.
+            if (!TryHitCut(used, out hit)) { Say("Activa el corte para medir el volumen"); return; }
+            organ = VolumeOrgan();
+            if (organ == null) { Say("Activa el corte para medir el volumen"); return; }
+        }
+        else
+        {
+            organ = Owner(hit.collider.transform);
+        }
         if (organ == null) { Say("Eso no es un órgano medible"); return; }
 
         if (_pending == null)
         {
             _pending = Begin(organ, hit.point);
-            Say("Ahora el segundo punto");
+            _learned = true;
+            _message = null;
+            Refresh();
             return;
         }
 
@@ -198,8 +235,8 @@ public class MeasureTool : MonoBehaviour
         Finish(_pending, hit.point);
         _done.Add(_pending);
         _pending = null;
-
-        Say("Hecho. Pulsa A para otra medida");
+        _message = null;
+        Refresh();
     }
 
     /// <summary>Empieza una medida colgada del órgano, con su primer punto.</summary>
@@ -303,6 +340,41 @@ public class MeasureTool : MonoBehaviour
         return null;
     }
 
+    private bool IsVolumeSurface(Collider collider)
+    {
+        foreach (var other in volumeSurfaces)
+        {
+            if (other != null && other == collider) return true;
+        }
+        return false;
+    }
+
+    /// <summary>Busca el plano de corte a lo largo del rayo, aunque haya algo delante.</summary>
+    private bool TryHitCut(XRRayInteractor ray, out RaycastHit cut)
+    {
+        cut = default;
+        Transform origin = ray.rayOriginTransform != null ? ray.rayOriginTransform : ray.transform;
+        float best = float.MaxValue;
+        bool found = false;
+
+        foreach (var h in Physics.RaycastAll(origin.position, origin.forward, ray.maxRaycastDistance,
+                                             Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
+        {
+            if (!IsVolumeSurface(h.collider) || !h.collider.enabled) continue;
+            if (h.distance < best) { best = h.distance; cut = h; found = true; }
+        }
+        return found;
+    }
+
+    private OrganScale VolumeOrgan()
+    {
+        foreach (var organ in organs)
+        {
+            if (organ != null && organ.root != null && organ.root == volumeRoot) return organ;
+        }
+        return null;
+    }
+
     private bool IsIgnored(Collider collider)
     {
         foreach (var other in ignored)
@@ -315,12 +387,15 @@ public class MeasureTool : MonoBehaviour
     private void Say(string message)
     {
         _message = message;
+        _messageUntil = Time.time + MessageSeconds;
         Refresh();
     }
 
     private void Refresh()
     {
-        if (labelRoot != null) labelRoot.gameObject.SetActive(measuring);
+        // Después del primer punto la ayuda solo aparece para un aviso.
+        bool show = measuring && (!_learned || !string.IsNullOrEmpty(_message));
+        if (labelRoot != null) labelRoot.gameObject.SetActive(show);
 
         if (label != null)
         {
@@ -369,9 +444,10 @@ public class MeasureTool : MonoBehaviour
             return "escala sin comprobar";
 
         float mm = sceneMetres * 1000f / organ.displayScale;
+        string prefix = organ.approximate ? "≈ " : "";
         return mm < 100f
-            ? string.Format("{0:F0} mm", mm)
-            : string.Format("{0:F1} cm", mm / 10f);
+            ? string.Format("{0}{1:F0} mm", prefix, mm)
+            : string.Format("{0}{1:F1} cm", prefix, mm / 10f);
     }
 
     private static float SafeInverse(float v)

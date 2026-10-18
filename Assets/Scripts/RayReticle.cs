@@ -29,7 +29,7 @@ public class RayReticle : MonoBehaviour
     [SerializeField] private float idleAlpha = 0.45f;
 
     [Tooltip("Rapidez con la que el círculo llega a su sitio. Más bajo = más suave.")]
-    [SerializeField] private float followSpeed = 14f;
+    [SerializeField] private float followSpeed = 8f;
 
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 

@@ -37,6 +37,10 @@ public static class MedicalHandTuning
             var so = new SerializedObject(hand);
             so.FindProperty("pinchThreshold").floatValue = 0.45f;
             so.FindProperty("releaseThreshold").floatValue = 0.25f;
+            // Rayo más suave: la mano tiembla y el círculo se veía nervioso.
+            so.FindProperty("smoothing").floatValue = 9f;
+            // 15 grados hacían que el círculo cayera por encima del botón al que se apuntaba.
+            so.FindProperty("pitchOffset").floatValue = 6f;
             so.ApplyModifiedPropertiesWithoutUndo();
             sb.AppendLine(string.Format("{0}: pinza 0.45 / suelta 0.25, rayo levantado {1} grados",
                 hand.BoundHandName, so.FindProperty("pitchOffset").floatValue));
@@ -62,6 +66,7 @@ public static class MedicalHandTuning
             if (follower == null) follower = visual.gameObject.AddComponent<RayReticle>();
             var so = new SerializedObject(follower);
             so.FindProperty("reticlePrefab").objectReferenceValue = reticle;
+            so.FindProperty("followSpeed").floatValue = 8f;
             so.ApplyModifiedPropertiesWithoutUndo();
             sb.AppendLine("circulo siempre visible y suave: " + Branch(visual.transform));
         }

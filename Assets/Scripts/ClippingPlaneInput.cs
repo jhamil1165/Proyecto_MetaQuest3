@@ -52,6 +52,19 @@ public class ClippingPlaneInput : MonoBehaviour
 
     [SerializeField] private bool cutting;
 
+    [Header("Orientación fija")]
+    [Tooltip("El plano solo se queda en los tres cortes anatómicos (axial, coronal, sagital) " +
+             "del volumen. El TAC tiene píxeles de 0,98 mm pero cortes cada 3,27 mm: en " +
+             "diagonal el corte cruza capas a medias y se ve escalonado y deformado. En los " +
+             "tres planos anatómicos cada píxel cae limpio sobre los datos.")]
+    [SerializeField] private bool lockToAnatomical = true;
+
+    [Tooltip("El volumen cuyos ejes marcan los tres cortes.")]
+    [SerializeField] private Transform volume;
+
+    [Tooltip("Grados por segundo con los que se endereza al soltarlo.")]
+    [SerializeField] private float snapSpeed = 360f;
+
     private void Awake()
     {
         if (controller == null) controller = GetComponent<ClippingPlaneController>();
@@ -98,7 +111,9 @@ public class ClippingPlaneInput : MonoBehaviour
         Vector2 turn = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.RTouch);
         Vector2 shift = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.LTouch);
 
-        if (turn.magnitude > deadZone)
+        // Con la orientación fija el joystick derecho no inclina: solo se cambia de corte
+        // con "Girar 90°".
+        if (turn.magnitude > deadZone && !lockToAnatomical)
         {
             // Adelante y atrás inclina de frente; izquierda y derecha inclina de lado.
             float pitch = -turn.y * rotateSpeed * Time.deltaTime;
@@ -135,10 +150,89 @@ public class ClippingPlaneInput : MonoBehaviour
         if (anchor != null) anchor.Place();
     }
 
-    /// <summary>Alterna entre corte horizontal y vertical.</summary>
+    /// <summary>
+    /// Pasa al siguiente corte: axial, coronal, sagital. Sin orientación fija, gira 90°.
+    /// </summary>
     public void Rotate90()
     {
-        transform.Rotate(0f, 0f, 90f, Space.Self);
+        if (!lockToAnatomical || Volume() == null)
+        {
+            transform.Rotate(0f, 0f, 90f, Space.Self);
+            return;
+        }
+
+        Vector3[] axes = Axes();
+        int next = (Nearest(axes, out _) + 1) % axes.Length;
+        transform.rotation = Facing(axes[next], axes[(next + 1) % axes.Length]);
+    }
+
+    /// <summary>
+    /// Mientras nadie lo agarra, el plano se endereza al corte anatómico más cercano. Agarrado
+    /// se mueve libre, para que la mano no luche contra él, y al soltarlo se coloca.
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (!lockToAnatomical || !cutting || Volume() == null) return;
+        if (grab != null && grab.isSelected) return;
+
+        Vector3[] axes = Axes();
+        int i = Nearest(axes, out float sign);
+        Vector3 normal = axes[i] * sign;
+
+        // El lado del plano se alinea también con un eje del volumen, para que la rebanada
+        // no quede girada sobre sí misma.
+        Vector3 along = Vector3.ProjectOnPlane(transform.forward, normal);
+        if (along.sqrMagnitude < 1e-4f) along = Vector3.ProjectOnPlane(transform.right, normal);
+        Vector3 best = along;
+        float bestDot = -1f;
+        foreach (var axis in axes)
+        {
+            foreach (float s in new[] { 1f, -1f })
+            {
+                Vector3 candidate = axis * s;
+                if (Mathf.Abs(Vector3.Dot(candidate, normal)) > 0.5f) continue;
+                float d = Vector3.Dot(candidate, along.normalized);
+                if (d > bestDot) { bestDot = d; best = candidate; }
+            }
+        }
+
+        Quaternion target = Quaternion.LookRotation(best, normal);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, target, snapSpeed * Time.deltaTime);
+    }
+
+    private Transform Volume()
+    {
+        if (volume == null)
+        {
+            var go = GameObject.Find("Volumen_3D");
+            if (go != null) volume = go.transform;
+        }
+        return volume;
+    }
+
+    /// <summary>Normales de los tres cortes: axial (arriba), coronal (delante), sagital (lado).</summary>
+    private Vector3[] Axes()
+    {
+        return new[] { volume.up, volume.forward, volume.right };
+    }
+
+    /// <summary>Cuál de los ejes se parece más a la normal actual del plano, y con qué signo.</summary>
+    private int Nearest(Vector3[] axes, out float sign)
+    {
+        int best = 0;
+        float bestDot = -1f;
+        sign = 1f;
+        for (int i = 0; i < axes.Length; i++)
+        {
+            float d = Vector3.Dot(transform.up, axes[i]);
+            if (Mathf.Abs(d) > bestDot) { bestDot = Mathf.Abs(d); best = i; sign = d >= 0f ? 1f : -1f; }
+        }
+        return best;
+    }
+
+    private static Quaternion Facing(Vector3 normal, Vector3 along)
+    {
+        return Quaternion.LookRotation(along, normal);
     }
 
     private void Apply()
