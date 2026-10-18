@@ -4194,6 +4194,7 @@ MonoBehaviour:
   pitchOffset: 15
   smoothing: 14
   pinchFreeze: 0.18
+  releaseFreezeBelow: 0.65
   pinchLookBack: 0.1
   interactorsToGate:
   - {fileID: 172953324}
@@ -19864,6 +19865,7 @@ MonoBehaviour:
   pitchOffset: 15
   smoothing: 14
   pinchFreeze: 0.18
+  releaseFreezeBelow: 0.65
   pinchLookBack: 0.1
   interactorsToGate:
   - {fileID: 783189475}
@@ -23645,11 +23647,6 @@ MonoBehaviour:
   segmentationObjects:
   - {fileID: 891630511}
   - {fileID: 1662767336}
-  - {fileID: 1280679473}
-  - {fileID: 1169792360}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 1748638622}
   model3DObjects:
   - {fileID: 788514049}
   - {fileID: 1955620862}
@@ -23660,8 +23657,6 @@ MonoBehaviour:
   - {fileID: 1664319389}
   - {fileID: 1169792360}
   - {fileID: 2058597687}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 292457795}
   - {fileID: 1748638622}
 --- !u!114 &944651582

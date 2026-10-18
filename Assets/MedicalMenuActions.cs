@@ -100,6 +100,8 @@ public class MedicalMenuActions : MonoBehaviour
             return;
         }
 
+        ResetTools();
+
         // Primero se apaga lo que no pertenece a la vista nueva y después se enciende la
         // vista. Antes los grupos se recorrían en un orden fijo (DICOM, Segmentación,
         // Modelo 3D): un objeto presente en dos vistas quedaba apagado si el grupo que lo
@@ -118,6 +120,20 @@ public class MedicalMenuActions : MonoBehaviour
         SetGroupActive(target, true);
 
         Debug.Log($"[MedicalViewer] Vista activa: {label}");
+    }
+
+    /// <summary>
+    /// Cada vista empieza limpia. Las herramientas que se encienden dentro de una vista (el
+    /// corte, los tres planos, las reglas) se quedaban encendidas al pasar a otra: se iba a
+    /// Segmentación o a DICOM y seguían ahí el plano de corte, su rebanada del TAC o el
+    /// cartel de "Pulsa A" de la regla. Lo ya medido no se borra: va con su órgano o su imagen.
+    /// </summary>
+    private static void ResetTools()
+    {
+        foreach (var cut in FindObjectsOfType<ClippingPlaneInput>(true)) cut.SetCutting(false);
+        foreach (var planes in FindObjectsOfType<TriPlaneView>(true)) planes.Hide();
+        foreach (var ruler in FindObjectsOfType<MeasureTool>(true)) ruler.Stop();
+        foreach (var ruler in FindObjectsOfType<CTMeasure2D>(true)) ruler.Stop();
     }
 
     private static void SetGroupActive(GameObject[] group, bool active)

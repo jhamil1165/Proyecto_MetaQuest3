@@ -68,7 +68,11 @@ public class InteractorModeSwitch : MonoBehaviour
         }
         else
         {
-            hands = HandsInUse() && (Time.time - _lastControllerUse) > switchDelay;
+            // A manos solo si el propio sistema ya no da ningún mando por activo. Sostener el
+            // mando quieto apuntando a un botón no cuenta como "usarlo" (no se mueve ni se
+            // pulsa), y con eso bastaba para pasar a modo manos y apagar los rayos de los
+            // mandos justo antes de pulsar: había que apretar varias veces.
+            hands = HandsInUse() && !SystemUsesControllers() && (Time.time - _lastControllerUse) > switchDelay;
         }
 
         if (_initialised && hands == _handsActive) return;
@@ -170,6 +174,12 @@ public class InteractorModeSwitch : MonoBehaviour
     {
         if (OVRInput.GetActiveController() == OVRInput.Controller.Hands) return true;
         return Confident(leftHand) || Confident(rightHand);
+    }
+
+    /// <summary>Si el sistema da algún mando por activo (en la mano o recién usado).</summary>
+    private static bool SystemUsesControllers()
+    {
+        return (OVRInput.GetActiveController() & OVRInput.Controller.Touch) != 0;
     }
 
     /// <summary>Si alguna mano tiene un objeto agarrado ahora mismo.</summary>

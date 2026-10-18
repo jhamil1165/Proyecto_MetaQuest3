@@ -130,6 +130,12 @@ public class MeasureTool : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>Deja de medir sin borrar lo medido. Lo usa el menú al cambiar de vista.</summary>
+    public void Stop()
+    {
+        if (measuring) Toggle();
+    }
+
     /// <summary>Quita todas las medidas. Enlazable al botón "Borrar".</summary>
     public void Clear()
     {

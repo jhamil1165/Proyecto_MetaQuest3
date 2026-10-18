@@ -45,6 +45,12 @@ public class OVRHandXRController : XRBaseController
              "la mano se mueve y el rayo se iba del botón justo en el momento de pulsar.")]
     [SerializeField] private float pinchFreeze = 0.18f;
 
+    [Tooltip("Por debajo de esta fuerza, con la pinza aún cerrada, se entiende que se está " +
+             "soltando y el rayo se queda quieto hasta soltar del todo. Al abrir los dedos " +
+             "la mano también se mueve, y el clic se perdía porque el botón se suelta fuera.")]
+    [Range(0.3f, 1f)]
+    [SerializeField] private float releaseFreezeBelow = 0.65f;
+
     [Tooltip("Cuánto antes de la pinza se toma la dirección que se congela, en segundos.")]
     [SerializeField] private float pinchLookBack = 0.1f;
 
@@ -70,6 +76,7 @@ public class OVRHandXRController : XRBaseController
     private int _aimFrame = -1;
     private float _pinchStart = -1f;
     private Quaternion _frozenAim;
+    private bool _releasing;
     private readonly Queue<(float time, Quaternion rotation)> _aimHistory = new Queue<(float, Quaternion)>();
 
     protected override void Awake()
@@ -154,6 +161,13 @@ public class OVRHandXRController : XRBaseController
             _frozenAim = AimBefore(Time.time - pinchLookBack);
         }
 
+        // Soltando: los dedos ya se separan pero la pinza sigue cerrada. Se congela el rayo
+        // en la dirección de justo antes de empezar a abrir, hasta que suelte del todo.
+        bool releasing = _pinchLatched && PinchStrength < releaseFreezeBelow && Time.time - _pinchStart > pinchFreeze;
+        if (releasing && !_releasing) _frozenAim = AimBefore(Time.time - pinchLookBack);
+        _releasing = releasing;
+        if (!_pinchLatched) _releasing = false;
+
         SetStates(controllerState, IsPinching, PinchStrength);
     }
 
@@ -184,7 +198,7 @@ public class OVRHandXRController : XRBaseController
             while (_aimHistory.Count > 0 && Time.time - _aimHistory.Peek().time > 0.4f) _aimHistory.Dequeue();
         }
 
-        bool frozen = _pinchStart >= 0f && Time.time - _pinchStart < pinchFreeze;
+        bool frozen = (_pinchStart >= 0f && Time.time - _pinchStart < pinchFreeze) || _releasing;
         transform.rotation = frozen ? _frozenAim : _aim;
     }
 

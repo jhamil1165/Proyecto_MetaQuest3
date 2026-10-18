@@ -65,6 +65,12 @@ public class TriPlaneView : MonoBehaviour
         if (visible) Center();
     }
 
+    /// <summary>Oculta los tres cortes. Lo usa el menú al cambiar de vista.</summary>
+    public void Hide()
+    {
+        if (visible) Toggle();
+    }
+
     /// <summary>Devuelve el punto de cruce al centro del cuerpo. Enlazable a un botón.</summary>
     public void Center()
     {

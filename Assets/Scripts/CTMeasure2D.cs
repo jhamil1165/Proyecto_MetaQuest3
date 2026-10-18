@@ -152,6 +152,12 @@ public class CTMeasure2D : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>Deja de medir sin borrar lo medido. Lo usa el menú al cambiar de vista.</summary>
+    public void Stop()
+    {
+        if (measuring) Toggle();
+    }
+
     /// <summary>Quita todas las medidas de este visor. Enlazable al botón "Borrar".</summary>
     public void Clear()
     {
