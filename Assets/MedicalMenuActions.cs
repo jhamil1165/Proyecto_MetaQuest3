@@ -77,28 +77,18 @@ public class MedicalMenuActions : MonoBehaviour
     }
 
     /// <summary>
-    /// Oculta el menú con la animación de salida. Se vuelve a abrir con el botón
-    /// Menu o B/Y del control (ver MenuToggleInput), así que no deja al usuario
-    /// atrapado sin interfaz.
+    /// Cierra la aplicación. Antes solo escondía el menú y no había forma de salir de la
+    /// app desde dentro: había que apagar el visor. Para esconder el menú sin salir sigue
+    /// estando el botón Menú del mando izquierdo (ver MenuToggleInput).
     /// </summary>
     public void ExitMenu()
     {
-        if (menuRoot == null)
-        {
-            Debug.LogWarning("[MedicalViewer] ExitMenu: falta asignar 'Menu Root' en el Inspector.");
-            return;
-        }
-
-        if (menuRoot.TryGetComponent(out MedicalMenuIntro intro))
-        {
-            intro.PlayHide();
-        }
-        else
-        {
-            menuRoot.SetActive(false);
-        }
-
-        Debug.Log("[MedicalViewer] Menú cerrado (botón Menu o B/Y para reabrirlo).");
+        Debug.Log("[MedicalViewer] Saliendo de la aplicación.");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     private void ShowView(GameObject[] target, string label)

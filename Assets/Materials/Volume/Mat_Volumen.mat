@@ -36,7 +36,7 @@ Material:
     - _BoneOpacity: 0
     - _OrganOpacity: 0.85
     - _Shading: 0.85
-    - _Steps: 160
+    - _Steps: 96
     - _TissueOpacity: 0.1
     - _WindowCenter: 40
     - _WindowWidth: 500
