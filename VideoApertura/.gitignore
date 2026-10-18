@@ -4,3 +4,4 @@ out/
 assets/*
 !assets/captures/
 !assets/audio/
+__pycache__/
