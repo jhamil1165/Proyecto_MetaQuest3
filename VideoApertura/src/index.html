@@ -7,43 +7,44 @@
 <link rel="stylesheet" href="../node_modules/@fontsource-variable/inter/index.css">
 <style>
   :root {
-    --bg: #1E2228; --text: #F0F2F5; --text2: #A8B1BC; --accent: #4C8DFF;
-    --glass: rgba(30, 34, 40, 0.80); --rim: rgba(255, 255, 255, 0.13);
+    --bg: #05070A; --text: #F0F2F5; --text2: #A8B1BC; --accent: #4C8DFF; --accent2: #7FB2FF; --amber: #FFB547;
+    --glass: rgba(10, 14, 21, 0.74); --rim: rgba(127, 178, 255, 0.22);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: #0d0f12; color: var(--text); font-family: 'Inter Variable', 'Inter', 'Liberation Sans', sans-serif; overflow: hidden; height: 100%; }
+  html, body { background: #000; color: var(--text); font-family: 'Inter Variable', 'Inter', 'Liberation Sans', sans-serif; overflow: hidden; height: 100%; }
   #viewport { position: absolute; inset: 0; display: grid; place-items: center; }
   #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); transform-origin: 0 0; flex: none; }
+  #cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
   #gl { position: absolute; inset: 0; width: 1920px; height: 1080px; }
   .layer { position: absolute; inset: 0; pointer-events: none; }
 
   /* ---------- texto ---------- */
   .block { position: absolute; display: flex; flex-direction: column; gap: 6px; }
-  .block.left { left: 150px; top: 540px; transform: translateY(-50%); }
-  .line { will-change: transform, opacity; opacity: 0; }
-  .kicker { font-size: 22px; font-weight: 640; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
-  .h1 { font-size: 76px; font-weight: 660; letter-spacing: -0.025em; line-height: 1.07; color: var(--text); white-space: nowrap; }
+  .line { will-change: transform, opacity; }
+  .kicker { font-size: 22px; font-weight: 640; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent2); margin-bottom: 18px;
+            text-shadow: 0 0 18px rgba(76, 141, 255, 0.45); }
+  .h1 { font-size: 78px; font-weight: 660; letter-spacing: -0.025em; line-height: 1.07; color: var(--text); white-space: nowrap; }
   .h2 { font-size: 64px; font-weight: 650; letter-spacing: -0.022em; line-height: 1.08; color: var(--text); white-space: nowrap; }
-  .q  { font-size: 84px; font-weight: 680; letter-spacing: -0.028em; line-height: 1.06; color: var(--text); white-space: nowrap; }
+  .q  { font-size: 86px; font-weight: 680; letter-spacing: -0.028em; line-height: 1.06; color: var(--text); white-space: nowrap; }
+  .xl { font-size: 118px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.0; white-space: nowrap; }
   .dim { color: var(--text2); }
   .sub { font-size: 30px; font-weight: 460; color: var(--text2); margin-top: 22px; letter-spacing: -0.005em; }
   .acc { color: var(--accent); }
-  .name { font-size: 112px; font-weight: 720; letter-spacing: -0.035em; line-height: 1; }
-  .closing { font-size: 46px; font-weight: 620; color: var(--accent); margin-top: 46px; letter-spacing: -0.015em; }
-  .big { font-size: 168px; font-weight: 720; letter-spacing: -0.045em; line-height: 0.98; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .big { font-size: 176px; font-weight: 720; letter-spacing: -0.045em; line-height: 0.98; color: var(--accent); font-variant-numeric: tabular-nums;
+         text-shadow: 0 0 40px rgba(76, 141, 255, 0.55); }
 
-  /* palabras que entran una por una; <b> se subraya, <s> se tacha */
+  /* palabras que entran una por una; <b> se subraya con brillo, <s> se tacha */
   .w { display: inline-block; }
   .hl, .st { position: relative; display: inline-block; }
   .hl > i, .st > i { position: absolute; left: -0.04em; right: -0.04em; transform-origin: 0 50%; transform: scaleX(0); border-radius: 0.04em; }
-  .hl { color: var(--accent); }
-  .hl > i { bottom: -0.03em; height: 0.075em; background: var(--accent); box-shadow: 0 0 24px rgba(76, 141, 255, 0.55); }
+  .hl { color: var(--accent); text-shadow: 0 0 26px rgba(76, 141, 255, 0.55); }
+  .hl > i { bottom: -0.03em; height: 0.075em; background: var(--accent); box-shadow: 0 0 22px rgba(76, 141, 255, 0.9); }
   .st > i { top: 53%; height: 0.075em; background: var(--text); }
 
-  /* ---------- vidrio oscuro, como los paneles del visor ---------- */
+  /* ---------- vidrio oscuro con borde de luz, como los paneles del visor ---------- */
   .glass {
     position: absolute; background: var(--glass); border: 1px solid var(--rim); border-radius: 30px;
-    box-shadow: 0 34px 90px rgba(5, 7, 11, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 0 1px rgba(76, 141, 255, 0.05), 0 0 60px rgba(76, 141, 255, 0.16), 0 34px 90px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(22px) saturate(1.15); opacity: 0;
   }
   .panel-head { display: flex; justify-content: space-between; align-items: baseline; padding: 26px 30px 18px; }
@@ -54,15 +55,8 @@
 
   #ctCard { left: 1040px; top: 170px; width: 680px; height: 760px; }
   #ctCard canvas { margin: 0 40px; }
-
-  #systems { left: 1500px; top: 268px; width: 340px; }
-  .row { display: flex; align-items: center; gap: 16px; padding: 15px 30px; border-top: 1px solid rgba(255,255,255,0.08); }
-  .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
-  .row .label { flex: 1; font-size: 24px; font-weight: 520; }
-  .pill { width: 62px; height: 36px; border-radius: 18px; background: rgba(255,255,255,0.18); position: relative; flex: none; }
-  .pill .knob { position: absolute; top: 3px; left: 3px; width: 30px; height: 30px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.35); }
-  .foot { padding: 14px 30px 24px; font-size: 20px; font-weight: 560; color: #6CA4FF; border-top: 1px solid rgba(255,255,255,0.08); }
-  .badge { font-size: 18px; font-weight: 650; color: #fff; background: var(--accent); border-radius: 14px; padding: 3px 12px; font-variant-numeric: tabular-nums; }
+  #ctCard .scan { position: absolute; left: 40px; width: 600px; height: 3px; top: 0; background: linear-gradient(90deg, transparent, #7FB2FF, transparent);
+                  box-shadow: 0 0 18px #4C8DFF; opacity: 0; }
 
   #axCard { left: 1340px; top: 220px; width: 520px; height: 640px; }
   #axCard canvas { margin: 0 30px; }
@@ -72,49 +66,78 @@
   .tri { display: flex; flex-direction: column; gap: 10px; }
   .tri span { font-size: 15px; font-weight: 640; letter-spacing: 0.18em; color: var(--text2); }
 
-  #capture { left: 180px; top: 300px; width: 1560px; height: 696px; border-radius: 30px; overflow: hidden; padding: 0; }
-  #capture img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* etiquetas de los órganos, como las del visor: nombre y volumen medido */
+  #lines { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: visible; }
+  .otag { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 10px 20px; border-radius: 999px; font-size: 24px; font-weight: 640;
+          background: rgba(14, 19, 27, 0.84); border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: 0 0 30px rgba(76, 141, 255, 0.18);
+          transform-origin: 50% 100%; opacity: 0; font-variant-numeric: tabular-nums; }
+  .otag em { font-style: normal; font-weight: 560; color: var(--accent2); }
+  .otag i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 10px; vertical-align: 1px; }
 
-  #chips { position: absolute; left: 150px; top: 440px; display: flex; flex-direction: column; gap: 16px; }
-  .chip { display: flex; align-items: center; gap: 18px; font-size: 32px; font-weight: 540; padding: 18px 30px 18px 24px;
-          border-radius: 22px; background: rgba(30,34,40,0.72); border: 1px solid var(--rim); opacity: 0; width: fit-content; }
-  .chip i { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 22px rgba(76,141,255,0.6);
+  /* modo cirugía (concepto) */
+  #sbtn { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 20px; padding: 28px 48px 28px 34px; border-radius: 999px;
+          font-size: 44px; font-weight: 660; letter-spacing: -0.01em; background: rgba(12, 18, 28, 0.86); border: 1.5px solid rgba(127, 178, 255, 0.55);
+          box-shadow: 0 0 60px rgba(76, 141, 255, 0.45), inset 0 0 30px rgba(76, 141, 255, 0.12); opacity: 0; white-space: nowrap; transform-origin: 50% 50%; }
+  #sbtn svg { width: 48px; height: 48px; }
+  #sring { position: absolute; left: 0; top: 0; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%;
+           border: 3px solid #7FB2FF; box-shadow: 0 0 30px #4C8DFF; opacity: 0; }
+  #schip { position: absolute; right: 70px; top: 64px; display: flex; align-items: center; gap: 12px; padding: 12px 22px; border-radius: 999px;
+           font-size: 18px; font-weight: 700; letter-spacing: 0.18em; color: var(--amber); background: rgba(30, 22, 8, 0.6);
+           border: 1px solid rgba(255, 181, 71, 0.45); box-shadow: 0 0 30px rgba(255, 181, 71, 0.2); opacity: 0; }
+  #schip i { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px var(--amber); }
+  .slabel { position: absolute; left: 0; top: 0; width: 330px; padding: 18px 24px; border-radius: 22px; background: rgba(10, 14, 21, 0.82);
+            border: 1px solid rgba(255, 181, 71, 0.35); box-shadow: 0 0 40px rgba(255, 181, 71, 0.14); opacity: 0; }
+  .slabel b { display: block; font-size: 30px; font-weight: 660; letter-spacing: -0.01em; }
+  .slabel span { display: block; margin-top: 6px; font-size: 20px; font-weight: 500; color: var(--text2); }
+  .slabel b::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--amber);
+                      box-shadow: 0 0 12px var(--amber); margin-right: 14px; vertical-align: 4px; }
+
+  /* hoja de ruta corta */
+  #road { position: absolute; left: 150px; top: 560px; width: 960px; height: 260px; opacity: 0; }
+  #roadLine { position: absolute; left: 32px; top: 30px; width: 700px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.14); overflow: hidden; }
+  #roadFill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #4C8DFF, #7FB2FF);
+              box-shadow: 0 0 16px #4C8DFF; }
+  .node { position: absolute; top: 0; width: 300px; opacity: 0; }
+  .node b { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3);
+            background: var(--bg); font-size: 26px; font-weight: 700; color: var(--text2); }
+  .node.done b { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 34px rgba(76,141,255,0.75); }
+  .node .when { display: inline-block; margin-top: 24px; font-size: 17px; font-weight: 680; letter-spacing: 0.2em; color: var(--text2); }
+  .node.done .when { color: #fff; background: var(--accent); border-radius: 12px; padding: 4px 12px; }
+  .node .lbl { margin-top: 10px; font-size: 30px; font-weight: 620; line-height: 1.2; letter-spacing: -0.01em; }
+
+  /* lo que buscamos: píldoras que se apilan */
+  #chips { position: absolute; left: 150px; top: 470px; display: flex; flex-direction: column; gap: 18px; }
+  .chip { display: flex; align-items: center; gap: 18px; font-size: 32px; font-weight: 560; padding: 18px 32px 18px 22px;
+          border-radius: 999px; background: rgba(12, 17, 25, 0.84); border: 1px solid var(--rim); opacity: 0; width: fit-content;
+          box-shadow: 0 0 36px rgba(76, 141, 255, 0.14); }
+  .chip i { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 22px rgba(76,141,255,0.7);
             display: grid; place-items: center; font-style: normal; font-size: 22px; font-weight: 800; color: #fff; }
 
-  /* ---------- marca ---------- */
+  /* marca */
   #brand { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; }
   #brandPre { font-size: 26px; font-weight: 620; letter-spacing: 0.32em; text-transform: uppercase; color: var(--text2); margin-bottom: 40px; }
   #brandRow { display: flex; align-items: center; gap: 44px; }
-  #mark { width: 132px; height: 132px; overflow: visible; }
-  #brandName { font-size: 150px; font-weight: 600; letter-spacing: 0.1em; margin-right: -0.1em; line-height: 1; white-space: nowrap; }
+  #mark { width: 132px; height: 132px; overflow: visible; filter: drop-shadow(0 0 18px rgba(76, 141, 255, 0.8)); }
+  #brandName { font-size: 150px; font-weight: 600; letter-spacing: 0.1em; margin-right: -0.1em; line-height: 1; white-space: nowrap;
+               text-shadow: 0 0 40px rgba(127, 178, 255, 0.35); }
   #brandName span { display: inline-block; }
-  #brandSub { font-size: 38px; font-weight: 520; letter-spacing: 0.03em; color: var(--accent); margin-top: 30px; }
+  #brandSub { font-size: 38px; font-weight: 520; letter-spacing: 0.03em; color: var(--accent); margin-top: 30px; text-shadow: 0 0 22px rgba(76, 141, 255, 0.6); }
   #brandTeam { font-size: 22px; font-weight: 620; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text2); margin-top: 72px; }
-
-  /* ---------- cifras del prototipo ---------- */
-  #stats { position: absolute; left: 150px; top: 290px; display: flex; flex-direction: column; gap: 46px; }
-  .stat { display: flex; align-items: center; gap: 34px; opacity: 0; }
-  .sn { font-size: 124px; font-weight: 720; letter-spacing: -0.045em; line-height: 0.9; color: var(--accent); width: 250px; text-align: right; font-variant-numeric: tabular-nums; }
-  .sl { font-size: 34px; font-weight: 560; line-height: 1.22; letter-spacing: -0.01em; }
-
-  /* ---------- hoja de ruta ---------- */
-  #road { position: absolute; left: 150px; top: 520px; width: 1700px; height: 320px; opacity: 0; }
-  #roadLine { position: absolute; left: 32px; top: 30px; width: 1410px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.14); overflow: hidden; }
-  #roadFill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #4C8DFF, rgba(76,141,255,0.45)); }
-  .node { position: absolute; top: 0; width: 330px; opacity: 0; }
-  .node b { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3);
-            background: var(--bg); font-size: 26px; font-weight: 700; color: var(--text2); }
-  .node.done b { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 34px rgba(76,141,255,0.65); }
-  .node .when { display: inline-block; margin-top: 26px; font-size: 17px; font-weight: 680; letter-spacing: 0.2em; color: var(--text2); }
-  .node.done .when { color: #fff; background: var(--accent); border-radius: 12px; padding: 4px 12px; }
-  .node .lbl { margin-top: 12px; font-size: 30px; font-weight: 600; line-height: 1.22; letter-spacing: -0.01em; }
+  #streak { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; transform-origin: 50% 50%;
+            background: linear-gradient(90deg, transparent, rgba(127,178,255,0.9) 35%, #fff 50%, rgba(127,178,255,0.9) 65%, transparent);
+            box-shadow: 0 0 30px #4C8DFF; opacity: 0; }
 
   #dim { position: absolute; inset: 0; background: var(--bg); opacity: 0; }
   #tag { position: absolute; left: 56px; bottom: 44px; display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 600;
          letter-spacing: 0.16em; text-transform: uppercase; color: var(--text2); opacity: 0; }
   #tag::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
   #tag.real { color: #7FB0FF; }
-  #pinch { position: absolute; left: 0; top: 0; width: 160px; height: 160px; margin: -80px 0 0 -80px; opacity: 0; overflow: visible; }
+  #tag.concept { color: var(--amber); }
+  #pinch { position: absolute; left: 0; top: 0; width: 160px; height: 160px; margin: -80px 0 0 -80px; opacity: 0; overflow: visible;
+           filter: drop-shadow(0 0 10px rgba(76, 141, 255, 0.8)); }
+  #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0;
+           background: radial-gradient(ellipse at 50% 50%, rgba(220, 235, 255, 0.95), rgba(76, 141, 255, 0.35) 45%, rgba(0, 0, 0, 0) 75%); mix-blend-mode: screen; }
+  #vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 55% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
 
   /* ---------- controles de la vista previa ---------- */
   #controls { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 12px; align-items: center; padding: 10px 16px;
@@ -129,100 +152,108 @@
 <body>
 <div id="viewport">
   <div id="stage">
-    <canvas id="gl" width="1920" height="1080"></canvas>
+    <div id="cam">
+      <canvas id="gl" width="1920" height="1080"></canvas>
 
-    <div class="layer" id="ui">
-      <!-- 1 · pantalla con los cortes -->
-      <div class="glass" id="ctCard">
-        <div class="panel-head"><div class="panel-title">Tomografía</div><div class="panel-meta" id="ctCount">Corte 001 / 267</div></div>
-        <div class="section">AXIAL</div>
-        <canvas class="ct" id="ctCanvas" width="600" height="600"></canvas>
-      </div>
-
-      <!-- panel "Sistemas" del prototipo -->
-      <div class="glass" id="systems">
-        <div class="panel-head"><div class="panel-title">Sistemas</div><div class="badge" id="sysBadge">0</div></div>
-        <div class="section">ANATOMÍA</div>
-        <div class="row"><div class="dot" style="background:#C2453F"></div><div class="label">Corazón</div><div class="pill"><div class="knob"></div></div></div>
-        <div class="row" data-organ="higado"><div class="dot" style="background:#DE6240"></div><div class="label">Hígado</div><div class="pill"><div class="knob"></div></div></div>
-        <div class="row" data-organ="estomago"><div class="dot" style="background:#B46BD0"></div><div class="label">Estómago</div><div class="pill"><div class="knob"></div></div></div>
-        <div class="row" data-organ="pancreas"><div class="dot" style="background:#EE93BC"></div><div class="label">Páncreas</div><div class="pill"><div class="knob"></div></div></div>
-        <div class="row" data-organ="vesicula"><div class="dot" style="background:#53B3E6"></div><div class="label">Vesícula</div><div class="pill"><div class="knob"></div></div></div>
-        <div class="foot">Ocultar todo</div>
-      </div>
-
-      <!-- corte axial que sigue al plano -->
-      <div class="glass" id="axCard">
-        <div class="panel-head"><div class="panel-title">Axial</div><div class="panel-meta" id="axCount">Corte 060 / 267</div></div>
-        <div class="section">TAC + SEGMENTACIÓN</div>
-        <canvas class="ct" id="axCanvas" width="460" height="460"></canvas>
-      </div>
-
-      <!-- tres planos -->
-      <div class="glass" id="triCard">
-        <div class="panel-head"><div class="panel-title">Tres planos</div><div class="panel-meta" id="triMeta"></div></div>
-        <div id="triRow">
-          <div class="tri"><span>AXIAL</span><canvas class="ct" id="triA" width="300" height="300"></canvas></div>
-          <div class="tri"><span>CORONAL</span><canvas class="ct" id="triC" width="172" height="300"></canvas></div>
-          <div class="tri"><span>SAGITAL</span><canvas class="ct" id="triS" width="172" height="300"></canvas></div>
+      <div class="layer" id="ui">
+        <!-- 1 · pantalla con los cortes -->
+        <div class="glass" id="ctCard">
+          <div class="panel-head"><div class="panel-title">Tomografía</div><div class="panel-meta" id="ctCount">Corte 001 / 267</div></div>
+          <div class="section">AXIAL</div>
+          <canvas class="ct" id="ctCanvas" width="600" height="600"></canvas>
+          <div class="scan" id="ctScan"></div>
         </div>
-      </div>
 
-      <div id="dim"></div>
-      <div class="glass" id="capture"><img id="capA" alt=""><img id="capB" alt=""></div>
-
-      <!-- lo que buscamos -->
-      <div id="chips">
-        <div class="chip"><i>✓</i>Cirujanos que lo prueben y nos guíen</div>
-        <div class="chip"><i>✓</i>Casos anonimizados para desarrollarlo</div>
-        <div class="chip"><i>✓</i>Apoyo para la siguiente fase</div>
-      </div>
-
-      <!-- el prototipo en cifras (datos del proyecto) -->
-      <div id="stats">
-        <div class="stat"><div class="sn" data-n="267">0</div><div class="sl">cortes de tomografía…<br><span class="acc">en un solo cuerpo 3D</span></div></div>
-        <div class="stat"><div class="sn" data-n="4">0</div><div class="sl">órganos<br>segmentados</div></div>
-        <div class="stat"><div class="sn" data-n="3">0</div><div class="sl">planos<br>sincronizados</div></div>
-      </div>
-
-      <!-- hoja de ruta -->
-      <div id="road">
-        <div id="roadLine"><i id="roadFill"></i></div>
-        <div class="node done" style="left:0"><b>✓</b><span class="when">HOY</span><div class="lbl">Visualización 3D<br>de la tomografía</div></div>
-        <div class="node" style="left:470px"><b>2</b><span class="when">FASE 2</span><div class="lbl">Precisión y<br>estabilidad del visor</div></div>
-        <div class="node" style="left:940px"><b>3</b><span class="when">FASE 3</span><div class="lbl">Planificación quirúrgica<br>con cirujanos</div></div>
-        <div class="node" style="left:1410px"><b>4</b><span class="when">FASE 4</span><div class="lbl">Validación<br>clínica</div></div>
-      </div>
-
-      <!-- marca: cortes que forman un volumen -->
-      <div id="brand">
-        <div id="brandPre">Les presentamos</div>
-        <div id="brandRow">
-          <svg id="mark" viewBox="-1.1 -1.1 2.2 2.2">
-            <defs><linearGradient id="markGrad" x1="0" y1="-1" x2="0" y2="1" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="#8DB8FF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient></defs>
-            <g id="markBars" fill="url(#markGrad)"></g>
-          </svg>
-          <div id="brandName"></div>
+        <!-- corte axial que sigue al plano -->
+        <div class="glass" id="axCard">
+          <div class="panel-head"><div class="panel-title">Axial</div><div class="panel-meta" id="axCount">Corte 060 / 267</div></div>
+          <div class="section">TAC + SEGMENTACIÓN</div>
+          <canvas class="ct" id="axCanvas" width="460" height="460"></canvas>
         </div>
-        <div id="brandSub"></div>
-        <div id="brandTeam"></div>
+
+        <!-- tres planos -->
+        <div class="glass" id="triCard">
+          <div class="panel-head"><div class="panel-title">Tres planos</div><div class="panel-meta" id="triMeta"></div></div>
+          <div id="triRow">
+            <div class="tri"><span>AXIAL</span><canvas class="ct" id="triA" width="300" height="300"></canvas></div>
+            <div class="tri"><span>CORONAL</span><canvas class="ct" id="triC" width="172" height="300"></canvas></div>
+            <div class="tri"><span>SAGITAL</span><canvas class="ct" id="triS" width="172" height="300"></canvas></div>
+          </div>
+        </div>
+
+        <div id="dim"></div>
+
+        <!-- líneas que unen cada etiqueta con su órgano o su marca -->
+        <svg id="lines" viewBox="0 0 1920 1080"></svg>
+        <div id="otags">
+          <div class="otag" data-organ="higado"><i style="background:#DE6240"></i>Hígado <em>· <span>1665</span> mL</em></div>
+          <div class="otag" data-organ="estomago"><i style="background:#B46BD0"></i>Estómago <em>· <span>436</span> mL</em></div>
+          <div class="otag" data-organ="pancreas"><i style="background:#EE93BC"></i>Páncreas <em>· <span>67</span> mL</em></div>
+          <div class="otag" data-organ="vesicula"><i style="background:#53B3E6"></i>Vesícula <em>· <span>12</span> mL</em></div>
+        </div>
+
+        <!-- modo cirugía (concepto) -->
+        <div id="surg">
+          <div id="sbtn">
+            <svg viewBox="-24 -24 48 48"><circle r="16" fill="none" stroke="#7FB2FF" stroke-width="3"/><circle r="5" fill="#FFB547"/>
+              <path d="M0 -23 V -12 M0 12 V 23 M-23 0 H -12 M12 0 H 23" stroke="#7FB2FF" stroke-width="3" stroke-linecap="round"/></svg>
+            Modo cirugía
+          </div>
+          <div id="sring"></div>
+          <div id="schip"><i></i>MODO CIRUGÍA · CONCEPTO</div>
+          <div class="slabel" id="sl0"><b>Zona a tratar</b><span>Marcada sobre el modelo</span></div>
+          <div class="slabel" id="sl1"><b>Márgenes</b><span>Alrededor de la zona</span></div>
+          <div class="slabel" id="sl2"><b>Abordaje</b><span>Trayectorias planificadas</span></div>
+        </div>
+
+        <!-- hoja de ruta corta -->
+        <div id="road">
+          <div id="roadLine"><i id="roadFill"></i></div>
+          <div class="node done" style="left:0"><b>✓</b><span class="when">HOY</span><div class="lbl">Prototipo</div></div>
+          <div class="node" style="left:340px"><b>2</b><span class="when">SIGUIENTE</span><div class="lbl">Validación<br>con cirujanos</div></div>
+          <div class="node" style="left:680px"><b>3</b><span class="when">META</span><div class="lbl">Quirófano</div></div>
+        </div>
+
+        <!-- lo que buscamos -->
+        <div id="chips">
+          <div class="chip"><i>✓</i>Cirujanos que lo prueben y nos guíen</div>
+          <div class="chip"><i>✓</i>Casos anonimizados para investigar</div>
+          <div class="chip"><i>✓</i>Validarlo juntos, con rigor académico</div>
+        </div>
+
+        <svg id="pinch" viewBox="-80 -80 160 160">
+          <circle id="pinchRing" r="46" fill="rgba(76,141,255,0.10)" stroke="#4C8DFF" stroke-width="3"/>
+          <circle id="pinchA" r="9" fill="#F0F2F5"/>
+          <circle id="pinchB" r="9" fill="#F0F2F5"/>
+        </svg>
+
+        <!-- marca: cortes que forman un volumen -->
+        <div id="brand">
+          <div id="streak"></div>
+          <div id="brandPre">Les presentamos</div>
+          <div id="brandRow">
+            <svg id="mark" viewBox="-1.1 -1.1 2.2 2.2">
+              <defs><linearGradient id="markGrad" x1="0" y1="-1" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#8DB8FF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient></defs>
+              <g id="markBars" fill="url(#markGrad)"></g>
+            </svg>
+            <div id="brandName"></div>
+          </div>
+          <div id="brandSub"></div>
+          <div id="brandTeam"></div>
+        </div>
+
+        <div id="text"></div>
+        <div id="tag"></div>
       </div>
-
-      <svg id="pinch" viewBox="-80 -80 160 160">
-        <circle id="pinchRing" r="46" fill="rgba(76,141,255,0.10)" stroke="#4C8DFF" stroke-width="3"/>
-        <circle id="pinchA" r="9" fill="#F0F2F5"/>
-        <circle id="pinchB" r="9" fill="#F0F2F5"/>
-      </svg>
-
-      <div id="text"></div>
-      <div id="tag"></div>
     </div>
+    <div id="vignette"></div>
+    <div id="flash"></div>
   </div>
 </div>
 <div id="controls">
   <button id="play">Reproducir</button>
-  <input id="scrub" type="range" min="0" max="63" step="0.0333" value="0">
+  <input id="scrub" type="range" min="0" max="66" step="0.0333" value="0">
   <output id="time">0.00 s</output>
 </div>
 <div id="loading">Cargando datos del TAC…</div>

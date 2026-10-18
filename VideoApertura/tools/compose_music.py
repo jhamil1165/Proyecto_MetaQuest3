@@ -5,9 +5,10 @@ derechos de terceros.
 Estilo de anuncio corto (reel), pero sobrio: 120 BPM, un compás = 2 s. Empieza con un reloj
 y un fondo tenso (son las 7:00, la cirugía es a las 9:00), suena un clic por cada corte que se
 revisa «uno por uno», sube hasta un golpe en Re mayor cuando aparece INMERSIA y entra el ritmo
-durante la demostración. Respira en la captura real, vuelve con más fuerza en la hoja de ruta
-y cierra con un último golpe en el logo, que se apaga en silencio. Los cambios caen en los
-segundos de CUES, que son los del guion de src/main.js.
+durante la demostración. Respira en la captura real, suena el clic del botón «Modo cirugía» y
+un destello por cada marca (zona, márgenes, abordaje), y cierra con un último golpe en el logo,
+que se apaga en silencio. Los cambios caen en los segundos de CUES, que son los del guion de
+src/main.js.
 
 Uso (desde VideoApertura):
   python3 tools/compose_music.py out/musica.wav
@@ -19,28 +20,30 @@ import numpy as np
 from scipy.signal import butter, fftconvolve, sosfilt
 
 SR = 48000
-DUR = 63.0
+DUR = 66.0
 BEAT = 0.5          # 120 BPM
 BAR = 4 * BEAT      # 2 s
 RNG = np.random.default_rng(11)
 
 # Escenas del guion (segundos del video; deben coincidir con src/main.js).
 CUES = {
-    "hook": 0.0,        # quirófano 3, 7:00 → 9:00
-    "count": 4.2,       # «267» cuenta desde cero
-    "problem": 6.0,     # una por una… en la cabeza
-    "question": 10.0,   # ¿y si pudieran verlo completo?
-    "brand": 16.0,      # INMERSIA (golpe)
-    "demo": 20.0,       # órganos, mano, plano, tres planos
-    "real": 34.0,       # captura real (respiro)
-    "stats": 38.0,      # cifras
-    "road": 42.0,       # hoja de ruta
-    "ask": 50.0,        # buscamos un aliado clínico
-    "close": 54.0,      # construyámoslo junto a la clínica
-    "logo": 58.0,       # logo (golpe final)
+    "hook": 0.0,        # son las 7:00, la cirugía es a las 9:00
+    "count": 5.2,       # «267» cuenta desde cero
+    "problem": 8.0,     # una por una… en la cabeza
+    "question": 14.0,   # ¿y si pudieran verlo completo? (nace el cuerpo)
+    "brand": 20.0,      # INMERSIA (golpe)
+    "demo": 24.0,       # órganos, mano, plano, tres planos
+    "real": 37.0,       # captura real (respiro)
+    "surgery": 41.0,    # lo que viene: modo cirugía
+    "click": 42.8,      # se pulsa el botón «Modo cirugía»
+    "ask": 50.5,        # prototipo, aliado clínico
+    "close": 56.0,      # construyámoslo juntos
+    "logo": 60.0,       # logo (golpe final)
 }
-# Entradas de bloques de texto: un soplo suave en cada cambio de escena.
-WHOOSH = [2.85, 6.55, 10.45, 20.0, 23.0, 26.0, 30.4, 34.1, 38.1, 42.1, 49.7, 54.0]
+# Marcas del modo cirugía: zona a tratar, márgenes y los tres puntos del abordaje.
+MARKS = [44.3, 45.8, 46.5, 46.75, 47.0]
+# Cambios de escena y de bloque de texto: un soplo suave.
+WHOOSH = [3.95, 8.25, 14.35, 24.2, 27.9, 30.3, 33.8, 37.2, 41.0, 50.5, 53.4, 56.5]
 
 N = int(SR * DUR)
 t = np.arange(N) / SR
@@ -257,18 +260,27 @@ def harmony(t0, t1, level, bass_level=0.2, eighths=True, bells_on=True):
         k += 1
 
 
+def ui_click(at, gain=0.2):
+    """Clic de botón: golpe corto y brillante con un destello de cristal."""
+    tick(at, high=True, gain=gain)
+    n = int(0.12 * SR)
+    tt = np.arange(n) / SR
+    place(fx, at, np.sin(2 * np.pi * 1320 * tt) * np.exp(-tt / 0.02), gain * 0.5)
+    bell("A6", at + 0.01, gain=gain * 0.35, decay=0.8, buf=fx)
+
+
 # --- Gancho: reloj y un fondo tenso en Si menor ---
 pad_chord(["B1", "F#2", "B2", "F#3"], 0.0, C["question"] + 0.8, 0.32, a=0.25, r=1.2)
-for s in np.arange(0.0, C["count"] - 0.5, 1.0):
+for s in np.arange(0.0, C["count"] - 0.4, 1.0):
     tick(s, high=int(s) % 2 == 0, gain=0.22)
     place(drums, s, KICK, 0.16)
 # «267»: los clics se aceleran mientras cuenta
-times = C["count"] + 1.1 * (1 - (1 - np.linspace(0, 1, 30)) ** 2.2)
+times = C["count"] + 1.2 * (1 - (1 - np.linspace(0, 1, 30)) ** 2.2)
 for j, s in enumerate(times):
     tick(s, high=True, gain=0.08 + 0.06 * j / 30)
-bell("F#5", C["count"] + 1.15, gain=0.05, decay=1.6)
+bell("F#5", C["count"] + 1.25, gain=0.05, decay=1.6)
 # «una por una»: un clic por cada corte que avanza (uno por tiempo)
-for s in np.arange(C["problem"] + 0.5, C["question"] - 0.4, BEAT):
+for s in np.arange(C["problem"] + 0.5, C["question"] - 1.0, BEAT):
     tick(s, high=False, gain=0.17)
 pad_chord(["G1", "D2", "B2", "D3"], C["problem"], C["question"] - C["problem"] + 0.8, 0.2, a=0.8, r=1.0)
 place(drums, C["problem"], KICK, 0.35)
@@ -292,25 +304,37 @@ for s in np.arange(C["brand"] + BAR, C["demo"], BEAT):
 groove(C["brand"] + BAR, C["demo"], kick=True, clap=False, hats=True, open_hats=False, level=0.7)
 swell(C["demo"] - 1.0, 1.0, 0.04)
 
-# --- Demostración: el ritmo completo ---
+# --- Demostración: el ritmo completo; un brillo por cada órgano que se enciende ---
 harmony(C["demo"], C["real"], 0.15)
 groove(C["demo"], C["real"])
+for j, s in enumerate([24.5, 25.0, 25.5, 26.0]):
+    bell(["A5", "D6", "F#6", "A6"][j], s, gain=0.045, decay=1.0, pan=(-0.3, 0.3, -0.15, 0.15)[j])
+bell("D6", 34.3, gain=0.05, decay=1.6)       # tres planos
 
 # --- Captura real: respiro, sin batería ---
 pad_chord(["G2", "D3", "F#3", "B3", "E4"], C["real"], BAR + 0.6, 0.22, a=0.3, r=0.8)
 pad_chord(["A2", "E3", "G3", "C#4", "E4"], C["real"] + BAR, BAR + 0.4, 0.22, a=0.3, r=0.5)
-for s in np.arange(C["real"], C["stats"], BEAT):
+for s in np.arange(C["real"], C["surgery"], BEAT):
     place(drums, s + BEAT / 2, HAT, 0.03)
 for j, nte in enumerate(["B5", "A5", "F#5", "E5", "C#6", "A5", "E5", "A5"]):
     bell(nte, C["real"] + j * BEAT, gain=0.04, decay=1.4, pan=0.3 * np.cos(j))
-swell(C["stats"] - 1.4, 1.4, 0.05)
+swell(C["surgery"] - 1.4, 1.4, 0.05)
 
-# --- Cifras, hoja de ruta y lo que buscamos: vuelve el ritmo, más abierto ---
-impact(C["stats"], gain=0.5)
-harmony(C["stats"], C["close"], 0.16, bass_level=0.22)
-groove(C["stats"], C["close"] - BEAT)
-for s in np.arange(C["road"], C["close"] - BAR, BEAT / 2):   # brillo extra en la hoja de ruta
-    bell(["D6", "A5", "F#6", "E6"][int((s - C["road"]) / (BEAT / 2)) % 4], s, gain=0.018, decay=0.5, pan=0.5 * np.sin(s))
+# --- Modo cirugía: suspenso hasta el clic, y el ritmo vuelve con más brillo ---
+impact(C["surgery"], gain=0.4)
+pad_chord(["B1", "F#2", "C#3", "D3", "A3"], C["surgery"], C["click"] - C["surgery"] + 0.4, 0.22, a=0.2, r=0.3)
+for j, s in enumerate(np.arange(C["surgery"] + 0.25, C["click"] - 0.05, BEAT / 4)):
+    tick(s, high=True, gain=0.02 + 0.05 * j / 7)
+ui_click(C["click"], gain=0.26)
+impact(C["click"], gain=0.35)
+harmony(C["click"], C["close"], 0.16, bass_level=0.22)
+groove(C["click"], C["ask"])
+groove(C["ask"], C["ask"] + 3.0, clap=False, level=0.8)        # «hoy es un prototipo»: más ligero
+groove(C["ask"] + 3.0, C["close"] - BEAT)
+for s in np.arange(C["click"] + 0.25, C["ask"], BEAT / 2):       # arpegio de cristal
+    bell(["D6", "A5", "F#6", "E6"][int((s - C["click"]) / (BEAT / 2)) % 4], s, gain=0.016, decay=0.5, pan=0.5 * np.sin(s))
+for j, s in enumerate(MARKS):
+    bell(["E6", "B5", "F#6", "A6", "D7"][j], s, gain=0.06, decay=1.2, pan=(0.0, -0.3, 0.3, 0.0, -0.2)[j], buf=fx)
 # redoble hacia el cierre
 for j, s in enumerate(np.arange(C["close"] - BEAT, C["close"], BEAT / 4)):
     place(drums, s, CLAP, 0.06 + 0.04 * j)
@@ -347,7 +371,7 @@ def reverb(x, seconds, wet):
 # --- mezcla ---
 # la armonía «respira» con el bombo durante el ritmo (bombeo suave)
 pump = np.ones(N)
-kick_times = [s for t0, t1 in ((C["demo"], C["real"]), (C["stats"], C["close"] - BEAT))
+kick_times = [s for t0, t1 in ((C["demo"], C["real"]), (C["click"], C["close"] - BEAT))
               for s in np.arange(t0, t1, 2 * BEAT)]
 for s in kick_times:
     i0 = int(s * SR)

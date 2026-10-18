@@ -218,6 +218,76 @@ export async function createEngine(canvas, opts = {}) {
   shadow.position.y = -half.y - 0.08;
   scene.add(shadow);
 
+  // Plataforma holográfica bajo el cuerpo, como el disco que pone el visor bajo cada órgano:
+  // anillos que giran, marcas y una onda que se expande. Suma luz (aditivo).
+  const platU = { uTime: { value: 0 }, uOpacity: { value: 0 }, uPulse: { value: 0 } };
+  const platform = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.ShaderMaterial({
+    uniforms: platU,
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: /* glsl */`
+      uniform float uTime, uOpacity, uPulse; varying vec2 vUv;
+      float ring(float r, float c, float w){ return exp(-pow((r - c) / w, 2.0)); }
+      void main(){
+        vec2 p = (vUv - 0.5) * 2.0; float r = length(p); float a = atan(p.y, p.x) / 6.28318 + 0.5;
+        float v = ring(r, 0.62, 0.010) + ring(r, 0.56, 0.004) * 0.45 + ring(r, 0.38, 0.003) * 0.25
+                + smoothstep(0.64, 0.0, r) * 0.07;
+        v += step(0.55, fract(a * 96.0 + uTime * 0.6)) * ring(r, 0.70, 0.010) * 0.55;
+        v += step(0.62, fract(a * 3.0 - uTime * 0.05)) * ring(r, 0.78, 0.005) * 0.9;
+        v += step(0.80, fract(a * 2.0 + uTime * 0.03)) * ring(r, 0.86, 0.003) * 0.6;
+        float w = fract(uTime * 0.28);
+        v += ring(r, w * 0.9, 0.025) * (1.0 - w) * 0.45;
+        v += uPulse * ring(r, 0.62, 0.05) * 0.8;
+        v *= smoothstep(1.0, 0.9, r);
+        gl_FragColor = vec4(vec3(0.32, 0.58, 1.0) * v * uOpacity, 1.0);
+      }`,
+    transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, toneMapped: false,
+  }));
+  platform.rotation.x = -Math.PI / 2;
+  platform.position.y = -half.y - 0.03;
+  platform.renderOrder = 1;
+  scene.add(platform);
+
+  // Polvo de luz flotando alrededor: da profundidad y vida al fondo negro.
+  const NP = 520;
+  const pPos = new Float32Array(NP * 3), pSeed = new Float32Array(NP);
+  let seed = 12345;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < NP; i++) {
+    pPos[i * 3] = (rnd() - 0.5) * 3.2;
+    pPos[i * 3 + 1] = (rnd() - 0.5) * 2.0;
+    pPos[i * 3 + 2] = (rnd() - 0.5) * 3.2;
+    pSeed[i] = rnd();
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  pGeo.setAttribute('seed', new THREE.BufferAttribute(pSeed, 1));
+  const dustU = { uTime: { value: 0 }, uOpacity: { value: 0 } };
+  const dust = new THREE.Points(pGeo, new THREE.ShaderMaterial({
+    uniforms: dustU,
+    vertexShader: /* glsl */`
+      attribute float seed; uniform float uTime; varying float vA;
+      void main(){
+        // suben despacio y, al llegar arriba, reaparecen abajo (con fundido en los bordes)
+        vec3 p = position;
+        p.y = mod(position.y + 1.0 + uTime * (0.012 + seed * 0.02), 2.0) - 1.0;
+        p.x += sin(uTime * 0.21 + seed * 40.0) * 0.04;
+        p.z += cos(uTime * 0.17 + seed * 23.0) * 0.04;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_Position = projectionMatrix * mv;
+        float s = 0.6 + seed * seed * 3.2;
+        gl_PointSize = min(s * 14.0 / -mv.z, 40.0);
+        vA = (0.35 + 0.65 * (0.5 + 0.5 * sin(uTime * (0.6 + seed) + seed * 50.0))) * (0.25 + seed * 0.75);
+        vA *= smoothstep(1.0, 0.75, abs(p.y)) * smoothstep(0.25, 0.8, -mv.z);
+      }`,
+    fragmentShader: /* glsl */`
+      uniform float uOpacity; varying float vA;
+      void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d); a *= a;
+        gl_FragColor = vec4(vec3(0.55, 0.72, 1.0) * a * vA * uOpacity * 0.55, 1.0); }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  dust.renderOrder = 1;
+  scene.add(dust);
+
   // ---------- volumen por raymarching ----------
   const rtMain = new THREE.WebGLRenderTarget(W, H, { samples: 4, type: THREE.HalfFloatType });
   rtMain.depthTexture = new THREE.DepthTexture(W, H);
@@ -294,13 +364,39 @@ export async function createEngine(canvas, opts = {}) {
   volScene.add(new THREE.Mesh(quadGeo, volMat));
 
   // composición final: escena + volumen (premultiplicado)
-  const copyMat = new THREE.ShaderMaterial({
-    uniforms: { uTex: { value: null } },
+  // brillo: se extrae lo más luminoso a 1/4 de resolución, se difumina y se suma al final
+  const BW = W / 4, BH = H / 4;
+  const rtB1 = new THREE.WebGLRenderTarget(BW, BH, { type: THREE.HalfFloatType });
+  const rtB2 = new THREE.WebGLRenderTarget(BW, BH, { type: THREE.HalfFloatType });
+  const bloomU = { uStrength: { value: 0.7 }, uThreshold: { value: 0.3 } };
+  const brightMat = new THREE.ShaderMaterial({
+    uniforms: { uTex: { value: null }, uPx: { value: new THREE.Vector2(1 / W, 1 / H) }, uThreshold: bloomU.uThreshold },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-    fragmentShader: `uniform sampler2D uTex; varying vec2 vUv;
+    fragmentShader: `uniform sampler2D uTex; uniform vec2 uPx; uniform float uThreshold; varying vec2 vUv;
+      void main(){ vec3 c = vec3(0.0);
+        for (int i = -1; i <= 2; i++) for (int j = -1; j <= 2; j++) c += texture2D(uTex, vUv + vec2(float(i) - 0.5, float(j) - 0.5) * uPx).rgb;
+        c /= 16.0; float l = max(c.r, max(c.g, c.b));
+        gl_FragColor = vec4(c * smoothstep(uThreshold, uThreshold + 0.35, l), 1.0); }`,
+    depthTest: false, depthWrite: false,
+  });
+  const blurMat = new THREE.ShaderMaterial({
+    uniforms: { uTex: { value: null }, uDir: { value: new THREE.Vector2() } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `uniform sampler2D uTex; uniform vec2 uDir; varying vec2 vUv;
+      void main(){ vec3 c = texture2D(uTex, vUv).rgb * 0.2270;
+        c += (texture2D(uTex, vUv + uDir * 1.3846).rgb + texture2D(uTex, vUv - uDir * 1.3846).rgb) * 0.3162;
+        c += (texture2D(uTex, vUv + uDir * 3.2308).rgb + texture2D(uTex, vUv - uDir * 3.2308).rgb) * 0.0703;
+        gl_FragColor = vec4(c, 1.0); }`,
+    depthTest: false, depthWrite: false,
+  });
+  const copyMat = new THREE.ShaderMaterial({
+    uniforms: { uTex: { value: null }, uBloom: { value: rtB1.texture }, uStrength: bloomU.uStrength },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `uniform sampler2D uTex, uBloom; uniform float uStrength; varying vec2 vUv;
       vec3 toSRGB(vec3 c){ c = clamp(c, 0.0, 1.0); return mix(c * 12.92, 1.055 * pow(c, vec3(1.0/2.4)) - 0.055, step(0.0031308, c)); }
       float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-      void main(){ vec3 c = toSRGB(texture2D(uTex, vUv).rgb); c += (hash(gl_FragCoord.xy) - 0.5) / 255.0; gl_FragColor = vec4(c, 1.0); }`,
+      void main(){ vec3 lin = texture2D(uTex, vUv).rgb + texture2D(uBloom, vUv).rgb * uStrength;
+        vec3 c = toSRGB(lin); c += (hash(gl_FragCoord.xy) - 0.5) / 255.0; gl_FragColor = vec4(c, 1.0); }`,
     depthTest: false, depthWrite: false,
   });
   const volCompMat = new THREE.ShaderMaterial({
@@ -311,6 +407,8 @@ export async function createEngine(canvas, opts = {}) {
     blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
   });
   const copyScene = new THREE.Scene(); copyScene.add(new THREE.Mesh(quadGeo, copyMat));
+  const brightScene = new THREE.Scene(); brightScene.add(new THREE.Mesh(quadGeo, brightMat));
+  const blurScene = new THREE.Scene(); blurScene.add(new THREE.Mesh(quadGeo, blurMat));
   const compScene = new THREE.Scene(); compScene.add(new THREE.Mesh(quadGeo, volCompMat));
   const orthoCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
@@ -319,9 +417,9 @@ export async function createEngine(canvas, opts = {}) {
   bgCanvas.width = 960; bgCanvas.height = 540;
   {
     const c = bgCanvas.getContext('2d');
-    c.fillStyle = '#1E2228'; c.fillRect(0, 0, 960, 540);
-    const gr = c.createRadialGradient(560, 250, 40, 560, 270, 720);
-    gr.addColorStop(0, 'rgba(46,54,66,0.85)'); gr.addColorStop(0.55, 'rgba(30,34,40,0)'); gr.addColorStop(1, 'rgba(14,16,20,0.75)');
+    c.fillStyle = '#05070A'; c.fillRect(0, 0, 960, 540);
+    const gr = c.createRadialGradient(600, 250, 20, 600, 270, 620);
+    gr.addColorStop(0, 'rgba(22,40,74,0.75)'); gr.addColorStop(0.5, 'rgba(10,18,34,0.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = gr; c.fillRect(0, 0, 960, 540);
   }
   const bgTex = new THREE.CanvasTexture(bgCanvas);
@@ -368,15 +466,25 @@ export async function createEngine(canvas, opts = {}) {
     renderer.autoClear = false;
     if (volumeOn) renderer.render(compScene, orthoCam);
     renderer.render(overlay, camera);
-    // 3) a pantalla, codificado a sRGB
+    renderer.autoClear = true;
+    // 3) brillo: lo luminoso, difuminado dos veces
+    brightMat.uniforms.uTex.value = rtMain.texture;
+    renderer.setRenderTarget(rtB1); renderer.render(brightScene, orthoCam);
+    for (let k = 0; k < 2; k++) {
+      blurMat.uniforms.uTex.value = rtB1.texture; blurMat.uniforms.uDir.value.set((1 + k) / BW, 0);
+      renderer.setRenderTarget(rtB2); renderer.render(blurScene, orthoCam);
+      blurMat.uniforms.uTex.value = rtB2.texture; blurMat.uniforms.uDir.value.set(0, (1 + k) / BH);
+      renderer.setRenderTarget(rtB1); renderer.render(blurScene, orthoCam);
+    }
+    // 4) a pantalla, codificado a sRGB
     renderer.setRenderTarget(null);
     copyMat.uniforms.uTex.value = rtMain.texture;
     renderer.render(copyScene, orthoCam);
-    renderer.autoClear = true;
   }
 
   return {
-    THREE, renderer, camera, scene, body, organs, stack, planes, loose, looseTex, looseKey, looseOpacity, looseR, shadow,
-    volMat, size, half, dims: { NX, NY, NZ }, project, render,
+    THREE, renderer, camera, scene, overlay, body, organs, stack, planes, loose, looseTex, looseKey, looseOpacity, looseR, shadow,
+    platform, platU, dust, dustU, bloom: bloomU,
+    volMat, size, half, dims: { NX, NY, NZ }, raw, project, render,
   };
 }
