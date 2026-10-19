@@ -53,6 +53,7 @@ VOICE_CUTS = [
     (51.75, 52.64, 54.015),    # Inmersia. (con el golpe del logo, en 54 s)
 ]
 TEMPO = 1.0    # la voz va a su velocidad natural
+PITCH = 1.035  # tono un poco más alto (sin cambiar la velocidad): menos seria, más ligera
 SR = 48000
 FADE = 0.015   # fundido en cada corte, para que no haga clic
 # Voz suave y elegante, sin cambiar su velocidad: un poco más de cuerpo, menos dureza en los
@@ -66,7 +67,8 @@ SOFT = ("highpass=f=80,equalizer=f=200:t=q:w=1.0:g=1.5,equalizer=f=2800:t=q:w=1.
 
 def place_voice(path_in, path_out):
     """Corta la toma en sus silencios y pone cada frase en su segundo del video."""
-    raw = subprocess.run([FFMPEG, "-v", "error", "-i", path_in, "-af", f"atempo={TEMPO}",
+    raw = subprocess.run([FFMPEG, "-v", "error", "-i", path_in, 
+                          "-af", f"aresample={SR},asetrate={SR}*{PITCH},aresample={SR},atempo={TEMPO / PITCH}",
                           "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"], check=True, capture_output=True).stdout
     take = np.frombuffer(raw, "<i2").astype(np.float32) / 32768
     out = np.zeros(int(DURATION * SR), np.float32)
