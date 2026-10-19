@@ -53,7 +53,7 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 //   24  cada órgano con su volumen · tómalo con la mano · córtalo · tres planos
 //   37  regla 2D: mide sobre cada corte, en milímetros reales
 //   41  regla 3D: sobre el propio órgano, y lo acompaña al moverlo
-//   45  y todo esto ya funciona en Meta Quest 3 (avances del prototipo)
+//   45  y ya funciona en Meta Quest 3 (avances del prototipo)
 //   49  construyámoslo juntos, con la clínica
 //   54  logo (quieto desde 55,8)
 
@@ -61,18 +61,18 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 // Las palabras entran una por una. <b>…</b> = azul y subrayado; <s>…</s> = tachado;
 // <n>267</n> = número que cuenta desde cero. Una línea 'ghost' queda borrosa, como imaginada.
 const BLOCKS = [
-  { at: 0.45, out: 4.45, pos: 'center', lines: [['q', 'Toda cirugía…'], ['q', 'empieza <b>antes</b>'], ['q', 'del quirófano.']], gaps: [0.05, 1.66, 3.0] },
-  { at: 4.85, out: 9.55, pos: 'left', lines: [['h1', 'Empieza en una tomografía:'], ['big', '<n>267</n>'], ['h1', 'imágenes…']], gaps: [0.05, 2.25, 3.8] },
-  { at: 9.9, out: 13.2, pos: 'left', lines: [['h1', 'Que hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1 ghost', 'imaginando el resto.']], gaps: [0.05, 1.25, 2.13] },
-  { at: 13.25, out: 18.0, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'verlo <b>completo</b>…'], ['h2 dim', 'frente a ti?']], gaps: [0.05, 0.78, 1.98] },
-  { at: 24.25, out: 27.8, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Cada órgano,'], ['h2', 'segmentado…'], ['h2', '<b>y con su volumen.</b>']], gaps: [0, 0.05, 1.12, 2.6] },
-  { at: 28.0, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalo'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.5] },
-  { at: 30.35, out: 33.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Córtalo'], ['h2', '<b>donde quieras.</b>'], ['sub', 'Y la tomografía te sigue.']], gaps: [0, 0.05, 0.53, 1.81] },
-  { at: 33.95, out: 36.9, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.05, 1.41] },
+  { at: 0.45, out: 4.45, pos: 'center', lines: [['q', 'Toda cirugía…'], ['q', 'empieza <b>antes</b>'], ['q', 'del quirófano.']], gaps: [0.05, 1.58, 2.92] },
+  { at: 4.85, out: 9.55, pos: 'left', lines: [['h1', 'Empieza en una tomografía:'], ['big', '<n>267</n>'], ['h1', 'imágenes…']], gaps: [0.05, 2.14, 3.61] },
+  { at: 9.9, out: 13.2, pos: 'left', lines: [['h1', 'Que hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1 ghost', 'imaginando el resto.']], gaps: [0.04, 1.18, 2.02] },
+  { at: 13.25, out: 18.0, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'verlo <b>completo</b>…'], ['h2 dim', 'frente a ti?']], gaps: [0.05, 0.8, 1.94] },
+  { at: 24.25, out: 27.8, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Cada órgano,'], ['h2', 'segmentado…'], ['h2', '<b>y con su volumen.</b>']], gaps: [0, 0.045, 1.06, 2.46] },
+  { at: 28.0, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalo'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.48] },
+  { at: 30.35, out: 33.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Córtalo'], ['h2', '<b>donde quieras.</b>'], ['sub', 'Y la tomografía te sigue.']], gaps: [0, 0.05, 0.5, 1.8] },
+  { at: 33.95, out: 36.9, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.05, 1.34] },
   { at: 37.5, out: 40.75, pos: 'left', lines: [['kicker', '05 · Regla 2D'], ['h2', 'Mide sobre cada corte…'], ['h2', '<b>en milímetros reales.</b>']], gaps: [0, 0.05, 1.5] },
   { at: 41.3, out: 45.2, pos: 'left', lines: [['kicker', '06 · Regla 3D'], ['h2', 'Y también en 3D…'], ['h2', '<b>sobre el propio órgano.</b>'], ['sub', 'La medida se mueve con el órgano.']], gaps: [0, 0.05, 1.4, 2.3] },
-  { at: 45.75, out: 49.25, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Y todo esto…'], ['h2', 'ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.05, 1.1, 1.9, 2.6] },
-  { at: 49.7, out: 53.4, pos: 'left', lines: [['h2', 'Construyámoslo juntos…'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.1, 1.43, 1.75] },
+  { at: 45.75, out: 49.25, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Y ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.05, 1.24, 2.1] },
+  { at: 49.7, out: 53.4, pos: 'left', lines: [['h2', 'Construyámoslo juntos…'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.1, 1.36, 1.67] },
 ];
 const WORD_STAGGER = 0.065, WORD_IN = 0.42;
 

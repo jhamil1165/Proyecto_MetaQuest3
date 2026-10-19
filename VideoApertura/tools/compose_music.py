@@ -5,10 +5,10 @@ derechos de terceros.
 Estilo de anuncio corto (reel), pero sobrio: 120 BPM, un compás = 2 s. Empieza con un reloj
 y un fondo tenso (toda cirugía empieza antes del quirófano), suena un clic por cada corte que se
 revisa «uno por uno», sube hasta un golpe en Re mayor cuando aparece INMERSIA y entra el ritmo
-durante la demostración. Respira en las reglas, con un destello por cada punto que se marca,
-vuelve con fuerza en «ya funciona en Meta Quest 3» (un brillo por cada avance) y cierra con un
-último golpe en el logo, que se apaga en silencio. Los cambios caen en los segundos de CUES, que
-son los del guion de src/main.js.
+durante la demostración. Sigue, más ligera, en las reglas (sin voz), con un destello por cada
+punto que se marca; vuelve con fuerza en «ya funciona en Meta Quest 3» (un brillo por cada
+avance) y cierra con un último golpe en el logo, que se apaga en silencio. Los cambios caen en
+los segundos de CUES, que son los del guion de src/main.js.
 
 Uso (desde VideoApertura):
   python3 tools/compose_music.py out/musica.wav
@@ -302,19 +302,13 @@ for j, s in enumerate([24.5, 25.0, 25.5, 26.0]):
     bell(["A5", "D6", "F#6", "A6"][j], s, gain=0.045, decay=1.0, pan=(-0.3, 0.3, -0.15, 0.15)[j])
 bell("D6", 34.3, gain=0.05, decay=1.6)       # tres planos
 
-# --- Reglas: respiro con un pulso suave; un destello por cada punto que se marca ---
-for j, (notes, dur) in enumerate([(["G2", "D3", "F#3", "B3", "E4"], BAR), (["A2", "E3", "G3", "C#4", "E4"], BAR),
-                                  (["B2", "F#3", "A3", "D4"], BAR), (["G2", "D3", "F#3", "B3"], C["quest"] - C["measure"] - 3 * BAR)]):
-    pad_chord(notes, C["measure"] + j * BAR, dur + 0.6, 0.22, a=0.3, r=0.7)
-for s in np.arange(C["measure"], C["quest"], BEAT):
-    place(drums, s + BEAT / 2, HAT, 0.03)
-for s in np.arange(C["measure"] + 4.0, C["quest"] - 0.1, 1.0):
-    place(drums, s, KICK, 0.16)
-for j, nte in enumerate(["B5", "A5", "F#5", "E5", "C#6", "A5", "E5", "A5"]):
-    bell(nte, C["measure"] + j * BEAT, gain=0.035, decay=1.4, pan=0.3 * np.cos(j))
+# --- Reglas: van sin voz; sigue la armonía con un ritmo más ligero y un destello por cada punto
+# que se marca ---
+harmony(C["measure"], C["quest"], 0.15, bass_level=0.17)
+groove(C["measure"], C["quest"] - BEAT, clap=False, level=0.75)
 for j, s in enumerate(MARKS):
     tick(s, high=True, gain=0.1)
-    bell(["E6", "B6", "F#6", "D7"][j], s, gain=0.06, decay=1.2, pan=(-0.3, 0.3, -0.2, 0.2)[j], buf=fx)
+    bell(["E6", "B6", "F#6", "D7"][j], s, gain=0.07, decay=1.2, pan=(-0.3, 0.3, -0.2, 0.2)[j], buf=fx)
 swell(C["quest"] - 1.4, 1.4, 0.05)
 
 # --- Ya funciona en Meta Quest 3: golpe y el ritmo completo; un brillo por cada avance ---
@@ -360,7 +354,7 @@ def reverb(x, seconds, wet):
 # --- mezcla ---
 # la armonía «respira» con el bombo durante el ritmo (bombeo suave)
 pump = np.ones(N)
-kick_times = [s for t0, t1 in ((C["demo"], C["measure"]), (C["quest"] + BEAT, C["close"] - BEAT))
+kick_times = [s for t0, t1 in ((C["demo"], C["quest"] - BEAT), (C["quest"] + BEAT, C["close"] - BEAT))
               for s in np.arange(t0, t1, 2 * BEAT)]
 for s in kick_times:
     i0 = int(s * SR)

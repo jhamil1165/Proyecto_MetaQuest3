@@ -1,9 +1,9 @@
 # INMERSIA · video de apertura
 
 Pitch de 60 s para presentar el proyecto, de carácter **académico**, a la Clínica Anglo
-Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Daniela - Soothing &
-Relaxed»: suave, tranquila y cálida), texto que entra palabra por palabra cuando la voz lo dice
-y música original a 120 BPM.
+Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Camila», la del
+video de 57 s, a su velocidad natural), texto que entra palabra por palabra cuando la voz lo dice
+y música original a 120 BPM. Las reglas 2D y 3D van sin voz, con su texto en pantalla.
 Estilo de reel: fondo negro con brillo azul, plataforma holográfica bajo el cuerpo, polvo de luz,
 etiquetas con el volumen de cada órgano (como en el visor) y las reglas 2D y 3D. Muestra solo lo
 que el prototipo ya hace. Todo se dibuja con código a partir de los datos reales del proyecto.
@@ -18,9 +18,9 @@ que el prototipo ya hace. Todo se dibuja con código a partir de los datos reale
 | 13 – 18 | La pregunta | «¿Y si pudieras verlo completo… frente a ti?» El corte sale de la pantalla y los cortes forman el cuerpo sobre la plataforma de luz. |
 | 18 – 24 | Marca | «Te presentamos… **Inmersia**. Cirugía inmersiva.» Golpe de la música en 20 s, destello y logo. |
 | 24 – 37 | Demostración | «Cada órgano, segmentado… y con su volumen» (Hígado 1665 mL · Estómago 436 mL · Páncreas 67 mL · Vesícula 12 mL) · «Tómalo con la mano» · «córtalo donde quieras… y la tomografía te sigue» · «Tres planos. Un mismo punto.» |
-| 37 – 41 | Regla 2D | «Mide sobre cada corte… en milímetros reales.» El corte 116 con su segmentación y una regla de lado a lado del hígado: 132,8 mm. |
-| 41 – 45,5 | Regla 3D | «Y también en 3D… sobre el propio órgano.» Una regla sobre el hígado (19,5 cm); la mano lo toma y lo gira, y la medida lo acompaña. |
-| 45,5 – 49,5 | Meta Quest 3 | «Y todo esto… ya funciona en Meta Quest 3.» El cuerpo completo y el panel «Avances del prototipo»: tomografía y segmentación, órganos 3D con su volumen, plano de corte y tres planos, reglas 2D y 3D, manos y mandos a tamaño real. |
+| 37 – 41 | Regla 2D | Sin voz; en pantalla: «Mide sobre cada corte… en milímetros reales.» El corte 116 con su segmentación y una regla de lado a lado del hígado: 132,8 mm. |
+| 41 – 45,5 | Regla 3D | Sin voz; en pantalla: «Y también en 3D… sobre el propio órgano.» Una regla sobre el hígado (19,5 cm); la mano lo toma y lo gira, y la medida lo acompaña. |
+| 45,5 – 49,5 | Meta Quest 3 | «Y ya funciona en Meta Quest 3.» El cuerpo completo y el panel «Avances del prototipo»: tomografía y segmentación, órganos 3D con su volumen, plano de corte y tres planos, reglas 2D y 3D, manos y mandos a tamaño real. |
 | 49,5 – 54 | Invitación | «Construyámoslo juntos… con la Clínica Anglo Americana.» |
 | 54 – 60 | Logo | «Inmersia.» INMERSIA · Cirugía inmersiva · Proyecto de investigación · Ingeniería Biomédica. Quieto desde 55,8 s. |
 
@@ -51,8 +51,7 @@ python tools/mix_audio.py out/video_apertura.mp4   # video final → out/inmersi
 ```
 
 Quedan dos versiones: `out/inmersia.mp4` (voz y música) y `out/inmersia_musica.mp4` (solo
-música, por si se narra en vivo). Mientras no esté la toma de voz
-(`assets/audio/locucion_daniela.mp3`), sale solo la de música.
+música, por si se narra en vivo).
 
 En Linux se usa `python3`. Con tarjeta gráfica toma unos minutos; sin ella, más de una hora.
 
@@ -73,7 +72,7 @@ Para revisar sin exportar todo:
 - **Escenas 3D:** se animan en su propio reloj y `WARP` las encaja en el guion. Las reglas están
   en `RULER2D` y `buildRuler3D`; el panel de avances, en `#recap` de `src/index.html`.
 - **Luz:** la plataforma, el polvo y el brillo (bloom) están en `src/gl.js`.
-- **Voz:** `assets/audio/locucion_daniela.mp3` es una sola toma; `VOICE_CUTS` en
+- **Voz:** `assets/audio/locucion_inmersia.mp3` es una sola toma; `VOICE_CUTS` en
   `tools/mix_audio.py` la corta en los silencios entre frases y dice en qué segundo entra cada una.
 - **Música:** `tools/compose_music.py`. Si mueves una escena, mueve también su segundo en
   `CUES` para que el golpe siga cayendo en el cambio.

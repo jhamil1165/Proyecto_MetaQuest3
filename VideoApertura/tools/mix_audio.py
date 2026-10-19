@@ -1,10 +1,10 @@
 """
 Arma la banda sonora del video: locución + música, y la pone en el MP4.
 
-La locución (assets/audio/locucion_daniela.mp3) llega en una sola toma. Se separa solo en sus
+La locución (assets/audio/locucion_inmersia.mp3) llega en una sola toma. Se separa solo en sus
 pausas naturales y cada frase entra cuando su escena lo pide: la voz nunca se acelera ni se
 recorta dentro de una frase. La música (tools/compose_music.py) baja sola cuando habla la voz.
-Mientras no esté la toma, sale solo la versión con música.
+Si no está la toma, sale solo la versión con música.
 
 Uso (desde VideoApertura):
   python3 tools/compose_music.py out/musica.wav
@@ -29,14 +29,29 @@ except ImportError:
     FFMPEG = "ffmpeg"
 
 DURATION = 60.0
-VOICE = "assets/audio/locucion_daniela.mp3"
+VOICE = "assets/audio/locucion_inmersia.mp3"
 MUSIC = "out/musica.wav"
 
 # (inicio en la toma, fin en la toma, segundo del video donde entra)
-# Toma de ElevenLabs v4, voz «Daniela - Soothing & Relaxed»: suave, tranquila y cálida. Se corta
-# solo en los silencios entre frases y el texto de src/main.js aparece cuando la voz lo dice.
-# Vacía hasta que llegue la toma.
-VOICE_CUTS = []
+# Toma de ElevenLabs v4, voz «Camila» (la del video de 57 s), 52,6 s, grabada para el guion
+# anterior: se usan solo las frases que siguen en el guion. Las reglas 2D y 3D (37–45,5 s) van
+# sin voz, con su texto en pantalla. Se corta en los silencios entre frases (por debajo de
+# -70 dB) y el texto de src/main.js aparece cuando la voz lo dice.
+VOICE_CUTS = [
+    (0.18, 4.58, 0.45),        # Toda cirugía… empieza antes del quirófano.
+    (4.58, 9.51, 4.85),        # Empieza en una tomografía: doscientas sesenta y siete imágenes…
+    (9.51, 12.74, 9.78),       # que hoy se revisan una por una… imaginando el resto.
+    (12.74, 16.265, 13.24),    # ¿Y si pudieras verlo completo… frente a ti?
+    (16.265, 20.545, 18.437),  # Te presentamos… Inmersia. Cirugía inmersiva. («Inmersia» con el golpe, en 20 s)
+    (20.545, 24.36, 24.205),   # Cada órgano, segmentado… y con su volumen.
+    (24.74, 26.3, 28.04),      # Tómalo con la mano…
+    (26.3, 27.99, 30.38),      # córtalo donde quieras…
+    (27.99, 29.785, 32.07),    # y la tomografía te sigue.
+    (29.785, 32.26, 33.945),   # Tres planos. Un mismo punto.
+    (32.26, 34.565, 45.75),    # Y ya funciona en Meta Quest tres.
+    (48.305, 51.75, 49.681),   # Construyámoslo juntos… con la Clínica Anglo Americana.
+    (51.75, 52.64, 54.015),    # Inmersia. (con el golpe del logo, en 54 s)
+]
 TEMPO = 1.0    # la voz va a su velocidad natural
 SR = 48000
 FADE = 0.015   # fundido en cada corte, para que no haga clic
