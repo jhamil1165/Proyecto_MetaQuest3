@@ -41,10 +41,10 @@ MUSIC = "out/musica.wav"
 # «una por una» y las reglas van sin voz.
 VOICE_CUTS = [
     (0.0, 2.95, 4.9),       # Cientos de imágenes… una sola pantalla.
-    (3.5, 5.85, 12.4),      # ¿Y si pudieras tenerlas… frente a ti?
-    (6.45, 8.55, 14.8),     # Cada corte encuentra su lugar…
-    (9.05, 10.5, 16.95),    # y aparece el cuerpo.
-    (16.25, 17.65, 18.35, CAMILA_2),   # Te presentamos…
+    (3.5, 5.85, 12.0),      # ¿Y si pudieras tenerlas… frente a ti?
+    (6.45, 8.55, 14.4),     # Cada corte encuentra su lugar…
+    (9.05, 10.5, 16.55),    # y aparece el cuerpo.
+    (16.25, 17.65, 17.9, CAMILA_2, 0.88),   # Te presentamos… (más lento: suspenso antes del nombre)
     (17.75, 18.75, 19.92, CAMILA_2),   # Inmersia. (con el golpe, en 20 s)
     (18.85, 20.545, 21.1, CAMILA_2),   # Cirugía inmersiva.
     (10.75, 14.95, 24.0),   # Con realidad mixta, la anatomía está aquí. En tu espacio.
@@ -79,11 +79,15 @@ def place_voice(path_in, path_out):
     out = np.zeros(int(DURATION * SR), np.float32)
     nf = int(FADE * SR)
     ramp = np.linspace(0, 1, nf, dtype=np.float32)
-    for a, b, at, *src in VOICE_CUTS:
-        path = src[0] if src else path_in
+    for a, b, at, *opt in VOICE_CUTS:
+        path = opt[0] if opt and opt[0] else path_in
         if path not in takes:
             takes[path] = load_take(path)
         seg = takes[path][int(a / TEMPO * SR):int(b / TEMPO * SR)].copy()
+        if len(opt) > 1:   # esta frase, más lenta (sin cambiar el tono)
+            seg = np.frombuffer(subprocess.run(
+                [FFMPEG, "-v", "error", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "-", "-af", f"atempo={opt[1]}",
+                 "-f", "f32le", "-"], input=seg.astype("<f4").tobytes(), check=True, capture_output=True).stdout, "<f4").copy()
         # nivel parejo: cada frase (sin contar sus silencios) queda en VOICE_RMS
         fr = seg[: len(seg) // 480 * 480].reshape(-1, 480)
         rms = np.sqrt((fr ** 2).mean(axis=1))
