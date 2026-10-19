@@ -55,10 +55,13 @@ VOICE_CUTS = [
 TEMPO = 1.0    # la voz va a su velocidad natural
 SR = 48000
 FADE = 0.015   # fundido en cada corte, para que no haga clic
-# Procesado ligero: sin graves de más, menos «s», compresión suave y nivel parejo.
-SOFT = ("highpass=f=80,deesser=i=0.3,"
-        "acompressor=threshold=-22dB:ratio=1.6:attack=20:release=250,"
-        "loudnorm=I=-17:TP=-2:LRA=9,aformat=sample_rates=48000:channel_layouts=stereo")
+# Voz suave y elegante, sin cambiar su velocidad: un poco más de cuerpo, menos dureza en los
+# medios agudos y menos brillo y «s», compresión suave y un toque de sala muy corto.
+SOFT = ("highpass=f=80,equalizer=f=200:t=q:w=1.0:g=1.5,equalizer=f=2800:t=q:w=1.2:g=-2.5,"
+        "deesser=i=0.45,treble=g=-3:f=6000,"
+        "acompressor=threshold=-24dB:ratio=1.8:attack=25:release=300,"
+        "aecho=0.8:0.85:28|47:0.05|0.03,"
+        "loudnorm=I=-18:TP=-2:LRA=8,aformat=sample_rates=48000:channel_layouts=stereo")
 
 
 def place_voice(path_in, path_out):
