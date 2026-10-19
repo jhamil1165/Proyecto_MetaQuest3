@@ -74,44 +74,18 @@
   .otag em { font-style: normal; font-weight: 560; color: var(--accent2); }
   .otag i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 10px; vertical-align: 1px; }
 
-  /* modo cirugía (concepto) */
-  #sbtn { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 20px; padding: 28px 48px 28px 34px; border-radius: 999px;
-          font-size: 44px; font-weight: 660; letter-spacing: -0.01em; background: rgba(12, 18, 28, 0.86); border: 1.5px solid rgba(127, 178, 255, 0.55);
-          box-shadow: 0 0 60px rgba(76, 141, 255, 0.45), inset 0 0 30px rgba(76, 141, 255, 0.12); opacity: 0; white-space: nowrap; transform-origin: 50% 50%; }
-  #sbtn svg { width: 48px; height: 48px; }
-  #sring { position: absolute; left: 0; top: 0; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%;
-           border: 3px solid #7FB2FF; box-shadow: 0 0 30px #4C8DFF; opacity: 0; }
-  #schip { position: absolute; right: 70px; top: 64px; display: flex; align-items: center; gap: 12px; padding: 12px 22px; border-radius: 999px;
-           font-size: 18px; font-weight: 700; letter-spacing: 0.18em; color: var(--amber); background: rgba(30, 22, 8, 0.6);
-           border: 1px solid rgba(255, 181, 71, 0.45); box-shadow: 0 0 30px rgba(255, 181, 71, 0.2); opacity: 0; }
-  #schip i { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 12px var(--amber); }
-  .slabel { position: absolute; left: 0; top: 0; width: 330px; padding: 18px 24px; border-radius: 22px; background: rgba(10, 14, 21, 0.82);
-            border: 1px solid rgba(255, 181, 71, 0.35); box-shadow: 0 0 40px rgba(255, 181, 71, 0.14); opacity: 0; }
-  .slabel b { display: block; font-size: 30px; font-weight: 660; letter-spacing: -0.01em; }
-  .slabel span { display: block; margin-top: 6px; font-size: 20px; font-weight: 500; color: var(--text2); }
-  .slabel b::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--amber);
-                      box-shadow: 0 0 12px var(--amber); margin-right: 14px; vertical-align: 4px; }
+  /* regla 3D: la distancia medida, sobre la línea */
+  #rLabel { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 12px 24px; border-radius: 999px; text-align: center;
+            background: rgba(14, 19, 27, 0.86); border: 1px solid rgba(127, 178, 255, 0.5); box-shadow: 0 0 34px rgba(76, 141, 255, 0.3);
+            transform-origin: 50% 100%; opacity: 0; font-variant-numeric: tabular-nums; }
+  #rLabel small { display: block; font-size: 14px; font-weight: 680; letter-spacing: 0.2em; color: var(--accent2); }
+  #rLabel b { display: block; font-size: 34px; font-weight: 660; letter-spacing: -0.01em; }
 
-  /* hoja de ruta corta */
-  #road { position: absolute; left: 150px; top: 560px; width: 960px; height: 260px; opacity: 0; }
-  #roadLine { position: absolute; left: 32px; top: 30px; width: 700px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.14); overflow: hidden; }
-  #roadFill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #4C8DFF, #7FB2FF);
-              box-shadow: 0 0 16px #4C8DFF; }
-  .node { position: absolute; top: 0; width: 300px; opacity: 0; }
-  .node b { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3);
-            background: var(--bg); font-size: 26px; font-weight: 700; color: var(--text2); }
-  .node.done b { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 34px rgba(76,141,255,0.75); }
-  .node .when { display: inline-block; margin-top: 24px; font-size: 17px; font-weight: 680; letter-spacing: 0.2em; color: var(--text2); }
-  .node.done .when { color: #fff; background: var(--accent); border-radius: 12px; padding: 4px 12px; }
-  .node .lbl { margin-top: 10px; font-size: 30px; font-weight: 620; line-height: 1.2; letter-spacing: -0.01em; }
-
-  /* lo que buscamos: píldoras que se apilan */
-  #chips { position: absolute; left: 150px; top: 470px; display: flex; flex-direction: column; gap: 18px; }
-  .chip { display: flex; align-items: center; gap: 18px; font-size: 32px; font-weight: 560; padding: 18px 32px 18px 22px;
-          border-radius: 999px; background: rgba(12, 17, 25, 0.84); border: 1px solid var(--rim); opacity: 0; width: fit-content;
-          box-shadow: 0 0 36px rgba(76, 141, 255, 0.14); }
-  .chip i { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 22px rgba(76,141,255,0.7);
-            display: grid; place-items: center; font-style: normal; font-size: 22px; font-weight: 800; color: #fff; }
+  /* avances del prototipo */
+  #recap { left: 1330px; top: 300px; width: 540px; padding-bottom: 20px; }
+  .ritem { display: flex; align-items: center; gap: 18px; padding: 11px 30px; font-size: 27px; font-weight: 560; letter-spacing: -0.005em; opacity: 0; }
+  .ritem i { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent);
+             box-shadow: 0 0 20px rgba(76, 141, 255, 0.7); font-style: normal; font-size: 19px; font-weight: 800; color: #fff; transform: scale(0); }
 
   /* marca */
   #brand { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; }
@@ -132,7 +106,6 @@
          letter-spacing: 0.16em; text-transform: uppercase; color: var(--text2); opacity: 0; }
   #tag::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
   #tag.real { color: #7FB0FF; }
-  #tag.concept { color: var(--amber); }
   #pinch { position: absolute; left: 0; top: 0; width: 160px; height: 160px; margin: -80px 0 0 -80px; opacity: 0; overflow: visible;
            filter: drop-shadow(0 0 10px rgba(76, 141, 255, 0.8)); }
   #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0;
@@ -166,7 +139,7 @@
 
         <!-- corte axial que sigue al plano -->
         <div class="glass" id="axCard">
-          <div class="panel-head"><div class="panel-title">Axial</div><div class="panel-meta" id="axCount">Corte 060 / 267</div></div>
+          <div class="panel-head"><div class="panel-title" id="axTitle">Axial</div><div class="panel-meta" id="axCount">Corte 060 / 267</div></div>
           <div class="section">TAC + SEGMENTACIÓN</div>
           <canvas class="ct" id="axCanvas" width="460" height="460"></canvas>
         </div>
@@ -192,33 +165,17 @@
           <div class="otag" data-organ="vesicula"><i style="background:#53B3E6"></i>Vesícula <em>· <span>12</span> mL</em></div>
         </div>
 
-        <!-- modo cirugía (concepto) -->
-        <div id="surg">
-          <div id="sbtn">
-            <svg viewBox="-24 -24 48 48"><circle r="16" fill="none" stroke="#7FB2FF" stroke-width="3"/><circle r="5" fill="#FFB547"/>
-              <path d="M0 -23 V -12 M0 12 V 23 M-23 0 H -12 M12 0 H 23" stroke="#7FB2FF" stroke-width="3" stroke-linecap="round"/></svg>
-            Modo cirugía
-          </div>
-          <div id="sring"></div>
-          <div id="schip"><i></i>MODO CIRUGÍA · CONCEPTO</div>
-          <div class="slabel" id="sl0"><b>Zona a tratar</b><span>Marcada sobre el modelo</span></div>
-          <div class="slabel" id="sl1"><b>Márgenes</b><span>Alrededor de la zona</span></div>
-          <div class="slabel" id="sl2"><b>Abordaje</b><span>Trayectorias planificadas</span></div>
-        </div>
+        <!-- regla 3D -->
+        <div id="rLabel"><small>REGLA 3D</small><b><span>0</span> cm</b></div>
 
-        <!-- hoja de ruta corta -->
-        <div id="road">
-          <div id="roadLine"><i id="roadFill"></i></div>
-          <div class="node done" style="left:0"><b>✓</b><span class="when">HOY</span><div class="lbl">Prototipo</div></div>
-          <div class="node" style="left:340px"><b>2</b><span class="when">SIGUIENTE</span><div class="lbl">Validación<br>con cirujanos</div></div>
-          <div class="node" style="left:680px"><b>3</b><span class="when">META</span><div class="lbl">Quirófano</div></div>
-        </div>
-
-        <!-- lo que buscamos -->
-        <div id="chips">
-          <div class="chip"><i>✓</i>Cirujanos que lo prueben y nos guíen</div>
-          <div class="chip"><i>✓</i>Casos anonimizados para investigar</div>
-          <div class="chip"><i>✓</i>Validarlo juntos, con rigor académico</div>
+        <!-- avances del prototipo -->
+        <div class="glass" id="recap">
+          <div class="panel-head"><div class="panel-title">Avances del prototipo</div></div>
+          <div class="ritem"><i>✓</i>Tomografía y segmentación</div>
+          <div class="ritem"><i>✓</i>Órganos 3D con su volumen</div>
+          <div class="ritem"><i>✓</i>Plano de corte y tres planos</div>
+          <div class="ritem"><i>✓</i>Reglas 2D y 3D</div>
+          <div class="ritem"><i>✓</i>Manos y mandos, a tamaño real</div>
         </div>
 
         <svg id="pinch" viewBox="-80 -80 160 160">
@@ -253,7 +210,7 @@
 </div>
 <div id="controls">
   <button id="play">Reproducir</button>
-  <input id="scrub" type="range" min="0" max="66" step="0.0333" value="0">
+  <input id="scrub" type="range" min="0" max="60" step="0.0333" value="0">
   <output id="time">0.00 s</output>
 </div>
 <div id="loading">Cargando datos del TAC…</div>

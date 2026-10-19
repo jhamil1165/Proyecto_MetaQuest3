@@ -10,10 +10,10 @@ import { createEngine, W, H } from './gl.js';
 const CONFIG = {
   name: 'INMERSIA',
   subtitle: 'Cirugía inmersiva',
-  team: 'Proyecto de investigación · Ingeniería Biomédica · PUCP',
+  team: 'Proyecto de investigación · Ingeniería Biomédica',
   clinic: 'Clínica Anglo Americana',
 };
-export const DURATION = 66;
+export const DURATION = 60;
 window.__duration = DURATION;
 
 const capture = new URLSearchParams(location.search).has('capture');
@@ -51,11 +51,11 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 //   13  ¿y si pudieras verlo completo, frente a ti? (los cortes forman el cuerpo)
 //   18  te presentamos INMERSIA · Cirugía inmersiva (golpe en 20)
 //   24  cada órgano con su volumen · tómalo con la mano · córtalo · tres planos
-//   37  ya funciona en Meta Quest 3
-//   41  lo que viene: modo cirugía (concepto): zona, márgenes, abordaje
-//   50  hoy, un prototipo · buscamos un aliado clínico
-//   56  construyámoslo juntos, con la clínica
-//   60  logo (quieto desde 61,8)
+//   37  regla 2D: mide sobre cada corte, en milímetros reales
+//   41  regla 3D: sobre el propio órgano, y lo acompaña al moverlo
+//   45  y todo esto ya funciona en Meta Quest 3 (avances del prototipo)
+//   49  construyámoslo juntos, con la clínica
+//   54  logo (quieto desde 55,8)
 
 // Cada bloque: cuándo entra, cuándo sale, dónde va y sus líneas (con el retraso de cada una).
 // Las palabras entran una por una. <b>…</b> = azul y subrayado; <s>…</s> = tachado;
@@ -69,24 +69,22 @@ const BLOCKS = [
   { at: 28.0, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalo'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.5] },
   { at: 30.35, out: 33.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Córtalo'], ['h2', '<b>donde quieras.</b>'], ['sub', 'Y la tomografía te sigue.']], gaps: [0, 0.05, 0.53, 1.81] },
   { at: 33.95, out: 36.9, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.05, 1.41] },
-  { at: 37.5, out: 40.75, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.18, 1.34, 2.2] },
-  { at: 40.95, out: 48.05, pos: 'surg', lines: [['kicker', 'Lo que viene · concepto'], ['xl', '<b>Modo cirugía</b>']], gaps: [0, 1.65] },
-  { at: 48.25, out: 50.25, pos: 'surg', lines: [['h2', 'Antes de entrar'], ['h2', '<b>al quirófano.</b>']], gaps: [0.03, 0.97] },
-  { at: 50.85, out: 53.25, pos: 'ask', lines: [['kicker', 'Proyecto de investigación'], ['h1', 'Hoy, un <b>prototipo</b>.']], gaps: [0, 0.1] },
-  { at: 53.45, out: 56.4, pos: 'ask', lines: [['kicker', 'Lo que buscamos'], ['h1', 'Un <b>aliado clínico</b>.']], gaps: [0, 1.15] },
-  { at: 56.5, out: 59.6, pos: 'left', lines: [['h2', 'Construyámoslo juntos…'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.1, 1.43, 1.75] },
+  { at: 37.5, out: 40.75, pos: 'left', lines: [['kicker', '05 · Regla 2D'], ['h2', 'Mide sobre cada corte…'], ['h2', '<b>en milímetros reales.</b>']], gaps: [0, 0.05, 1.5] },
+  { at: 41.3, out: 45.2, pos: 'left', lines: [['kicker', '06 · Regla 3D'], ['h2', 'Y también en 3D…'], ['h2', '<b>sobre el propio órgano.</b>'], ['sub', 'La medida se mueve con el órgano.']], gaps: [0, 0.05, 1.4, 2.3] },
+  { at: 45.75, out: 49.25, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Y todo esto…'], ['h2', 'ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.05, 1.1, 1.9, 2.6] },
+  { at: 49.7, out: 53.4, pos: 'left', lines: [['h2', 'Construyámoslo juntos…'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.1, 1.43, 1.75] },
 ];
 const WORD_STAGGER = 0.065, WORD_IN = 0.42;
 
 // Las escenas 3D se animan en su propio reloj; aquí se estira o encoge cada tramo para que
 // caiga en su escena del guion. [tiempo de la animación 3D, tiempo del video]. Donde el
-// reloj 3D salta (37,2 s, 41 s y 50,5 s) hay un corte, tapado con un barrido de luz.
+// reloj 3D salta (37,2 s, 41 s y 45,5 s) hay un corte, tapado con un barrido de luz.
 const WARP = [
   [0, 0], [0.2, 4.6], [1.0, 5.4], [6.75, 13.3], [12.8, 18.4], [16.6, 23.6], [18.2, 24.3], [20.1, 26.0], [20.7, 27.8],
   [21.5, 28.2], [24.4, 30.0], [25.2, 30.5], [26.4, 31.0], [31.8, 33.8], [33.2, 34.3], [37.6, 37.2],
-  [42.3, 37.2], [44.0, 41.0],                  // el cuerpo completo: ya funciona en Meta Quest 3
-  [60.0, 41.0], [69.5, 50.5],                  // modo cirugía
-  [44.0, 50.5], [49.5, 56.0], [53.5, 60.0], [55.4, 61.8], [55.4, DURATION],
+  [70.0, 37.2], [73.8, 41.0],                  // regla 2D
+  [80.0, 41.0], [84.5, 45.5],                  // regla 3D
+  [42.6, 45.5], [44.0, 48.3], [51.6, 54.0], [55.4, 55.8], [55.4, DURATION],   // el cuerpo completo
 ];
 function warp(t) {
   if (t <= 0) return 0;
@@ -96,14 +94,12 @@ function warp(t) {
   }
   return WARP[WARP.length - 1][0];
 }
-const CUTS = [37.2, 41.0, 50.5];
+const CUTS = [37.2, 41.0, 45.5];
 
 const POS = {
   left: 'left:150px; top:540px; transform:translateY(-50%);',
   center: 'left:0; right:0; top:540px; transform:translateY(-50%); align-items:center; text-align:center;',
   tri: 'left:1150px; top:120px;',
-  surg: 'left:150px; top:150px;',
-  ask: 'left:150px; top:250px;',
 };
 
 // Arma una línea palabra por palabra.
@@ -187,15 +183,16 @@ function updateText(t) {
   }
 }
 
-// Etiqueta discreta que dice qué es real, qué es ilustración y qué es concepto.
+// Etiqueta discreta que dice qué es real y qué es ilustración.
 const TAGS = [
   [4.7, 13.3, 'Cortes reales de la tomografía del proyecto', ''],
   [13.6, 24.0, 'Ilustración en 3D con los datos del proyecto', ''],
   [24.2, 27.7, 'Ilustración en 3D · volúmenes medidos en la segmentación del proyecto', ''],
   [27.9, 30.3, 'Representación de la interacción · órganos segmentados del proyecto', ''],
-  [30.4, 40.8, 'Ilustración en 3D con los datos del proyecto', ''],
-  [41.3, 50.2, 'Concepto en desarrollo · la zona y las trayectorias son ilustrativas', 'concept'],
-  [50.8, 59.5, 'Ilustración en 3D con los datos del proyecto', ''],
+  [30.4, 36.9, 'Ilustración en 3D con los datos del proyecto', ''],
+  [37.4, 40.8, 'Corte real del proyecto · distancia medida sobre la imagen', ''],
+  [41.2, 45.2, 'Ilustración en 3D · distancia medida sobre el hígado segmentado del proyecto', ''],
+  [45.7, 53.4, 'Ilustración en 3D con los datos del proyecto', ''],
 ];
 const tagEl = document.getElementById('tag');
 function updateTag(t) {
@@ -314,7 +311,7 @@ function crosshair(c, x, y, w, h) {
   c.beginPath(); c.arc(x, y, 5, 0, Math.PI * 2); c.fill();
 }
 
-// ---------- líneas guía (etiquetas de órganos y del modo cirugía) ----------
+// ---------- líneas guía (etiquetas de los órganos) y regla 3D ----------
 const SVGNS = 'http://www.w3.org/2000/svg';
 const linesEl = document.getElementById('lines');
 const leaders = {};
@@ -340,32 +337,77 @@ function leader(id, a, b, k, color, glow) {
   L.dot.style.filter = glow ? `drop-shadow(0 0 8px ${glow})` : 'none';
   L.dot.style.opacity = Math.min(1, k * 3).toFixed(3);
 }
-// Trayectoria punteada de a hacia b, que avanza hasta k y cuyos trazos fluyen hacia b.
-function trajectory(id, a, b, k, tv) {
-  let L = leaders[id];
-  if (!L) {
-    L = leaders[id] = { path: document.createElementNS(SVGNS, 'path'), dot: document.createElementNS(SVGNS, 'circle') };
-    L.path.setAttribute('fill', 'none'); L.path.setAttribute('stroke', '#FFC870'); L.path.setAttribute('stroke-width', '3.5');
-    L.path.setAttribute('stroke-linecap', 'round'); L.path.setAttribute('stroke-dasharray', '2 11');
-    L.path.style.filter = 'drop-shadow(0 0 6px rgba(255,181,71,0.95))';
-    L.dot.setAttribute('r', '5'); L.dot.setAttribute('fill', '#FFFFFF');
-    L.dot.style.filter = 'drop-shadow(0 0 8px #FFB547)';
-    linesEl.append(L.path, L.dot);
+// Regla: línea de a hacia b que se dibuja hasta k, con un punto en cada extremo (kA, kB) y el
+// círculo del puntero del visor en la punta mientras mide.
+const ruler = {};
+function rulerLine(a, b, k, kA, kB, alpha) {
+  if (!ruler.line) {
+    ruler.line = document.createElementNS(SVGNS, 'path');
+    ruler.line.setAttribute('fill', 'none'); ruler.line.setAttribute('stroke', '#FFFFFF'); ruler.line.setAttribute('stroke-width', '3.5');
+    ruler.line.setAttribute('stroke-linecap', 'round');
+    ruler.line.style.filter = 'drop-shadow(0 0 7px rgba(76,141,255,0.95))';
+    ruler.dots = [0, 1].map(() => {
+      const d = document.createElementNS(SVGNS, 'circle');
+      d.setAttribute('fill', '#FFFFFF'); d.style.filter = 'drop-shadow(0 0 9px #4C8DFF)';
+      return d;
+    });
+    ruler.ring = document.createElementNS(SVGNS, 'circle');
+    ruler.ring.setAttribute('fill', 'none'); ruler.ring.setAttribute('stroke', '#7FB2FF'); ruler.ring.setAttribute('stroke-width', '3');
+    ruler.ring.setAttribute('r', '17'); ruler.ring.style.filter = 'drop-shadow(0 0 6px #4C8DFF)';
+    linesEl.append(ruler.line, ...ruler.dots, ruler.ring);
   }
-  if (k <= 0.001) { L.path.style.display = L.dot.style.display = 'none'; return; }
-  L.path.style.display = L.dot.style.display = '';
+  const all = [ruler.line, ...ruler.dots, ruler.ring];
+  if (alpha <= 0.001) { all.forEach((e) => (e.style.display = 'none')); return; }
+  all.forEach((e) => (e.style.display = ''));
   const ex = lerp(a.x, b.x, k), ey = lerp(a.y, b.y, k);
-  L.path.setAttribute('d', `M${a.x.toFixed(1)} ${a.y.toFixed(1)} L${ex.toFixed(1)} ${ey.toFixed(1)}`);
-  L.path.setAttribute('stroke-dashoffset', (-tv * 40).toFixed(1));
-  L.dot.setAttribute('cx', ex.toFixed(1)); L.dot.setAttribute('cy', ey.toFixed(1));
-  L.dot.style.opacity = k < 0.999 ? '1' : '0';
+  ruler.line.setAttribute('d', `M${a.x.toFixed(1)} ${a.y.toFixed(1)} L${ex.toFixed(1)} ${ey.toFixed(1)}`);
+  ruler.line.style.opacity = (k > 0 ? alpha : 0).toFixed(3);
+  [[a, kA], [b, kB]].forEach(([p, kk], i) => {
+    ruler.dots[i].setAttribute('cx', p.x.toFixed(1)); ruler.dots[i].setAttribute('cy', p.y.toFixed(1));
+    ruler.dots[i].setAttribute('r', (7 * kk).toFixed(2));
+    ruler.dots[i].style.opacity = (alpha * Math.min(1, kk)).toFixed(3);
+  });
+  ruler.ring.setAttribute('cx', ex.toFixed(1)); ruler.ring.setAttribute('cy', ey.toFixed(1));
+  ruler.ring.style.opacity = (alpha * (kA > 0 && kB < 1 ? 1 : 0)).toFixed(3);
 }
-function hideLeaders(prefix) { for (const [id, L] of Object.entries(leaders)) if (id.startsWith(prefix)) L.path.style.display = L.dot.style.display = 'none'; }
+
+// Regla 2D sobre el lienzo del corte: los mismos dos puntos, en píxeles de la imagen de 512.
+function ruler2D(c, w, k, kA, kB, kL, mm) {
+  const s = w / 512, R = RULER2D;
+  const ax = (R.a[0] + 0.5) * s, ay = (R.a[1] + 0.5) * s, bx = (R.b[0] + 0.5) * s, by = (R.b[1] + 0.5) * s;
+  const ex = lerp(ax, bx, k), ey = lerp(ay, by, k);
+  c.save();
+  c.shadowColor = '#4C8DFF'; c.shadowBlur = 12;
+  c.strokeStyle = '#FFFFFF'; c.lineWidth = 3; c.lineCap = 'round';
+  if (k > 0) { c.beginPath(); c.moveTo(ax, ay); c.lineTo(ex, ey); c.stroke(); }
+  c.fillStyle = '#FFFFFF';
+  for (const [x, y, kk] of [[ax, ay, kA], [bx, by, kB]]) {
+    if (kk <= 0) continue;
+    c.beginPath(); c.arc(x, y, 5.5 * kk, 0, Math.PI * 2); c.fill();
+  }
+  if (kA > 0 && kB < 1) {
+    c.strokeStyle = '#7FB2FF'; c.lineWidth = 2.5;
+    c.beginPath(); c.arc(ex, ey, 13, 0, Math.PI * 2); c.stroke();
+  }
+  c.restore();
+  if (kL <= 0) return;
+  // etiqueta con la distancia, sobre la línea
+  const txt = `${(mm * easeOut(kL)).toFixed(1).replace('.', ',')} mm`;
+  c.save();
+  c.globalAlpha = Math.min(1, kL * 2);
+  c.font = "640 22px 'Inter Variable', 'Inter', sans-serif";
+  const tw = c.measureText(txt).width, px = (ax + bx) / 2, py = Math.min(ay, by) - 34;
+  c.fillStyle = 'rgba(14, 19, 27, 0.88)'; c.strokeStyle = 'rgba(127, 178, 255, 0.6)'; c.lineWidth = 1.5;
+  c.beginPath(); c.roundRect(px - tw / 2 - 16, py - 19, tw + 32, 38, 19); c.fill(); c.stroke();
+  c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(txt, px, py + 1);
+  c.restore();
+}
 
 // ---------- montaje ----------
 const $ = (id) => document.getElementById(id);
 let E; // motor 3D
-let SURG; // piezas 3D del modo cirugía
+let RULER3D; // los dos puntos de la regla 3D sobre el hígado
 
 async function init() {
   const stage = $('stage');
@@ -386,7 +428,7 @@ async function init() {
     o.mesh.geometry.computeBoundingBox();
   }
   abdomenY = Object.values(E.organs).reduce((s, o) => s + o.pivot.userData.home.y, 0) / 4;
-  SURG = buildSurgery();
+  RULER3D = buildRuler3D();
 
   // posición exacta del lienzo del TAC dentro del escenario
   {
@@ -413,83 +455,29 @@ const HANDOFF_I = 24;                                     // corte de la pila qu
 const HANDOFF = Math.round(((HANDOFF_I + 0.5) / STACK) * NSLICES - 0.5);
 const sliceY = (z) => E.half.y - ((z + 0.5) / NSLICES) * E.size.y;
 
-// ---------- modo cirugía (concepto) ----------
-// Un punto dentro del hígado (lo más lejos posible de su superficie), tres puertos sobre la
-// piel del abdomen y las trayectorias de cada puerto a la zona. Es ilustrativo: no marca ningún
-// hallazgo del paciente.
-function buildSurgery() {
+// ---------- reglas ----------
+// Regla 2D: el ancho del hígado, de derecha a izquierda, por su centro, en el corte 116 (índice 115),
+// medido sobre su máscara de segmentación: fila 257, columnas 136 a 272 = 136 píxeles × 500 mm / 512.
+const RULER2D = { z: 115, a: [136, 257], b: [272, 257], mm: 132.8 };
+
+// Regla 3D: los extremos derecho e izquierdo de la cara anterior del hígado. Viven en el espacio
+// del órgano, así que la medida lo acompaña cuando se mueve.
+function buildRuler3D() {
   const T = E.THREE;
-  E.body.updateMatrixWorld(true);
-  const liver = E.organs.higado;
-  const mesh = liver.mesh, g = mesh.geometry, bb = g.boundingBox;
-  const side = mesh.material.side;
-  mesh.material.side = T.DoubleSide;
-  const ray = new T.Raycaster();
-  const dir = new T.Vector3(1, 0.013, 0.021).normalize();
-  const inside = (pw) => { ray.set(pw, dir); return ray.intersectObject(mesh, false).length % 2 === 1; };
-  const pos = g.attributes.position;
-  const verts = [];
-  for (let i = 0; i < pos.count; i += 13) verts.push(new T.Vector3().fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld));
-  let best = null, bestD = -1;
-  const N = 6;
-  for (let ix = 0; ix < N; ix++) for (let iy = 0; iy < N; iy++) for (let iz = 0; iz < N; iz++) {
-    const p = new T.Vector3(
-      lerp(bb.min.x, bb.max.x, 0.12 + 0.76 * ix / (N - 1)),
-      lerp(bb.min.y, bb.max.y, 0.12 + 0.76 * iy / (N - 1)),
-      lerp(bb.min.z, bb.max.z, 0.12 + 0.76 * iz / (N - 1))).applyMatrix4(mesh.matrixWorld);
-    if (!inside(p)) continue;
-    let d = Infinity;
-    for (const v of verts) d = Math.min(d, v.distanceToSquared(p));
-    if (d > bestD) { bestD = d; best = p; }
+  const pos = E.organs.higado.mesh.geometry.attributes.position;
+  const v = new T.Vector3();
+  let a = null, b = null;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    if (v.z < 0) continue;
+    if (!a || v.x < a.x) a = v.clone();
+    if (!b || v.x > b.x) b = v.clone();
   }
-  mesh.material.side = side;
-  const target = best || liver.pivot.position.clone();
-
-  // piel anterior: primer vóxel con tejido, entrando desde el frente
-  const { NX, NY, NZ } = E.dims, raw = E.raw, h = E.half;
-  const skinZ = (x, y) => {
-    const ix = Math.max(0, Math.min(NX - 1, Math.round(((x + h.x) / (2 * h.x)) * NX)));
-    const iz = Math.max(0, Math.min(NZ - 1, Math.round((1 - (y + h.y) / (2 * h.y)) * NZ)));
-    for (let iy = 0; iy < NY - 1; iy++) {
-      if (raw[ix + NX * (iy + NY * iz)] > 34 && raw[ix + NX * (iy + 1 + NY * iz)] > 34) return h.z - 2 * h.z * ((iy + 0.5) / NY);
-    }
-    return h.z * 0.5;
-  };
-
-  const amber = new T.Color('#FFB547');
-  const glowMat = (color, rim, core) => new T.ShaderMaterial({
-    uniforms: { uColor: { value: color }, uOpacity: { value: 0 }, uRim: { value: rim }, uCore: { value: core } },
-    vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0);
-      vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform vec3 uColor; uniform float uOpacity, uRim, uCore; varying vec3 vN; varying vec3 vV;
-      void main(){ float f = 1.0 - abs(dot(normalize(vN), normalize(vV)));
-        float a = uCore + uRim * pow(f, 2.5); gl_FragColor = vec4(uColor * a * uOpacity, 1.0); }`,
-    transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide,
-  });
-  const core = new T.Mesh(new T.SphereGeometry(0.016, 40, 20), glowMat(amber, 1.4, 0.55));
-  const margin = new T.Mesh(new T.SphereGeometry(0.032, 48, 24), glowMat(new T.Color('#9CC4FF'), 1.6, 0.04));
-  const ringGeo = new T.RingGeometry(0.022, 0.0245, 64);
-  const pulse = new T.Mesh(ringGeo, new T.MeshBasicMaterial({ color: amber, transparent: true, depthTest: false, blending: T.AdditiveBlending }));
-  core.position.copy(target); margin.position.copy(target); pulse.position.copy(target);
-  for (const m of [core, margin, pulse]) { m.renderOrder = 10; E.overlay.add(m); }
-
-  const ports = [[-0.085, -0.02], [-0.01, -0.095], [0.065, -0.055]].map(([dx, dy], i) => {
-    const x = target.x + dx, y = target.y + dy;
-    const p = new T.Vector3(x, y, skinZ(x, y) + 0.004);
-    const grp = new T.Group();
-    grp.position.copy(p);
-    const ring = new T.Mesh(new T.RingGeometry(0.008, 0.0115, 40), new T.MeshBasicMaterial({ color: amber, transparent: true, depthTest: false, blending: T.AdditiveBlending, side: T.DoubleSide }));
-    const dot = new T.Mesh(new T.CircleGeometry(0.0038, 24), new T.MeshBasicMaterial({ color: '#FFFFFF', transparent: true, depthTest: false, blending: T.AdditiveBlending, side: T.DoubleSide }));
-    grp.add(ring, dot);
-    grp.renderOrder = 11;
-    E.overlay.add(grp);
-    return { grp, ring, dot, p, i };
-  });
-  return { target, core, margin, pulse, ports };
+  return { a, b, cm: a.distanceTo(b) * 100 };
 }
 
-// Cámara: [t, azimut, elevación, distancia, objetivo ('abd' = abdomen, 'liv' = zona del
-// modo cirugía, o una altura), x en pantalla]
+// Cámara: [t, azimut, elevación, distancia, objetivo ('abd' = abdomen, 'liv' = hígado, o una
+// altura), x en pantalla]
 const CAM = [
   [0, 0, 4, 2.7, 0, 1150],
   [7.0, 0, 4, 2.7, 0, 1150],
@@ -504,18 +492,21 @@ const CAM = [
   [32.6, -40, 30, 2.8, 0.02, 985],
   [34.0, -36, 22, 2.45, 'abd', 600],
   [37.8, -50, 23, 2.4, 'abd', 600],
-  [38.4, -30, 12, 2.75, 0, 1250],
-  [42.0, -30, 12, 2.75, 0, 1250],
-  [51.6, 8, 12, 2.7, 0, 1250],
+  // el cuerpo completo: deja sitio al panel de avances y luego a la invitación
+  [42.0, -30, 12, 2.75, 0, 990],
+  [44.2, -22, 12, 2.75, 0, 990],
+  [46.4, -12, 12, 2.75, 0, 1280],
+  [51.6, 8, 12, 2.7, 0, 1280],
   [55.4, 16, 12, 2.85, 0, 1250],
-  // modo cirugía
-  [60.0, -16, 14, 1.75, 'liv', 1120],
-  [61.9, -20, 15, 1.68, 'liv', 1120],
-  [63.2, -34, 17, 1.12, 'liv', 1040],
-  [69.5, -46, 20, 1.02, 'liv', 1040],
+  // regla 2D
+  [70.0, 24, 34, 2.9, 0.02, 1080],
+  [73.8, 34, 30, 2.85, 0.02, 1080],
+  // regla 3D
+  [80.0, -12, 10, 1.3, 'liv', 1120],
+  [84.5, -24, 14, 1.15, 'liv', 1120],
 ];
 function camAt(t) {
-  const tgt = (r, axis) => (r[4] === 'liv' ? SURG.target[axis] : axis === 'y' ? (r[4] === 'abd' ? abdomenY : r[4]) : 0);
+  const tgt = (r, axis) => (r[4] === 'liv' ? E.organs.higado.pivot.userData.home[axis] : axis === 'y' ? (r[4] === 'abd' ? abdomenY : r[4]) : 0);
   const col = (f) => CAM.map((r) => [r[0], f(r)]);
   return {
     az: track(t, col((r) => r[1])), el: track(t, col((r) => r[2])), dist: track(t, col((r) => r[3])),
@@ -552,7 +543,7 @@ function cardPose() {
 
 // Golpe del bombo durante el ritmo (cae en cada segundo entero): da pulso a la plataforma.
 function kick(tv) {
-  const on = (tv >= 24 && tv < 37) || (tv >= 42.8 && tv < 55.5);
+  const on = (tv >= 24 && tv < 37) || (tv >= 46 && tv < 49.5);
   return on ? Math.exp(-(tv % 1) / 0.12) : 0;
 }
 
@@ -560,7 +551,8 @@ function renderAt(tv) {
   // tv: tiempo del video (guion, textos, paneles 2D). t: reloj de la animación 3D (ver WARP).
   const t = warp(tv);
   const T = E.THREE;
-  const surg = t >= 59.5;          // modo cirugía (tramo 60–69,5 del reloj 3D)
+  const m2 = t >= 69.5 && t < 79.5;   // regla 2D (tramo 70–73,8 del reloj 3D)
+  const m3 = t >= 79.5;                // regla 3D (tramo 80–84,5)
   placeCamera(t);
 
   // ===== 1 · pantalla con cortes (0 – 14 s del video) =====
@@ -623,11 +615,8 @@ function renderAt(tv) {
   vol.uOpacity.value = track(t, [[11.4, 0], [12.8, 1], [20.8, 1], [21.6, 0.16], [24.8, 0.16], [25.8, 1], [33.0, 1], [34.0, 0.32], [37.8, 0.32], [38.4, 0], [41.8, 0], [42.8, 1]]);
   vol.uDensity.value = track(t, [[17.4, 1], [18.6, 0.55], [25.0, 0.55], [25.8, 0.7], [41.8, 0.7], [42.6, 0.5]]);
   vol.uBone.value = 0;
-  const glass = surg ? easeInOut(prog(tv, 42.9, 43.8)) : 0;   // tras el clic: el hígado se vuelve vidrio
-  if (surg) {
-    vol.uOpacity.value = lerp(0.85, 0.14, glass);
-    vol.uDensity.value = 0.6;
-  }
+  if (m2) { vol.uOpacity.value = 1; vol.uDensity.value = 0.7; }
+  if (m3) { vol.uOpacity.value = 0.16; vol.uDensity.value = 0.55; }
 
   // ===== órganos =====
   const toggles = { higado: 18.3, estomago: 18.9, pancreas: 19.5, vesicula: 20.1 };
@@ -636,7 +625,7 @@ function renderAt(tv) {
     let a = easeOut(prog(t, ton, ton + 0.55));
     a *= 1 - easeInOut(prog(t, 33.0, 33.8));          // fuera en "tres planos"
     a = t > 38 ? easeOut(prog(t, 42.2, 43.2)) : a;     // vuelven para el cuerpo completo
-    if (surg) a = name === 'higado' ? lerp(1, 0.09, glass) : lerp(1, 0.02, glass);   // brillan en HDR: basta muy poca opacidad
+    if (m3) a = name === 'higado' ? 1 : 0.2;           // en la regla 3D destaca el hígado
     o.mat.opacity = a;
     o.mesh.visible = a > 0.003;
     // three.js compila aparte la versión opaca del material: al cambiar hay que recompilarlo
@@ -661,24 +650,35 @@ function renderAt(tv) {
     liver.mat.emissiveIntensity = 0.16 * grab;
     for (const n of ['estomago', 'pancreas', 'vesicula']) E.organs[n].mat.opacity *= lerp(1, 0.45, grab);
   }
+  // regla 3D: la mano toma el hígado ya medido y lo gira; la medida lo acompaña
+  if (m3) {
+    const g3 = easeInOut(prog(tv, 43.25, 43.8));
+    const spin = easeInOut(prog(tv, 43.4, 45.4));
+    const toCam = E.camera.position.clone().sub(liver.pivot.userData.home).normalize();
+    liver.pivot.position.copy(liver.pivot.userData.home).addScaledVector(toCam, 0.05 * g3);
+    liver.pivot.rotation.set(spin * 14 * DEG, spin * -40 * DEG, 0);
+    liver.mat.emissive.set('#4C8DFF');
+    liver.mat.emissiveIntensity = 0.12 * g3;
+  }
 
   // ===== planos de corte =====
   const P = E.planes;
   let axVis = env(t, 25.6, 37.6, 0.7, 0.5) + (t > 38 ? env(t, 42.4, 99, 0.9) : 0);
-  const axZ = t > 38 ? 118 : track(t, [[26.4, 58], [31.8, 126], [34.6, 126], [37.4, 112]]);
+  const axZ = m2 ? RULER2D.z : t > 38 ? 118 : track(t, [[26.4, 58], [31.8, 126], [34.6, 126], [37.4, 112]]);
   const corRow = track(t, [[34.6, 238], [37.4, 262]]);  // fila (0..511, 0 = frente)
   const sagCol = track(t, [[34.6, 300], [37.4, 252]]);  // columna (0..511, 0 = derecha del paciente)
   P.axial.group.position.y = sliceY(axZ);
   P.coronal.group.position.z = E.half.z - ((corRow + 0.5) / 512) * E.size.z;
   P.sagital.group.position.x = -E.half.x + ((sagCol + 0.5) / 512) * E.size.x;
   const triVis = env(t, 33.2, 37.6, 0.7, 0.5);
-  if (surg) axVis = 0;
+  if (m2) axVis = 1;
+  if (m3) axVis = 0;
   setPlane(P.axial, axVis, lerp(1, 0.35, triVis));
   setPlane(P.coronal, triVis, 0.35);
   setPlane(P.sagital, triVis, 0.35);
 
   // el plano axial corta el volumen y los órganos, salvo en "tres planos"
-  const clipOn = t >= 25.6 && t < 33.4;
+  const clipOn = (t >= 25.6 && t < 33.4) || m2;
   const clipY = clipOn ? sliceY(axZ) : 10;
   vol.uClipD.value = clipY;
   clipPlane.constant = clipY;
@@ -689,11 +689,11 @@ function renderAt(tv) {
   E.platU.uTime.value = tv;
   // más tenue cuando la cámara está cerca (la plataforma queda grande en primer plano)
   E.platU.uOpacity.value = track(tv, [[15.6, 0], [18.4, 0.75], [23.6, 0.75], [24.3, 0.4], [33.6, 0.4], [34.4, 0.75],
-    [41.0, 0.75], [43.2, 0.4], [50.5, 0.75], [59.6, 0.75], [60.4, 0.2]]);
+    [37.1, 0.75], [37.3, 0.45], [45.4, 0.45], [45.6, 0.75], [53.6, 0.75], [54.4, 0.2]]);
   E.platU.uPulse.value = k * 0.7;
   E.dustU.uTime.value = tv;
   E.dustU.uOpacity.value = track(tv, [[0, 0.2], [1.5, 0.8], [14, 0.7], [18.6, 1]]);
-  E.bloom.uStrength.value = (tv > 13.3 && tv < 19 ? 0.4 : surg ? 0.5 : 0.7) + 0.2 * k;
+  E.bloom.uStrength.value = (tv > 13.3 && tv < 19 ? 0.4 : m3 ? 0.5 : 0.7) + 0.2 * k;
 
   // ===== paneles 2D =====
   // etiquetas de los órganos: nombre y volumen medido, como en el visor
@@ -715,15 +715,22 @@ function renderAt(tv) {
     leader('o-' + name, a, b, easeOut(prog(tv, otagOn[name], otagOn[name] + 0.35)) * v, 'rgba(255,255,255,0.75)', 'rgba(127,178,255,0.8)');
   });
 
-  // corte axial que sigue al plano
+  // corte axial que sigue al plano; en la regla 2D, el corte donde se mide
   const ax = $('axCard');
-  const axCardVis = env(t, 26.0, 32.8, 0.7, 0.5);
+  const [ac0, axCardVis] = m2 ? [37.25, env(tv, 37.25, 40.8, 0.5, 0.4)] : [26.0, env(t, 26.0, 32.8, 0.7, 0.5)];
+  const ac = m2 ? tv : t;
   ax.style.opacity = axCardVis.toFixed(3);
-  ax.style.transform = `perspective(1700px) translateX(${((1 - easeOut(prog(t, 26.0, 26.8))) * 60).toFixed(2)}px) rotateY(${(-10 * (1 - easeOut(prog(t, 26.0, 27.2)))).toFixed(2)}deg)`;
+  ax.style.transform = `perspective(1700px) translateX(${((1 - easeOut(prog(ac, ac0, ac0 + 0.8))) * 60).toFixed(2)}px) rotateY(${(-10 * (1 - easeOut(prog(ac, ac0, ac0 + 1.2)))).toFixed(2)}deg)`;
   if (axCardVis > 0) {
     const zi = Math.round(axZ);
-    drawSlice($('axCanvas'), zi, 0.55, '#4C8DFF');
+    const cv = $('axCanvas');
+    drawSlice(cv, zi, 0.55, '#4C8DFF');
     $('axCount').textContent = `Corte ${pad(zi + 1, 3)} / ${NSLICES}`;
+    $('axTitle').textContent = m2 ? 'Regla 2D' : 'Axial';
+    if (m2) {
+      ruler2D(cv.getContext('2d'), cv.width, easeInOut(prog(tv, 38.35, 39.05)),
+        easeBack(prog(tv, 38.15, 38.45)), easeBack(prog(tv, 39.0, 39.3)), prog(tv, 39.1, 39.9), RULER2D.mm);
+    }
   }
 
   // tres planos
@@ -747,58 +754,59 @@ function renderAt(tv) {
   }
 
   // velo que oscurece la escena detrás de la marca y del logo
-  $('dim').style.opacity = Math.max(0.68 * env(tv, 18.35, 23.3, 0.5, 0.4), 0.9 * env(tv, 59.6, 99, 0.45)).toFixed(3);
+  $('dim').style.opacity = Math.max(0.68 * env(tv, 18.35, 23.3, 0.5, 0.4), 0.9 * env(tv, 53.6, 99, 0.45)).toFixed(3);
 
-  // ===== modo cirugía (concepto) =====
-  updateSurgery(tv, surg);
+  // ===== regla 3D sobre el hígado =====
+  const r3 = m3 ? env(tv, 41.2, 45.2, 0.2, 0.35) : 0;
+  const rl = $('rLabel');
+  rl.style.opacity = (r3 * clamp01(prog(tv, 42.3, 42.6))).toFixed(3);
+  if (r3 > 0) {
+    liver.pivot.updateMatrixWorld(true);
+    const pa = E.project(RULER3D.a.clone().applyMatrix4(liver.mesh.matrixWorld));
+    const pb = E.project(RULER3D.b.clone().applyMatrix4(liver.mesh.matrixWorld));
+    rulerLine(pa, pb, easeInOut(prog(tv, 41.65, 42.3)), easeBack(prog(tv, 41.45, 41.75)), easeBack(prog(tv, 42.25, 42.55)), r3);
+    const kl = prog(tv, 42.35, 43.1);
+    rl.querySelector('span').textContent = (RULER3D.cm * easeOut(kl)).toFixed(1).replace('.', ',');
+    const pop = easeBack(prog(tv, 42.3, 42.7));
+    rl.style.transform = `translate(${((pa.x + pb.x) / 2 - rl.offsetWidth / 2).toFixed(1)}px, ${(Math.min(pa.y, pb.y) - 70 - rl.offsetHeight).toFixed(1)}px) scale(${lerp(0.6, 1, pop).toFixed(4)})`;
+  } else rulerLine({ x: 0, y: 0 }, { x: 0, y: 0 }, 0, 0, 0, 0);
 
-  // hoja de ruta corta: hoy prototipo → validación con cirujanos → quirófano
-  const road = $('road');
-  road.style.opacity = env(tv, 50.8, 53.25, 0.35, 0.4).toFixed(3);
-  const fill = track(tv, [[51.3, 0], [52.45, 0.5], [53.2, 1]]);
-  $('roadFill').style.transform = `scaleX(${fill.toFixed(4)})`;
-  road.querySelectorAll('.node').forEach((nd, i) => {
-    const a = [50.9, 52.3, 53.05][i];
-    const kk = easeOut(prog(tv, a, a + 0.45));
-    nd.style.opacity = kk.toFixed(3);
-    nd.style.transform = `translateY(${((1 - kk) * 24).toFixed(2)}px)`;
-    if (i > 0) nd.querySelector('b').style.borderColor = `rgba(127, 178, 255, ${(0.3 + 0.7 * kk).toFixed(3)})`;
+  // avances del prototipo: cada uno entra con su visto
+  const recap = $('recap');
+  recap.style.opacity = env(tv, 45.9, 49.2, 0.4, 0.4).toFixed(3);
+  recap.style.transform = `translateX(${((1 - easeOut(prog(tv, 45.9, 46.5))) * 50).toFixed(2)}px)`;
+  recap.querySelectorAll('.ritem').forEach((it, i) => {
+    const a = 46.25 + i * 0.3;
+    const kk = easeOut(prog(tv, a, a + 0.4));
+    it.style.opacity = kk.toFixed(3);
+    it.style.transform = `translateX(${((1 - kk) * 30).toFixed(2)}px)`;
+    it.querySelector('i').style.transform = `scale(${easeBack(prog(tv, a + 0.1, a + 0.45)).toFixed(4)})`;
   });
 
-  // lo que buscamos: píldoras que se apilan
-  document.querySelectorAll('.chip').forEach((c, i) => {
-    const a = 54.6 + i * 0.35;
-    const v = env(tv, a, 56.4, 0.5, 0.4);
-    const pop = easeBack(prog(tv, a, a + 0.5));
-    c.style.opacity = v.toFixed(3);
-    c.style.transform = `translateY(${((1 - easeOut(prog(tv, a, a + 0.5))) * 40).toFixed(2)}px) scale(${lerp(0.7, 1, pop).toFixed(4)})`;
-  });
-
-  // gesto de pinza sobre el hígado (representación)
+  // gesto de pinza sobre el hígado (representación): al tomarlo y en la regla 3D
   const pinch = $('pinch');
-  const pv = env(t, 21.2, 24.5, 0.4, 0.4);
-  if (!surg) {
-    pinch.style.opacity = pv.toFixed(3);
-    if (pv > 0) {
-      liver.pivot.updateMatrixWorld(true);
-      const wp = new T.Vector3().setFromMatrixPosition(liver.pivot.matrixWorld);
-      const sp = E.project(wp);
-      pinch.style.transform = `translate(${sp.x + 40}px, ${sp.y - 55}px) scale(1.25)`;
-      setPinch(easeInOut(prog(t, 21.4, 21.9)));
-    }
+  const pv = m3 ? env(tv, 42.9, 45.25, 0.35, 0.35) : env(t, 21.2, 24.5, 0.4, 0.4);
+  pinch.style.opacity = pv.toFixed(3);
+  if (pv > 0) {
+    liver.pivot.updateMatrixWorld(true);
+    const wp = new T.Vector3().setFromMatrixPosition(liver.pivot.matrixWorld);
+    const sp = E.project(wp);
+    const [px, py] = m3 ? [110, 95] : [40, -55];        // en la regla 3D, bajo la etiqueta de la medida
+    pinch.style.transform = `translate(${sp.x + px}px, ${sp.y + py}px) scale(1.25)`;
+    setPinch(m3 ? easeInOut(prog(tv, 43.1, 43.45)) : easeInOut(prog(t, 21.4, 21.9)));
   }
 
-  // marca: presentación (golpe en 20 s) y logo final (golpe en 60 s)
+  // marca: presentación (golpe en 20 s) y logo final (golpe en 54 s)
   if (tv < 40) {
     brandAt(tv, 20.0, 23.3, 3.3);
     $('brandPre').style.opacity = easeOut(prog(tv, 18.4, 18.9)).toFixed(3);
     $('brandPre').style.display = '';
     $('brandTeam').style.display = 'none';
   } else {
-    brandAt(tv, 60.0, 99, 1.6);
+    brandAt(tv, 54.0, 99, 1.6);
     $('brandPre').style.display = 'none';
     $('brandTeam').style.display = '';
-    const kk = easeOut(prog(tv, 60.9, 61.5));
+    const kk = easeOut(prog(tv, 54.9, 55.5));
     $('brandTeam').style.opacity = kk.toFixed(3);
     $('brandTeam').style.transform = `translateY(${((1 - kk) * 14).toFixed(2)}px)`;
   }
@@ -811,7 +819,7 @@ function renderAt(tv) {
   const push = tv < 4.8 ? 0.04 * easeOut(prog(tv, 0, 4.4)) * (1 - easeInOut(prog(tv, 4.4, 4.8))) : 0;
   $('cam').style.transform = wk > 0 || push > 0 ? `scale(${(1 + 0.07 * wk + push).toFixed(4)})` : '';
   $('cam').style.filter = wk > 0 ? `blur(${(wk * 14).toFixed(2)}px)` : 'none';
-  $('flash').style.opacity = Math.min(1, hit(20.0, 0.55) + hit(42.8, 0.3) + hit(60.0, 0.6) + 0.35 * wk).toFixed(3);
+  $('flash').style.opacity = Math.min(1, hit(20.0, 0.55) + hit(45.5, 0.25) + hit(54.0, 0.6) + 0.35 * wk).toFixed(3);
 
   // sombra en el suelo: la reemplaza la plataforma de luz
   E.shadow.material.opacity = 0;
@@ -826,87 +834,6 @@ function setPinch(closed) {
   $('pinchA').setAttribute('cx', -sep * 0.7); $('pinchA').setAttribute('cy', -sep * 0.7);
   $('pinchB').setAttribute('cx', sep * 0.7); $('pinchB').setAttribute('cy', sep * 0.7);
   $('pinchRing').setAttribute('r', lerp(46, 34, closed));
-}
-
-// Botón «Modo cirugía» que la mano pulsa, y luego la zona, sus márgenes y el abordaje.
-const SLABEL_POS = [[1500, 300], [1500, 470], [1500, 640]];
-function updateSurgery(tv, surg) {
-  const T = E.THREE;
-  const S = SURG;
-  const on = surg && tv < 50.6;
-  const btn = $('sbtn'), ring = $('sring'), chip = $('schip');
-  if (!on) {
-    for (const m of [S.core, S.margin, S.pulse]) m.visible = false;
-    for (const p of S.ports) p.grp.visible = false;
-    hideLeaders('t-');
-    btn.style.opacity = ring.style.opacity = chip.style.opacity = 0;
-    document.querySelectorAll('.slabel').forEach((l) => (l.style.opacity = 0));
-    hideLeaders('s-');
-    return;
-  }
-  // botón: aparece, la mano lo pulsa (42,8 s) y se encoge hasta volverse la etiqueta de arriba
-  const BX = 1120, BY = 560;
-  const bin = easeOut(prog(tv, 41.5, 42.0));
-  const press = tv < 42.8 ? 0 : Math.exp(-(tv - 42.8) / 0.08) * (tv < 43.0 ? 1 : 0);
-  const gone = easeInOut(prog(tv, 43.05, 43.5));
-  const bs = lerp(0.8, 1, easeBack(prog(tv, 41.5, 42.0))) * (1 - 0.08 * press) * lerp(1, 0.4, gone);
-  btn.style.opacity = (bin * (1 - gone)).toFixed(3);
-  btn.style.transform = `translate(${(BX - btn.offsetWidth / 2 + gone * 420).toFixed(1)}px, ${(BY - btn.offsetHeight / 2 - gone * 470).toFixed(1)}px) scale(${bs.toFixed(4)})`;
-  const rp = prog(tv, 42.8, 43.5);
-  ring.style.opacity = (rp > 0 && rp < 1 ? 0.9 * (1 - rp) : 0).toFixed(3);
-  ring.style.transform = `translate(${BX}px, ${BY}px) scale(${lerp(0.6, 3.2, easeOut(rp)).toFixed(4)})`;
-  chip.style.opacity = env(tv, 43.3, 50.0, 0.4, 0.4).toFixed(3);
-
-  // la mano: llega desde abajo a la derecha, pinza y se va
-  const pinch = $('pinch');
-  const hv = env(tv, 41.8, 43.0, 0.3, 0.35);
-  pinch.style.opacity = hv.toFixed(3);
-  if (hv > 0) {
-    const m = easeInOut(prog(tv, 41.8, 42.65));
-    pinch.style.transform = `translate(${lerp(1640, BX + 60, m).toFixed(1)}px, ${lerp(900, BY + 40, m).toFixed(1)}px) scale(1.25)`;
-    setPinch(easeInOut(prog(tv, 42.6, 42.8)) * (1 - easeInOut(prog(tv, 42.95, 43.15))));
-  }
-
-  // zona a tratar (44,3 s), márgenes (45,8 s) y abordaje (46,5 s)
-  const zk = easeBack(prog(tv, 44.3, 44.8));
-  const zv = clamp01(prog(tv, 44.3, 44.5)) * (1 - easeInOut(prog(tv, 50.1, 50.5)));
-  S.core.visible = zv > 0;
-  S.core.scale.setScalar(Math.max(0.001, zk) * (1 + 0.08 * Math.sin(tv * 6)));
-  S.core.material.uniforms.uOpacity.value = zv;
-  S.pulse.visible = zv > 0;
-  const pp = (tv - 44.3) % 1.2 / 1.2;
-  S.pulse.scale.setScalar(lerp(0.6, 2.2, pp));
-  S.pulse.material.opacity = zv * (1 - pp) * 0.9;
-  S.pulse.quaternion.copy(E.camera.quaternion);
-  const mk = easeOut(prog(tv, 45.95, 46.65));
-  S.margin.visible = mk > 0;
-  S.margin.scale.setScalar(Math.max(0.001, lerp(0.5, 1, mk)));
-  S.margin.material.uniforms.uOpacity.value = mk * (1 - easeInOut(prog(tv, 50.1, 50.5)));
-  for (const p of S.ports) {
-    const a = 46.8 + p.i * 0.25;
-    const pk = easeBack(prog(tv, a, a + 0.4));
-    p.grp.visible = pk > 0.001;
-    p.grp.scale.setScalar(Math.max(0.001, pk));
-    p.grp.quaternion.copy(E.camera.quaternion);
-    const fade = 1 - easeInOut(prog(tv, 50.1, 50.5));
-    p.ring.material.opacity = fade; p.dot.material.opacity = fade;
-    trajectory('t-' + p.i, E.project(p.p), E.project(S.target), easeInOut(prog(tv, a + 0.15, a + 1.0)) * fade, tv);
-  }
-
-  // etiquetas con su línea guía (estilo de las ramas de luz)
-  const anchors = [
-    E.project(S.target),
-    E.project(S.target.clone().add(new T.Vector3(0.032, 0, 0).applyQuaternion(E.camera.quaternion))),
-    E.project(S.ports[2].p),
-  ];
-  [44.35, 46.0, 47.35].forEach((a, i) => {
-    const el = $('sl' + i);
-    const v = env(tv, a + 0.25, 50.05, 0.45, 0.4);
-    el.style.opacity = v.toFixed(3);
-    const [lx, ly] = SLABEL_POS[i];
-    el.style.transform = `translate(${(lx + (1 - easeOut(prog(tv, a + 0.25, a + 0.7))) * 30).toFixed(1)}px, ${(ly - el.offsetHeight / 2).toFixed(1)}px)`;
-    leader('s-' + i, anchors[i], { x: lx - 8, y: ly }, easeOut(prog(tv, a, a + 0.45)) * (1 - easeInOut(prog(tv, 50.05, 50.45))), '#FFB547', 'rgba(255,181,71,0.9)');
-  });
 }
 
 function setPlane(p, v, fill = 1) {

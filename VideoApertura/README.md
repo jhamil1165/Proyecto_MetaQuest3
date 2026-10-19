@@ -1,12 +1,12 @@
 # INMERSIA · video de apertura
 
-Pitch de 66 s para presentar el proyecto, de carácter **académico**, a la Clínica Anglo
-Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Camila», dirigida
-como la del video de 57 s: suave, de anuncio, frases cortas con pausas), texto que entra palabra
-por palabra cuando la voz lo dice y música original a 120 BPM.
+Pitch de 60 s para presentar el proyecto, de carácter **académico**, a la Clínica Anglo
+Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Daniela - Soothing &
+Relaxed»: suave, tranquila y cálida), texto que entra palabra por palabra cuando la voz lo dice
+y música original a 120 BPM.
 Estilo de reel: fondo negro con brillo azul, plataforma holográfica bajo el cuerpo, polvo de luz,
-etiquetas con el volumen de cada órgano (como en el visor) y un modo cirugía como concepto.
-Todo se dibuja con código a partir de los datos reales del proyecto.
+etiquetas con el volumen de cada órgano (como en el visor) y las reglas 2D y 3D. Muestra solo lo
+que el prototipo ya hace. Todo se dibuja con código a partir de los datos reales del proyecto.
 
 ## Guion
 
@@ -18,25 +18,26 @@ Todo se dibuja con código a partir de los datos reales del proyecto.
 | 13 – 18 | La pregunta | «¿Y si pudieras verlo completo… frente a ti?» El corte sale de la pantalla y los cortes forman el cuerpo sobre la plataforma de luz. |
 | 18 – 24 | Marca | «Te presentamos… **Inmersia**. Cirugía inmersiva.» Golpe de la música en 20 s, destello y logo. |
 | 24 – 37 | Demostración | «Cada órgano, segmentado… y con su volumen» (Hígado 1665 mL · Estómago 436 mL · Páncreas 67 mL · Vesícula 12 mL) · «Tómalo con la mano» · «córtalo donde quieras… y la tomografía te sigue» · «Tres planos. Un mismo punto.» |
-| 37 – 41 | Meta Quest 3 | «Y esto ya funciona en Meta Quest 3.» El cuerpo completo con sus órganos y el plano. |
-| 41 – 50,5 | Modo cirugía (concepto) | «Lo que viene… es el modo cirugía. Marca la zona a tratar… mira sus márgenes… y planifica el abordaje… antes de entrar al quirófano.» La mano pulsa el botón, el hígado se vuelve de vidrio y aparecen la zona, los márgenes y tres trayectorias. |
-| 50,5 – 56 | Lo que buscamos | «Hoy, es un prototipo. Para llevarlo al quirófano… buscamos un aliado clínico.» Hoja de ruta corta y tres píldoras: cirujanos que lo prueben y nos guíen, casos anonimizados para investigar, validarlo juntos con rigor académico. |
-| 56 – 60 | Invitación | «Construyámoslo juntos… con la Clínica Anglo Americana.» |
-| 60 – 66 | Logo | «Inmersia.» INMERSIA · Cirugía inmersiva · Proyecto de investigación · Ingeniería Biomédica · PUCP. Quieto desde 61,8 s. |
+| 37 – 41 | Regla 2D | «Mide sobre cada corte… en milímetros reales.» El corte 116 con su segmentación y una regla de lado a lado del hígado: 132,8 mm. |
+| 41 – 45,5 | Regla 3D | «Y también en 3D… sobre el propio órgano.» Una regla sobre el hígado (19,5 cm); la mano lo toma y lo gira, y la medida lo acompaña. |
+| 45,5 – 49,5 | Meta Quest 3 | «Y todo esto… ya funciona en Meta Quest 3.» El cuerpo completo y el panel «Avances del prototipo»: tomografía y segmentación, órganos 3D con su volumen, plano de corte y tres planos, reglas 2D y 3D, manos y mandos a tamaño real. |
+| 49,5 – 54 | Invitación | «Construyámoslo juntos… con la Clínica Anglo Americana.» |
+| 54 – 60 | Logo | «Inmersia.» INMERSIA · Cirugía inmersiva · Proyecto de investigación · Ingeniería Biomédica. Quieto desde 55,8 s. |
 
-## Qué es real, qué es ilustración y qué es concepto
+## Qué es real y qué es ilustración
 
 Una etiqueta discreta abajo a la izquierda lo dice en cada escena:
 
 - **Real:** los cortes de la tomografía del proyecto. Los volúmenes de los órganos son los que
-  mide el visor sobre la segmentación (`OrganTag` en la escena de Unity).
+  mide el visor sobre la segmentación (`OrganTag` en la escena de Unity). Las dos medidas son
+  distancias reales sobre los datos: 132,8 mm sobre la máscara del corte 116 y 19,5 cm entre dos
+  puntos de la superficie del hígado segmentado.
 - **Ilustración con datos del proyecto:** el cuerpo en 3D, los órganos, los planos y los paneles.
-- **Representación:** la mano que toma el hígado y la que pulsa el botón.
-- **Concepto en desarrollo:** el modo cirugía. La zona, los márgenes y las trayectorias son
-  ilustrativos: no marcan ningún hallazgo del paciente.
+- **Representación:** la mano que toma el hígado.
+- Los avances del panel son los que ya tiene el visor (ver `CLAUDE.md` en la raíz del repo).
 
-No se muestran resultados clínicos, navegación quirúrgica, datos de pacientes, logos de la
-clínica ni de instituciones que financien. No se usan las capturas del visor.
+No se muestran resultados clínicos, navegación quirúrgica, planes a futuro, datos de pacientes,
+logos de la clínica ni de instituciones que financien. No se usan las capturas del visor.
 
 ## Cómo generarlo
 
@@ -50,7 +51,8 @@ python tools/mix_audio.py out/video_apertura.mp4   # video final → out/inmersi
 ```
 
 Quedan dos versiones: `out/inmersia.mp4` (voz y música) y `out/inmersia_musica.mp4` (solo
-música, por si se narra en vivo).
+música, por si se narra en vivo). Mientras no esté la toma de voz
+(`assets/audio/locucion_daniela.mp3`), sale solo la de música.
 
 En Linux se usa `python3`. Con tarjeta gráfica toma unos minutos; sin ella, más de una hora.
 
@@ -68,10 +70,10 @@ Para revisar sin exportar todo:
 - **Nombre, lema, equipo y clínica:** `CONFIG` en `src/main.js`.
 - **Volúmenes de los órganos, hoja de ruta y lo que buscamos:** `src/index.html` (`.otag`,
   `#road`, `#chips`).
-- **Escenas 3D:** se animan en su propio reloj y `WARP` las encaja en el guion. El modo cirugía
-  está en `buildSurgery` y `updateSurgery`.
+- **Escenas 3D:** se animan en su propio reloj y `WARP` las encaja en el guion. Las reglas están
+  en `RULER2D` y `buildRuler3D`; el panel de avances, en `#recap` de `src/index.html`.
 - **Luz:** la plataforma, el polvo y el brillo (bloom) están en `src/gl.js`.
-- **Voz:** `assets/audio/locucion_inmersia.mp3` es una sola toma; `VOICE_CUTS` en
+- **Voz:** `assets/audio/locucion_daniela.mp3` es una sola toma; `VOICE_CUTS` en
   `tools/mix_audio.py` la corta en los silencios entre frases y dice en qué segundo entra cada una.
 - **Música:** `tools/compose_music.py`. Si mueves una escena, mueve también su segundo en
   `CUES` para que el golpe siga cayendo en el cambio.
