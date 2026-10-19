@@ -52,8 +52,10 @@ TEMPO = 1.0    # la voz va a su velocidad natural
 PITCH = 1.0    # y con su tono original
 SR = 48000
 FADE = 0.015   # fundido en cada corte, para que no haga clic
-# Solo se limpia el grave y se sube el volumen (la toma venía baja); la voz suena como es.
-SOFT = ("highpass=f=70,loudnorm=I=-14:TP=-1.5:LRA=9,aformat=sample_rates=48000:channel_layouts=stereo")
+# Solo se limpia el grave y se sube el volumen (la toma venía baja), igual en todas las frases;
+# la voz suena como es.
+VOICE_RMS = -16.0
+SOFT = ("highpass=f=70,alimiter=limit=0.89:attack=5:release=60,aformat=sample_rates=48000:channel_layouts=stereo")
 
 
 def place_voice(path_in, path_out):
@@ -67,6 +69,10 @@ def place_voice(path_in, path_out):
     ramp = np.linspace(0, 1, nf, dtype=np.float32)
     for a, b, at in VOICE_CUTS:
         seg = take[int(a / TEMPO * SR):int(b / TEMPO * SR)].copy()
+        # nivel parejo: cada frase (sin contar sus silencios) queda en VOICE_RMS
+        fr = seg[: len(seg) // 480 * 480].reshape(-1, 480)
+        rms = np.sqrt((fr ** 2).mean(axis=1))
+        seg *= 10 ** (VOICE_RMS / 20) / np.sqrt((fr[rms > rms.max() * 0.1] ** 2).mean())
         seg[:nf] *= ramp
         seg[-nf:] *= ramp[::-1]
         i0 = int(round(at * SR))
