@@ -62,17 +62,18 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 // <n>267</n> = número que cuenta desde cero. Una línea 'ghost' queda borrosa, como imaginada.
 const BLOCKS = [
   { at: 0.45, out: 4.45, pos: 'center', lines: [['q', 'Toda cirugía…'], ['q', 'empieza <b>antes</b>'], ['q', 'del quirófano.']], gaps: [0.05, 1.58, 2.92] },
-  { at: 4.85, out: 9.55, pos: 'left', lines: [['h1', 'Empieza en una tomografía:'], ['big', '<n>267</n>'], ['h1', 'imágenes…']], gaps: [0.05, 2.14, 3.61] },
-  { at: 9.9, out: 13.2, pos: 'left', lines: [['h1', 'Que hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1 ghost', 'imaginando el resto.']], gaps: [0.04, 1.18, 2.02] },
-  { at: 13.25, out: 18.0, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', 'verlo <b>completo</b>…'], ['h2 dim', 'frente a ti?']], gaps: [0.05, 0.8, 1.94] },
-  { at: 24.25, out: 27.8, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Cada órgano,'], ['h2', 'segmentado…'], ['h2', '<b>y con su volumen.</b>']], gaps: [0, 0.045, 1.06, 2.46] },
-  { at: 28.0, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalo'], ['h2', '<b>con la mano.</b>']], gaps: [0, 0.1, 0.48] },
-  { at: 30.35, out: 33.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Córtalo'], ['h2', '<b>donde quieras.</b>'], ['sub', 'Y la tomografía te sigue.']], gaps: [0, 0.05, 0.5, 1.8] },
-  { at: 33.95, out: 36.9, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos,'], ['h2', '<b>un mismo punto.</b>']], gaps: [0, 0.05, 1.34] },
+  { at: 4.9, out: 9.55, pos: 'left', lines: [['h1', 'Cientos de imágenes…'], ['big', '<n>267</n>'], ['h1', 'una sola <b>pantalla</b>.']], gaps: [0.05, 0.75, 2.0] },
+  { at: 9.9, out: 13.0, pos: 'left', lines: [['h1', 'Que hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1 ghost', 'imaginando el resto.']], gaps: [0.05, 1.18, 2.02] },
+  { at: 13.25, out: 15.25, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', '<b>tenerlas</b>…'], ['h2 dim', 'frente a ti?']], gaps: [0.07, 0.8, 1.5] },
+  { at: 15.45, out: 18.9, pos: 'left', lines: [['h2', 'Cada corte'], ['h2', 'encuentra su lugar…'], ['h2', 'y aparece <b>el cuerpo</b>.']], gaps: [0.08, 0.5, 2.63] },
+  { at: 24.0, out: 27.95, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Con realidad mixta,'], ['h2', 'la anatomía, <b>aquí</b>.'], ['h2 dim', 'En tu espacio.']], gaps: [0, 0.07, 1.0, 3.33] },
+  { at: 28.15, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalo…'], ['h2', '<b>y gíralo.</b>']], gaps: [0, 0.05, 0.82] },
+  { at: 30.3, out: 33.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Desliza un plano…'], ['h2', 'y la tomografía'], ['h2', '<b>te sigue.</b>']], gaps: [0, 0.07, 1.64, 2.3] },
+  { at: 33.95, out: 36.9, pos: 'tri', lines: [['kicker', '04 · Tres planos'], ['h2', 'Tres planos.'], ['h2', '<b>Un mismo punto.</b>']], gaps: [0, 0.07, 1.32] },
   { at: 37.5, out: 40.75, pos: 'left', lines: [['kicker', '05 · Regla 2D'], ['h2', 'Mide sobre cada corte…'], ['h2', '<b>en milímetros reales.</b>']], gaps: [0, 0.05, 1.5] },
   { at: 41.3, out: 45.2, pos: 'left', lines: [['kicker', '06 · Regla 3D'], ['h2', 'Y también en 3D…'], ['h2', '<b>sobre el propio órgano.</b>'], ['sub', 'La medida se mueve con el órgano.']], gaps: [0, 0.05, 1.4, 2.3] },
-  { at: 45.75, out: 49.25, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Y ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Prototipo en desarrollo.']], gaps: [0, 0.05, 1.24, 2.1] },
-  { at: 49.7, out: 53.4, pos: 'left', lines: [['h2', 'Construyámoslo juntos…'], ['h2', 'con la'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.1, 1.36, 1.67] },
+  { at: 45.7, out: 49.3, pos: 'left', lines: [['kicker', 'Realidad mixta'], ['h2', 'Y ya funciona en'], ['h1', '<b>Meta Quest 3</b>.'], ['sub', 'Hoy, es un prototipo.']], gaps: [0, 0.07, 1.1, 2.15] },
+  { at: 49.7, out: 53.4, pos: 'left', lines: [['h2', 'Y queremos construirlo…'], ['h2', 'con ustedes,'], ['h1', `<b>${CONFIG.clinic}.</b>`]], gaps: [0.06, 1.62, 2.1] },
 ];
 const WORD_STAGGER = 0.065, WORD_IN = 0.42;
 
@@ -754,7 +755,7 @@ function renderAt(tv) {
   }
 
   // velo que oscurece la escena detrás de la marca y del logo
-  $('dim').style.opacity = Math.max(0.68 * env(tv, 18.35, 23.3, 0.5, 0.4), 0.9 * env(tv, 53.6, 99, 0.45)).toFixed(3);
+  $('dim').style.opacity = Math.max(0.68 * env(tv, 19.0, 23.3, 0.5, 0.4), 0.9 * env(tv, 53.6, 99, 0.45)).toFixed(3);
 
   // ===== regla 3D sobre el hígado =====
   const r3 = m3 ? env(tv, 41.2, 45.2, 0.2, 0.35) : 0;
@@ -799,7 +800,7 @@ function renderAt(tv) {
   // marca: presentación (golpe en 20 s) y logo final (golpe en 54 s)
   if (tv < 40) {
     brandAt(tv, 20.0, 23.3, 3.3);
-    $('brandPre').style.opacity = easeOut(prog(tv, 18.4, 18.9)).toFixed(3);
+    $('brandPre').style.opacity = easeOut(prog(tv, 19.2, 19.6)).toFixed(3);
     $('brandPre').style.display = '';
     $('brandTeam').style.display = 'none';
   } else {

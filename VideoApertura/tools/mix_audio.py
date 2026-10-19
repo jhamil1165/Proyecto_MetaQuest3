@@ -29,40 +29,31 @@ except ImportError:
     FFMPEG = "ffmpeg"
 
 DURATION = 60.0
-VOICE = "assets/audio/locucion_inmersia.mp3"
+VOICE = "assets/audio/locucion.mp3"
 MUSIC = "out/musica.wav"
 
 # (inicio en la toma, fin en la toma, segundo del video donde entra)
-# Toma de ElevenLabs v4, voz «Camila» (la del video de 57 s), 52,6 s, grabada para el guion
-# anterior: se usan solo las frases que siguen en el guion. Las reglas 2D y 3D (37–45,5 s) van
-# sin voz, con su texto en pantalla. Se corta en los silencios entre frases (por debajo de
-# -70 dB) y el texto de src/main.js aparece cuando la voz lo dice.
+# Toma de ElevenLabs v4, voz «Camila», 39,5 s: la del primer video, la que más gustó. Se usa tal
+# cual (sin cambiar tono ni timbre), solo las frases que siguen en el guion; el texto de
+# src/main.js dice lo mismo que la voz. El gancho, «una por una», las reglas y el logo van sin voz.
 VOICE_CUTS = [
-    (0.18, 4.58, 0.45),        # Toda cirugía… empieza antes del quirófano.
-    (4.58, 9.51, 4.85),        # Empieza en una tomografía: doscientas sesenta y siete imágenes…
-    (9.51, 12.74, 9.78),       # que hoy se revisan una por una… imaginando el resto.
-    (12.74, 16.265, 13.24),    # ¿Y si pudieras verlo completo… frente a ti?
-    (16.265, 20.545, 18.437),  # Te presentamos… Inmersia. Cirugía inmersiva. («Inmersia» con el golpe, en 20 s)
-    (20.545, 24.36, 24.205),   # Cada órgano, segmentado… y con su volumen.
-    (24.74, 26.3, 28.04),      # Tómalo con la mano…
-    (26.3, 27.99, 30.38),      # córtalo donde quieras…
-    (27.99, 29.785, 32.07),    # y la tomografía te sigue.
-    (29.785, 32.26, 33.945),   # Tres planos. Un mismo punto.
-    (32.26, 34.565, 45.75),    # Y ya funciona en Meta Quest tres.
-    (48.305, 51.75, 49.681),   # Construyámoslo juntos… con la Clínica Anglo Americana.
-    (51.75, 52.64, 54.015),    # Inmersia. (con el golpe del logo, en 54 s)
+    (0.0, 2.95, 4.9),       # Cientos de imágenes… una sola pantalla.
+    (3.5, 5.85, 13.25),     # ¿Y si pudieras tenerlas… frente a ti?
+    (6.45, 10.5, 15.45),    # Cada corte encuentra su lugar… y aparece el cuerpo.
+    (10.75, 14.95, 24.0),   # Con realidad mixta, la anatomía está aquí. En tu espacio.
+    (17.95, 19.55, 28.15),  # Tómalo… y gíralo.
+    (19.8, 23.2, 30.3),     # Desliza un plano… y la tomografía te sigue.
+    (23.5, 26.0, 33.95),    # Tres planos. Un mismo punto.
+    (26.4, 28.5, 45.7),     # Y ya funciona en Meta Quest 3.
+    (28.95, 30.5, 47.85),   # Hoy, es un prototipo.
+    (33.88, 36.3, 49.7),    # Y queremos construirlo… con ustedes.
 ]
 TEMPO = 1.0    # la voz va a su velocidad natural
-PITCH = 1.035  # tono un poco más alto (sin cambiar la velocidad): menos seria, más ligera
+PITCH = 1.0    # y con su tono original
 SR = 48000
 FADE = 0.015   # fundido en cada corte, para que no haga clic
-# Voz suave y elegante, sin cambiar su velocidad: un poco más de cuerpo, menos dureza en los
-# medios agudos y menos brillo y «s», compresión suave y un toque de sala muy corto.
-SOFT = ("highpass=f=80,equalizer=f=200:t=q:w=1.0:g=1.5,equalizer=f=2800:t=q:w=1.2:g=-2.5,"
-        "deesser=i=0.45,treble=g=-3:f=6000,"
-        "acompressor=threshold=-24dB:ratio=1.8:attack=25:release=300,"
-        "aecho=0.8:0.85:28|47:0.05|0.03,"
-        "loudnorm=I=-18:TP=-2:LRA=8,aformat=sample_rates=48000:channel_layouts=stereo")
+# Solo se limpia el grave y se sube el volumen (la toma venía baja); la voz suena como es.
+SOFT = ("highpass=f=70,loudnorm=I=-14:TP=-1.5:LRA=9,aformat=sample_rates=48000:channel_layouts=stereo")
 
 
 def place_voice(path_in, path_out):

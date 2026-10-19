@@ -1,9 +1,9 @@
 # INMERSIA · video de apertura
 
 Pitch de 60 s para presentar el proyecto, de carácter **académico**, a la Clínica Anglo
-Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Camila», la del
-video de 57 s, a su velocidad natural), texto que entra palabra por palabra cuando la voz lo dice
-y música original a 120 BPM. Las reglas 2D y 3D van sin voz, con su texto en pantalla.
+Americana: horizontal (1920 × 1080, 30 fps), con locución (ElevenLabs, voz «Camila» del primer video, tal cual, sin cambiarle el tono), texto que
+entra palabra por palabra cuando la voz lo dice y música original a 120 BPM. El gancho, «una por una»,
+las reglas y el logo van sin voz, con su texto en pantalla.
 Estilo de reel: fondo negro con brillo azul, plataforma holográfica bajo el cuerpo, polvo de luz,
 etiquetas con el volumen de cada órgano (como en el visor) y las reglas 2D y 3D. Muestra solo lo
 que el prototipo ya hace. Todo se dibuja con código a partir de los datos reales del proyecto.
@@ -72,7 +72,7 @@ Para revisar sin exportar todo:
 - **Escenas 3D:** se animan en su propio reloj y `WARP` las encaja en el guion. Las reglas están
   en `RULER2D` y `buildRuler3D`; el panel de avances, en `#recap` de `src/index.html`.
 - **Luz:** la plataforma, el polvo y el brillo (bloom) están en `src/gl.js`.
-- **Voz:** `assets/audio/locucion_inmersia.mp3` es una sola toma; `VOICE_CUTS` en
+- **Voz:** `assets/audio/locucion.mp3` es una sola toma; `VOICE_CUTS` en
   `tools/mix_audio.py` la corta en los silencios entre frases y dice en qué segundo entra cada una.
 - **Música:** `tools/compose_music.py`. Si mueves una escena, mueve también su segundo en
   `CUES` para que el golpe siga cayendo en el cambio.
