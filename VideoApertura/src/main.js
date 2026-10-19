@@ -63,9 +63,9 @@ const env = (t, a, b, din = 0.7, dout = 0.5) => easeOut(prog(t, a, a + din)) * (
 const BLOCKS = [
   { at: 0.45, out: 4.45, pos: 'center', lines: [['q', 'Toda cirugía…'], ['q', 'empieza <b>antes</b>'], ['q', 'del quirófano.']], gaps: [0.05, 1.58, 2.92] },
   { at: 4.9, out: 9.55, pos: 'left', lines: [['h1', 'Cientos de imágenes…'], ['big', '<n>267</n>'], ['h1', 'una sola <b>pantalla</b>.']], gaps: [0.05, 0.75, 2.0] },
-  { at: 9.9, out: 13.0, pos: 'left', lines: [['h1', 'Que hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1 ghost', 'imaginando el resto.']], gaps: [0.05, 1.18, 2.02] },
-  { at: 13.25, out: 15.25, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', '<b>tenerlas</b>…'], ['h2 dim', 'frente a ti?']], gaps: [0.07, 0.8, 1.5] },
-  { at: 15.45, out: 18.9, pos: 'left', lines: [['h2', 'Cada corte'], ['h2', 'encuentra su lugar…'], ['h2', 'y aparece <b>el cuerpo</b>.']], gaps: [0.08, 0.5, 2.63] },
+  { at: 9.75, out: 12.15, pos: 'left', lines: [['h1', 'Que hoy se revisan'], ['h1', '<b>una por una</b>…'], ['h1 ghost', 'imaginando el resto.']], gaps: [0.05, 0.85, 1.55] },
+  { at: 12.35, out: 14.55, pos: 'left', lines: [['q', '¿Y si pudieras'], ['q', '<b>tenerlas</b>…'], ['h2 dim', 'frente a ti?']], gaps: [0.12, 0.87, 1.58] },
+  { at: 14.8, out: 18.2, pos: 'left', lines: [['h2', 'Cada corte'], ['h2', 'encuentra su lugar…'], ['h2', 'y aparece <b>el cuerpo</b>.']], gaps: [0.12, 0.6, 2.23] },
   { at: 24.0, out: 27.95, pos: 'left', lines: [['kicker', '01 · Anatomía'], ['h2', 'Con realidad mixta,'], ['h2', 'la anatomía, <b>aquí</b>.'], ['h2 dim', 'En tu espacio.']], gaps: [0, 0.07, 1.0, 3.33] },
   { at: 28.15, out: 30.15, pos: 'left', lines: [['kicker', '02 · Interacción'], ['h2', 'Tómalo…'], ['h2', '<b>y gíralo.</b>']], gaps: [0, 0.05, 0.82] },
   { at: 30.3, out: 33.75, pos: 'left', lines: [['kicker', '03 · Plano de corte'], ['h2', 'Desliza un plano…'], ['h2', 'y la tomografía'], ['h2', '<b>te sigue.</b>']], gaps: [0, 0.07, 1.64, 2.3] },
@@ -755,7 +755,7 @@ function renderAt(tv) {
   }
 
   // velo que oscurece la escena detrás de la marca y del logo
-  $('dim').style.opacity = Math.max(0.68 * env(tv, 19.0, 23.3, 0.5, 0.4), 0.9 * env(tv, 53.6, 99, 0.45)).toFixed(3);
+  $('dim').style.opacity = Math.max(0.68 * env(tv, 18.3, 23.3, 0.5, 0.4), 0.9 * env(tv, 53.6, 99, 0.45)).toFixed(3);
 
   // ===== regla 3D sobre el hígado =====
   const r3 = m3 ? env(tv, 41.2, 45.2, 0.2, 0.35) : 0;
@@ -800,7 +800,7 @@ function renderAt(tv) {
   // marca: presentación (golpe en 20 s) y logo final (golpe en 54 s)
   if (tv < 40) {
     brandAt(tv, 20.0, 23.3, 3.3);
-    $('brandPre').style.opacity = easeOut(prog(tv, 19.2, 19.6)).toFixed(3);
+    $('brandPre').style.opacity = easeOut(prog(tv, 18.35, 18.75)).toFixed(3);
     $('brandPre').style.display = '';
     $('brandTeam').style.display = 'none';
   } else {

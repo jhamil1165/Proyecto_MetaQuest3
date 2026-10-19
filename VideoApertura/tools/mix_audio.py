@@ -30,16 +30,23 @@ except ImportError:
 
 DURATION = 60.0
 VOICE = "assets/audio/locucion.mp3"
+CAMILA_2 = "assets/audio/locucion_inmersia.mp3"   # la misma voz, otra toma: dice «Inmersia»
 MUSIC = "out/musica.wav"
 
 # (inicio en la toma, fin en la toma, segundo del video donde entra)
 # Toma de ElevenLabs v4, voz «Camila», 39,5 s: la del primer video, la que más gustó. Se usa tal
 # cual (sin cambiar tono ni timbre), solo las frases que siguen en el guion; el texto de
-# src/main.js dice lo mismo que la voz. El gancho, «una por una», las reglas y el logo van sin voz.
+# src/main.js dice lo mismo que la voz. «Te presentamos… Inmersia. Cirugía inmersiva.» y el
+# «Inmersia» final vienen de otra toma de la misma voz (CAMILA_2), con el mismo nivel. El gancho,
+# «una por una» y las reglas van sin voz.
 VOICE_CUTS = [
     (0.0, 2.95, 4.9),       # Cientos de imágenes… una sola pantalla.
-    (3.5, 5.85, 13.25),     # ¿Y si pudieras tenerlas… frente a ti?
-    (6.45, 10.5, 15.45),    # Cada corte encuentra su lugar… y aparece el cuerpo.
+    (3.5, 5.85, 12.4),      # ¿Y si pudieras tenerlas… frente a ti?
+    (6.45, 8.55, 14.8),     # Cada corte encuentra su lugar…
+    (9.05, 10.5, 16.95),    # y aparece el cuerpo.
+    (16.25, 17.65, 18.35, CAMILA_2),   # Te presentamos…
+    (17.75, 18.75, 19.92, CAMILA_2),   # Inmersia. (con el golpe, en 20 s)
+    (18.85, 20.545, 21.1, CAMILA_2),   # Cirugía inmersiva.
     (10.75, 14.95, 24.0),   # Con realidad mixta, la anatomía está aquí. En tu espacio.
     (17.95, 19.55, 28.15),  # Tómalo… y gíralo.
     (19.8, 23.2, 30.3),     # Desliza un plano… y la tomografía te sigue.
@@ -47,6 +54,7 @@ VOICE_CUTS = [
     (26.4, 28.5, 45.7),     # Y ya funciona en Meta Quest 3.
     (28.95, 30.5, 47.85),   # Hoy, es un prototipo.
     (33.88, 36.3, 49.7),    # Y queremos construirlo… con ustedes.
+    (51.7, 52.64, 54.0, CAMILA_2),     # Inmersia. (con el golpe del logo, en 54 s)
 ]
 TEMPO = 1.0    # la voz va a su velocidad natural
 PITCH = 1.0    # y con su tono original
@@ -58,17 +66,24 @@ VOICE_RMS = -16.0
 SOFT = ("highpass=f=70,alimiter=limit=0.89:attack=5:release=60,aformat=sample_rates=48000:channel_layouts=stereo")
 
 
-def place_voice(path_in, path_out):
-    """Corta la toma en sus silencios y pone cada frase en su segundo del video."""
-    raw = subprocess.run([FFMPEG, "-v", "error", "-i", path_in, 
+def load_take(path):
+    raw = subprocess.run([FFMPEG, "-v", "error", "-i", path,
                           "-af", f"aresample={SR},asetrate={SR}*{PITCH},aresample={SR},atempo={TEMPO / PITCH}",
                           "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"], check=True, capture_output=True).stdout
-    take = np.frombuffer(raw, "<i2").astype(np.float32) / 32768
+    return np.frombuffer(raw, "<i2").astype(np.float32) / 32768
+
+
+def place_voice(path_in, path_out):
+    """Corta la toma en sus silencios y pone cada frase en su segundo del video."""
+    takes = {path_in: load_take(path_in)}
     out = np.zeros(int(DURATION * SR), np.float32)
     nf = int(FADE * SR)
     ramp = np.linspace(0, 1, nf, dtype=np.float32)
-    for a, b, at in VOICE_CUTS:
-        seg = take[int(a / TEMPO * SR):int(b / TEMPO * SR)].copy()
+    for a, b, at, *src in VOICE_CUTS:
+        path = src[0] if src else path_in
+        if path not in takes:
+            takes[path] = load_take(path)
+        seg = takes[path][int(a / TEMPO * SR):int(b / TEMPO * SR)].copy()
         # nivel parejo: cada frase (sin contar sus silencios) queda en VOICE_RMS
         fr = seg[: len(seg) // 480 * 480].reshape(-1, 480)
         rms = np.sqrt((fr ** 2).mean(axis=1))
