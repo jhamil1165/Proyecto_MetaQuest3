@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit;
 
 /// <summary>
 /// Regla para medir sobre los órganos 3D dentro del visor.
@@ -62,8 +61,9 @@ public class MeasureTool : MonoBehaviour
     }
 
     [Header("Mandos")]
-    [Tooltip("Rayos de los mandos y de las manos. Se usa el primero que apunte a algo.")]
-    [SerializeField] private XRRayInteractor[] rays = new XRRayInteractor[0];
+    [Tooltip("Alcance del rayo del mando, en metros. El rayo sale del anclaje del mando " +
+             "que pulsa el botón (ver ControllerPointer).")]
+    [SerializeField] private float maxDistance = 10f;
 
     [Tooltip("Botón que clava un punto. A en el mando derecho, X en el izquierdo.")]
     [SerializeField] private OVRInput.Button placeButton = OVRInput.Button.One;
@@ -123,11 +123,8 @@ public class MeasureTool : MonoBehaviour
     {
         if (!measuring) return;
 
-        bool pressed = OVRInput.GetDown(placeButton, OVRInput.Controller.RTouch)
-                       || OVRInput.GetDown(placeButton, OVRInput.Controller.LTouch)
-                       || OVRInput.GetDown(placeButton);
-
-        if (pressed) TryPlace();
+        if (ControllerPointer.TryGetPressed(placeButton, out Ray ray, out Transform origin))
+            TryPlace(ray, origin);
     }
 
     private void LateUpdate()
@@ -177,37 +174,29 @@ public class MeasureTool : MonoBehaviour
     }
 
     /// <summary>
-    /// Clava un punto donde apunte el usuario. Se prueban todos los rayos y vale el primero
-    /// que tenga algo delante: así da igual con qué mano se apunte, y da igual que el rig
-    /// tenga rayos de mando y de mano a la vez.
+    /// Clava un punto donde apunte el mando que pulsó el botón: así da igual con qué mano
+    /// se apunte.
     /// </summary>
-    private void TryPlace()
+    private void TryPlace(Ray ray, Transform origin)
     {
-        RaycastHit hit = default;
-        XRRayInteractor used = null;
+        _hand = origin;
 
-        foreach (var ray in rays)
-        {
-            if (ray == null || !ray.isActiveAndEnabled) continue;
+        // Lo primero que toca el rayo, sin contar los triggers (igual que el rayo de XRI).
+        bool touched = Physics.Raycast(ray, out RaycastHit hit, maxDistance,
+                                       Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
 
-            // Apuntando a un panel no se clava nada en 3D: es la regla 2D la que mide sobre
-            // las imágenes, y un punto 3D detrás del panel sería un error del usuario.
-            if (ray.TryGetCurrentUIRaycastResult(out var ui) && ui.gameObject != null) return;
+        // Apuntando a un panel no se clava nada en 3D: es la regla 2D la que mide sobre
+        // las imágenes, y un punto 3D detrás del panel sería un error del usuario.
+        if (ControllerPointer.HitsPanel(ray, touched ? hit.distance : maxDistance)) return;
 
-            if (!ray.TryGetCurrent3DRaycastHit(out hit)) continue;
-            used = ray;
-            break;
-        }
-
-        if (used == null) { Say("Apunta a un órgano"); return; }
-        _hand = used.transform;
+        if (!touched) { Say("Apunta a un órgano"); return; }
 
         OrganScale organ;
         if (IsIgnored(hit.collider) || IsVolumeSurface(hit.collider))
         {
             // El rayo choca primero con la caja que envuelve el volumen. Se mira si, siguiendo
             // el mismo rayo, más adentro está el plano de corte.
-            if (!TryHitCut(used, out hit)) { Say("Activa el corte para medir el volumen"); return; }
+            if (!TryHitCut(ray, out hit)) { Say("Activa el corte para medir el volumen"); return; }
             organ = VolumeOrgan();
             if (organ == null) { Say("Activa el corte para medir el volumen"); return; }
         }
@@ -350,14 +339,13 @@ public class MeasureTool : MonoBehaviour
     }
 
     /// <summary>Busca el plano de corte a lo largo del rayo, aunque haya algo delante.</summary>
-    private bool TryHitCut(XRRayInteractor ray, out RaycastHit cut)
+    private bool TryHitCut(Ray ray, out RaycastHit cut)
     {
         cut = default;
-        Transform origin = ray.rayOriginTransform != null ? ray.rayOriginTransform : ray.transform;
         float best = float.MaxValue;
         bool found = false;
 
-        foreach (var h in Physics.RaycastAll(origin.position, origin.forward, ray.maxRaycastDistance,
+        foreach (var h in Physics.RaycastAll(ray, maxDistance,
                                              Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
         {
             if (!IsVolumeSurface(h.collider) || !h.collider.enabled) continue;
@@ -423,13 +411,7 @@ public class MeasureTool : MonoBehaviour
             return;
         }
 
-        if (_hand == null)
-        {
-            foreach (var ray in rays)
-            {
-                if (ray != null && ray.isActiveAndEnabled) { _hand = ray.transform; break; }
-            }
-        }
+        if (_hand == null) _hand = ControllerPointer.Anchor(true);
 
         if (_hand != null) labelRoot.position = _hand.position + Vector3.up * 0.08f + _hand.forward * 0.06f;
     }

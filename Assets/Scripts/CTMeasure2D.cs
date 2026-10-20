@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit;
 
 /// <summary>
 /// Regla sobre la imagen médica 2D: mide encima del corte del TAC, en milímetros reales.
@@ -42,8 +40,9 @@ public class CTMeasure2D : MonoBehaviour
     [SerializeField] private CTPlaneView[] planes = new CTPlaneView[0];
 
     [Header("Mandos")]
-    [Tooltip("Rayos de los mandos y de las manos. Se usa el primero que apunte a una imagen.")]
-    [SerializeField] private XRRayInteractor[] rays = new XRRayInteractor[0];
+    [Tooltip("Alcance del rayo del mando, en metros. El rayo sale del anclaje del mando " +
+             "que pulsa el botón (ver ControllerPointer).")]
+    [SerializeField] private float maxDistance = 10f;
 
     [Tooltip("Botón que clava un punto. A en el mando derecho, X en el izquierdo.")]
     [SerializeField] private OVRInput.Button placeButton = OVRInput.Button.One;
@@ -136,11 +135,7 @@ public class CTMeasure2D : MonoBehaviour
     {
         if (!measuring) return;
 
-        bool pressed = OVRInput.GetDown(placeButton, OVRInput.Controller.RTouch)
-                       || OVRInput.GetDown(placeButton, OVRInput.Controller.LTouch)
-                       || OVRInput.GetDown(placeButton);
-
-        if (pressed) TryPlace();
+        if (ControllerPointer.TryGetPressed(placeButton, out Ray ray, out _)) TryPlace(ray);
     }
 
     /// <summary>Enciende o apaga la regla. Enlazable al botón "Medir".</summary>
@@ -171,25 +166,35 @@ public class CTMeasure2D : MonoBehaviour
         Refresh();
     }
 
-    private void TryPlace()
+    /// <summary>
+    /// Clava un punto en la columna del visor a la que apunte el mando. Si apunta a otra cosa
+    /// (un botón, otro panel) no hace nada: no es para esta regla.
+    /// </summary>
+    private void TryPlace(Ray ray)
     {
-        foreach (var ray in rays)
+        CTPlaneView plane = null;
+        Vector3 point = default;
+        float best = float.MaxValue;
+
+        foreach (var candidate in planes)
         {
-            if (ray == null || !ray.isActiveAndEnabled) continue;
-            if (!ray.TryGetCurrentUIRaycastResult(out RaycastResult hit) || hit.gameObject == null) continue;
+            if (candidate == null || !candidate.isActiveAndEnabled) continue;
+            if (!(candidate.transform is RectTransform column)) continue;
+            if (!ControllerPointer.TryHitRect(column, ray, maxDistance, out Vector3 hit)) continue;
 
-            CTPlaneView plane = PlaneOf(hit.gameObject.transform);
-            if (plane == null) continue;   // apunta a un botón o a otro panel: no es para nosotros
+            float distance = Vector3.Distance(ray.origin, hit);
+            if (distance < best) { best = distance; plane = candidate; point = hit; }
+        }
 
-            if (!ToPixel(plane, hit.worldPosition, out Vector2 px))
-            {
-                Say("Fuera de imagen");
-                return;
-            }
+        if (plane == null) return;
 
-            Place(plane, px);
+        if (!ToPixel(plane, point, out Vector2 px))
+        {
+            Say("Fuera de imagen");
             return;
         }
+
+        Place(plane, px);
     }
 
     /// <summary>Clava un punto en la imagen de un plano, en píxeles de la imagen.</summary>
@@ -241,15 +246,6 @@ public class CTMeasure2D : MonoBehaviour
         return true;
     }
 
-    /// <summary>De qué plano es el objeto que tocó el rayo, subiendo por la jerarquía.</summary>
-    private CTPlaneView PlaneOf(Transform hit)
-    {
-        foreach (var plane in planes)
-        {
-            if (plane != null && hit.IsChildOf(plane.transform)) return plane;
-        }
-        return null;
-    }
 
     /// <summary>
     /// Dibuja la medida dentro de la imagen: los dos puntos, la línea y el número. Todo va

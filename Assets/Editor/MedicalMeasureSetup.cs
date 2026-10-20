@@ -64,9 +64,14 @@ public static class MedicalMeasureSetup
         }
 
         var so = new SerializedObject(tool);
+        // Desde el paso a Meta la regla ya no usa los rayos de XRI (ver ControllerPointer):
+        // el campo "rays" ya no existe y no hay nada que asignar.
         var rayList = so.FindProperty("rays");
-        rayList.arraySize = rays.Count;
-        for (int i = 0; i < rays.Count; i++) rayList.GetArrayElementAtIndex(i).objectReferenceValue = rays[i];
+        if (rayList != null)
+        {
+            rayList.arraySize = rays.Count;
+            for (int i = 0; i < rays.Count; i++) rayList.GetArrayElementAtIndex(i).objectReferenceValue = rays[i];
+        }
         so.FindProperty("markerA").objectReferenceValue = markerA;
         so.FindProperty("markerB").objectReferenceValue = markerB;
         so.FindProperty("line").objectReferenceValue = line;

@@ -47,8 +47,6 @@ public class ClippingPlaneInput : MonoBehaviour
     [Tooltip("Por debajo de esto no se mueve: los joysticks nunca descansan del todo en cero.")]
     [SerializeField] private float deadZone = 0.2f;
 
-    [Tooltip("Para no pelearse con la mano mientras se agarra el plano.")]
-    [SerializeField] private UnityEngine.XR.Interaction.Toolkit.XRGrabInteractable grab;
 
     [SerializeField] private bool cutting;
 
@@ -65,19 +63,32 @@ public class ClippingPlaneInput : MonoBehaviour
     [Tooltip("Grados por segundo con los que se endereza al soltarlo.")]
     [SerializeField] private float snapSpeed = 360f;
 
+    // Agarre del plano con el Interaction SDK de Meta (su Grabbable y el hijo
+    // ISDK_HandGrabInteraction). Sirve para no pelearse con la mano mientras se agarra.
+    private PointableTracker _grab;
+
+    private bool Grabbed => _grab != null && _grab.IsSelected;
+
     private void Awake()
     {
         if (controller == null) controller = GetComponent<ClippingPlaneController>();
         if (anchor == null) anchor = GetComponent<ClippingPlaneAnchor>();
         if (planeRenderer == null) planeRenderer = GetComponent<Renderer>();
         if (planeCollider == null) planeCollider = GetComponent<Collider>();
-        if (grab == null) grab = GetComponent<UnityEngine.XR.Interaction.Toolkit.XRGrabInteractable>();
+        _grab = new PointableTracker(gameObject);
     }
 
     private void OnEnable()
     {
+        _grab.Attach();
         Apply();
     }
+
+    private void OnDisable()
+    {
+        _grab.Detach();
+    }
+
 
     private void Update()
     {
@@ -106,7 +117,7 @@ public class ClippingPlaneInput : MonoBehaviour
     private void FineControl()
     {
         if (!cutting) return;
-        if (grab != null && grab.isSelected) return;
+        if (Grabbed) return;
 
         Vector2 turn = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.RTouch);
         Vector2 shift = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, OVRInput.Controller.LTouch);
@@ -173,7 +184,7 @@ public class ClippingPlaneInput : MonoBehaviour
     private void LateUpdate()
     {
         if (!lockToAnatomical || !cutting || Volume() == null) return;
-        if (grab != null && grab.isSelected) return;
+        if (Grabbed) return;
 
         Vector3[] axes = Axes();
         int i = Nearest(axes, out float sign);

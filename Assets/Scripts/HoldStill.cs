@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Oculus.Interaction;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,8 +20,13 @@ using UnityEngine.XR.Interaction.Toolkit;
 /// </summary>
 public class HoldStill : MonoBehaviour
 {
+    // Se siguen usando los XRGrabInteractable (apagados) solo como referencia a cada objeto:
+    // así no hay que volver a asignar la lista en la escena. El agarre real es el de Meta.
     [Tooltip("Lo que se queda quieto: el volumen y los órganos. El plano de corte no.")]
     [SerializeField] private XRGrabInteractable[] targets = new XRGrabInteractable[0];
+
+    private readonly List<GameObject> _metaGrab = new List<GameObject>();
+    private bool _collected;
 
     [Header("Botón del menú")]
     [SerializeField] private Button toggleButton;
@@ -50,12 +57,14 @@ public class HoldStill : MonoBehaviour
 
     private void Apply()
     {
-        foreach (var target in targets)
-        {
-            if (target == null) continue;
+        if (!_collected) CollectMetaGrab();
 
-            // Se apaga el componente, no el objeto: el modelo se sigue viendo.
-            target.enabled = !holding;
+        // Se apagan los hijos con el agarre de Meta (ISDK_HandGrabInteraction), no el objeto:
+        // el modelo se sigue viendo. El XRGrabInteractable ya no se toca: antes se encendía
+        // aquí y volvía a activar el agarre de XRI que se había quitado.
+        foreach (var grab in _metaGrab)
+        {
+            if (grab != null && grab.activeSelf == holding) grab.SetActive(!holding);
         }
 
         if (toggleButton != null)
@@ -68,6 +77,31 @@ public class HoldStill : MonoBehaviour
             {
                 label.text = holding ? "Fijado" : "Suelto";
                 label.color = holding ? onText : offText;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Los hijos directos de cada objeto que llevan piezas de interacción de Meta. Se buscan
+    /// una sola vez y con los inactivos incluidos, porque al fijar se apagan.
+    /// </summary>
+    private void CollectMetaGrab()
+    {
+        _collected = true;
+        foreach (var target in targets)
+        {
+            if (target == null) continue;
+
+            foreach (Transform child in target.transform)
+            {
+                foreach (var behaviour in child.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if (behaviour is IPointable)
+                    {
+                        _metaGrab.Add(child.gameObject);
+                        break;
+                    }
+                }
             }
         }
     }

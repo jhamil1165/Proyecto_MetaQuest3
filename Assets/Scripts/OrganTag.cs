@@ -1,7 +1,6 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit;
 
 /// <summary>
 /// Etiqueta flotante encima de un órgano: su nombre y su volumen real ("Hígado · 1665 mL"),
@@ -46,10 +45,9 @@ public class OrganTag : MonoBehaviour
     private Canvas _canvas;
     private TMP_Text _text;
     private Renderer[] _renderers;
-    private XRBaseInteractable _interactable;
+    private PointableTracker _tracker;
     private Transform _camera;
     private float _alpha;
-    private bool _hovered;
 
     public string Title { get => title; set { title = value; Refresh(); } }
     public float Millilitres { get => millilitres; set { millilitres = value; Refresh(); } }
@@ -62,7 +60,7 @@ public class OrganTag : MonoBehaviour
     private void Awake()
     {
         _renderers = GetComponentsInChildren<Renderer>(true);
-        _interactable = ResolveInteractable();
+        _tracker = new PointableTracker(gameObject);
         _alpha = idleAlpha;
         Build();
     }
@@ -70,17 +68,13 @@ public class OrganTag : MonoBehaviour
     private void OnEnable()
     {
         if (_tag != null) _tag.gameObject.SetActive(true);
-        if (_interactable == null) return;
-        _interactable.hoverEntered.AddListener(OnHoverEntered);
-        _interactable.hoverExited.AddListener(OnHoverExited);
+        _tracker.Attach();
     }
 
     private void OnDisable()
     {
         if (_tag != null) _tag.gameObject.SetActive(false);
-        if (_interactable == null) return;
-        _interactable.hoverEntered.RemoveListener(OnHoverEntered);
-        _interactable.hoverExited.RemoveListener(OnHoverExited);
+        _tracker.Detach();
     }
 
     private void OnDestroy()
@@ -90,23 +84,11 @@ public class OrganTag : MonoBehaviour
         else DestroyImmediate(_tag.gameObject);
     }
 
-    private void OnHoverEntered(HoverEnterEventArgs args) => _hovered = true;
-    private void OnHoverExited(HoverExitEventArgs args) => _hovered = _interactable.isHovered;
-
-    /// <summary>El mismo criterio que OrganSelectionInfo: el de agarre si está activo.</summary>
-    private XRBaseInteractable ResolveInteractable()
-    {
-        var all = GetComponents<XRBaseInteractable>();
-        foreach (var i in all) if (i.enabled && i is XRGrabInteractable) return i;
-        foreach (var i in all) if (i.enabled) return i;
-        return all.Length > 0 ? all[0] : null;
-    }
-
     private void LateUpdate()
     {
         if (_tag == null) return;
 
-        bool lit = _hovered || (_interactable != null && _interactable.isSelected);
+        bool lit = _tracker.IsHovered || _tracker.IsSelected;
         _alpha = Mathf.MoveTowards(_alpha, lit ? 1f : idleAlpha, Time.deltaTime * fadeSpeed);
         _group.alpha = _alpha;
 
