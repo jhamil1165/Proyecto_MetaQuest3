@@ -11,8 +11,9 @@ using UnityEngine.UI;
 /// los cortes. Por eso cada medida recuerda el plano y el corte donde se hizo, y solo se ve
 /// cuando ese corte está en pantalla; al pasar a otro corte se esconde, y vuelve al volver.
 ///
-/// Cómo se usa: se pulsa "Medir" en la cabecera del visor, se apunta a la imagen con el mando
-/// y se pulsa <b>A</b> en cada extremo. Sale una línea con la distancia. "Borrar" quita todas.
+/// Cómo se usa: se pulsa "Medir" en la cabecera del visor, se apunta a la imagen con la mano
+/// y se <b>pellizca</b> (índice y pulgar) en cada extremo. Sale una línea con la distancia.
+/// "Borrar" quita todas. En quirófano solo se usan las manos; con mandos sigue valiendo A.
 ///
 /// Los milímetros salen del tamaño de píxel de cada plano, que pone el visor al cargar el
 /// estudio (CTPlaneView.MillimetresPerPixel). En una imagen sin escala conocida, como las
@@ -64,6 +65,7 @@ public class CTMeasure2D : MonoBehaviour
     [SerializeField] private bool measuring;
 
     private readonly List<Caliper> _done = new List<Caliper>();
+    private readonly HandPinch _pinch = new HandPinch();
     private Caliper _pending;
     private string _status;
 
@@ -135,7 +137,9 @@ public class CTMeasure2D : MonoBehaviour
     {
         if (!measuring) return;
 
-        if (ControllerPointer.TryGetPressed(placeButton, out Ray ray, out _)) TryPlace(ray);
+        if (_pinch.TryGetPinched(out Ray ray, out _)
+            || ControllerPointer.TryGetPressed(placeButton, out ray, out _))
+            TryPlace(ray);
     }
 
     /// <summary>Enciende o apaga la regla. Enlazable al botón "Medir".</summary>
@@ -396,7 +400,7 @@ public class CTMeasure2D : MonoBehaviour
             label.color = measuring ? onText : offText;
             label.text = !measuring ? "Medir"
                        : !string.IsNullOrEmpty(_status) ? _status
-                       : "Pulsa A";
+                       : "Pellizca";
         }
     }
 }

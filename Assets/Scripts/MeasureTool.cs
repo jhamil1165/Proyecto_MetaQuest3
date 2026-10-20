@@ -7,13 +7,15 @@ using UnityEngine.UI;
 /// <summary>
 /// Regla para medir sobre los órganos 3D dentro del visor.
 ///
-/// Cómo se usa: se enciende con el botón "Medir" del panel. Se apunta con el mando a un
-/// órgano y se pulsa <b>A</b> (o X en el mando izquierdo) para clavar el primer punto, y
-/// otra vez para el segundo. Entre los dos aparece una línea con la distancia. Se pueden
-/// hacer varias medidas seguidas; "Borrar" las quita todas.
+/// Cómo se usa: se enciende con el botón "Medir" del panel. Se apunta con la mano a un
+/// órgano y se <b>pellizca</b> (índice y pulgar) para clavar el primer punto, y otra vez para
+/// el segundo. Entre los dos aparece una línea con la distancia. Se pueden hacer varias
+/// medidas seguidas; "Borrar" las quita todas. En quirófano solo se usan las manos; con
+/// mandos sigue valiendo el botón A (o X en el izquierdo).
 ///
-/// Por qué el botón A y no el gatillo: el gatillo ya sirve para agarrar los órganos y para
-/// pulsar los botones del menú. Midiendo con el gatillo, cada medida movería el órgano.
+/// El pellizco es también el gesto de agarrar: mientras se mide, los objetos que se pueden
+/// agarrar dejan de responder (ver BlockGrab), y al dejar de medir vuelven como estaban.
+/// Sin eso, cada punto agarraría y movería el órgano.
 ///
 /// <para><b>Cada medida es hija de su órgano.</b> Lo pidió el profesor: al trasladar o girar
 /// el modelo, las medidas tienen que acompañarlo y mantener su sitio sobre él. Antes los
@@ -105,6 +107,8 @@ public class MeasureTool : MonoBehaviour
     private Measurement _pending;
     private Transform _camera;
     private Transform _hand;
+    private readonly HandPinch _pinch = new HandPinch();
+    private readonly List<GameObject> _blockedGrab = new List<GameObject>();
     private string _message;
 
     // La ayuda solo se enseña hasta el primer punto: después ya se sabe usar y el texto
@@ -119,11 +123,18 @@ public class MeasureTool : MonoBehaviour
         Refresh();
     }
 
+    // Si la herramienta se apaga midiendo, el agarre no puede quedarse bloqueado.
+    private void OnDisable()
+    {
+        Stop();
+    }
+
     private void Update()
     {
         if (!measuring) return;
 
-        if (ControllerPointer.TryGetPressed(placeButton, out Ray ray, out Transform origin))
+        if (_pinch.TryGetPinched(out Ray ray, out Transform origin)
+            || ControllerPointer.TryGetPressed(placeButton, out ray, out origin))
             TryPlace(ray, origin);
     }
 
@@ -143,6 +154,7 @@ public class MeasureTool : MonoBehaviour
     public void Toggle()
     {
         measuring = !measuring;
+        BlockGrab(measuring);
 
         // Apagar la regla deja de clavar puntos, pero no borra lo medido: las medidas son
         // parte del modelo hasta que alguien pulse "Borrar".
@@ -363,6 +375,43 @@ public class MeasureTool : MonoBehaviour
         return null;
     }
 
+    /// <summary>
+    /// Mientras se mide, apaga el agarre de Meta de todo lo agarrable (órganos, volumen, plano
+    /// de corte): el pellizco que clava un punto no debe agarrar nada. Al dejar de medir se
+    /// encienden solo los que estaban encendidos, para no deshacer el "Fijar".
+    /// </summary>
+    private void BlockGrab(bool block)
+    {
+        if (!block)
+        {
+            foreach (var go in _blockedGrab)
+            {
+                if (go != null) go.SetActive(true);
+            }
+            _blockedGrab.Clear();
+            return;
+        }
+
+        foreach (var grabbable in FindObjectsOfType<Oculus.Interaction.Grabbable>(true))
+        {
+            foreach (Transform child in grabbable.transform)
+            {
+                if (!child.gameObject.activeSelf || !HasPointable(child)) continue;
+                child.gameObject.SetActive(false);
+                _blockedGrab.Add(child.gameObject);
+            }
+        }
+    }
+
+    private static bool HasPointable(Transform root)
+    {
+        foreach (var behaviour in root.GetComponentsInChildren<MonoBehaviour>(true))
+        {
+            if (behaviour is Oculus.Interaction.IPointable) return true;
+        }
+        return false;
+    }
+
     private bool IsIgnored(Collider collider)
     {
         foreach (var other in ignored)
@@ -390,7 +439,7 @@ public class MeasureTool : MonoBehaviour
             label.text = !measuring ? string.Empty
                        : !string.IsNullOrEmpty(_message) ? _message
                        : _pending != null ? "Ahora el segundo punto"
-                       : "Pulsa A sobre un órgano";
+                       : "Pellizca sobre un órgano";
         }
 
         Highlight();

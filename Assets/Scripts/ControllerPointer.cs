@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// El rayo con el que apuntan los mandos para las reglas (MeasureTool y CTMeasure2D).
+/// El rayo con el que apuntan los mandos para las reglas (MeasureTool y CTMeasure2D). Las
+/// manos van aparte, con HandPinch (más abajo); los mandos quedan como alternativa.
 ///
 /// Antes las reglas leían el punto de choque de los XRRayInteractor de XRI. Con el paso al
 /// Interaction SDK de Meta esos rayos están apagados, así que aquí se traza el rayo a mano:
@@ -70,5 +72,53 @@ public static class ControllerPointer
         point = ray.GetPoint(distance);
         Vector3 local = rect.InverseTransformPoint(point);
         return rect.rect.Contains(new Vector2(local.x, local.y));
+    }
+}
+
+/// <summary>
+/// Pellizco de índice y pulgar con hand tracking, para las reglas: en quirófano se trabaja
+/// solo con las manos, sin mandos.
+///
+/// Detecta el instante en que se cierra el pellizco (no mientras se mantiene) y da el rayo de
+/// apuntar de esa mano: OVRHand.PointerPose, el rayo que Meta ya estabiliza. Cada regla tiene
+/// su propio HandPinch, porque cada una lleva la cuenta de cuándo se cerró.
+/// </summary>
+public sealed class HandPinch
+{
+    // Tras un punto, un momento sin aceptar otro: al abrir y cerrar rápido el seguimiento
+    // puede dar dos pellizcos donde el usuario hizo uno.
+    private const float Cooldown = 0.35f;
+
+    private readonly Dictionary<OVRHand, bool> _wasPinching = new Dictionary<OVRHand, bool>();
+    private OVRHand[] _hands;
+    private float _nextAllowed;
+
+    public bool TryGetPinched(out Ray ray, out Transform origin)
+    {
+        ray = default;
+        origin = null;
+
+        // Puede haber dos OVRHand por mano (la del rig y la del Interaction SDK). Se miran todas
+        // y vale la primera que cierre el pellizco en este fotograma.
+        if (_hands == null || _hands.Length == 0) _hands = Object.FindObjectsOfType<OVRHand>(true);
+
+        foreach (var hand in _hands)
+        {
+            if (hand == null) continue;
+
+            bool pinching = hand.isActiveAndEnabled && hand.IsTracked && hand.PointerPose != null
+                            && hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+            _wasPinching.TryGetValue(hand, out bool was);
+            _wasPinching[hand] = pinching;
+
+            if (origin != null || !pinching || was || Time.time < _nextAllowed) continue;
+            origin = hand.PointerPose;
+        }
+
+        if (origin == null) return false;
+
+        _nextAllowed = Time.time + Cooldown;
+        ray = new Ray(origin.position, origin.forward);
+        return true;
     }
 }
