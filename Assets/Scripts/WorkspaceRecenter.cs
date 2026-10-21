@@ -22,6 +22,11 @@ public class WorkspaceRecenter : MonoBehaviour
     [SerializeField] private Transform menuRoot;
     [SerializeField] private List<Transform> organs = new List<Transform>();
 
+    [Tooltip("Objetos fuera del menú que se recolocan con él, manteniendo su sitio respecto " +
+             "a él. Es la pantalla NDI: va fuera del menú para que nunca se oculte, pero debe " +
+             "quedar donde estaba respecto al resto de paneles.")]
+    [SerializeField] private List<Transform> followMenu = new List<Transform>();
+
     [Header("Menú")]
     [Tooltip("Altura del menú respecto a los ojos. Negativo = algo por debajo. " +
              "La distancia al usuario la define el arco dentro del propio menú.")]
@@ -64,11 +69,30 @@ public class WorkspaceRecenter : MonoBehaviour
 
         if (menuRoot != null)
         {
+            // Dónde está cada objeto respecto al menú antes de moverlo, para dejarlo en el
+            // mismo sitio relativo después. Sin esto la pantalla NDI se quedaba fija en la
+            // escena y, al girar el menú hacia el usuario, parecía saltar de un lado a otro.
+            var followPoses = new List<(Vector3 position, Quaternion rotation)>(followMenu.Count);
+            foreach (var t in followMenu)
+            {
+                followPoses.Add(t != null
+                    ? (menuRoot.InverseTransformPoint(t.position), Quaternion.Inverse(menuRoot.rotation) * t.rotation)
+                    : (Vector3.zero, Quaternion.identity));
+            }
+
             // La raiz se coloca EN los ojos, no delante: los canvas ya cuelgan de ella
             // a su distancia, en coordenadas locales. Sumar aqui la distancia otra vez
             // alejaria el menu al doble.
             menuRoot.position = eye + Vector3.up * menuHeightOffset;
             menuRoot.rotation = yaw;
+
+            for (int i = 0; i < followMenu.Count; i++)
+            {
+                if (followMenu[i] == null) continue;
+                followMenu[i].SetPositionAndRotation(
+                    menuRoot.TransformPoint(followPoses[i].position),
+                    menuRoot.rotation * followPoses[i].rotation);
+            }
         }
 
         PlaceOrgans(eye, yaw);

@@ -23743,6 +23743,9 @@ MonoBehaviour:
   - {fileID: 80695177}
   - {fileID: 1071914504}
   - {fileID: 68292590}
+  followMenu:
+  - {fileID: 2053271124}
+  - {fileID: 1104711059}
   menuHeightOffset: -0.05
   organDistance: 0.62
   organHeightOffset: -0.28
