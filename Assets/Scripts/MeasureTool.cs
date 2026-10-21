@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit;
 
 /// <summary>
 /// Regla para medir sobre los órganos 3D dentro del visor.
 ///
-/// Cómo se usa: se enciende con el botón "Medir" del panel. Se apunta con el mando a un
-/// órgano y se pulsa <b>A</b> (o X en el mando izquierdo) para clavar el primer punto, y
-/// otra vez para el segundo. Entre los dos aparece una línea con la distancia. Se pueden
-/// hacer varias medidas seguidas; "Borrar" las quita todas.
+/// Cómo se usa: se enciende con el botón "Medir" del panel. Se apunta con la mano a un
+/// órgano y se <b>pellizca</b> (índice y pulgar) para clavar el primer punto, y otra vez para
+/// el segundo. Entre los dos aparece una línea con la distancia. Se pueden hacer varias
+/// medidas seguidas; "Borrar" las quita todas. En quirófano solo se usan las manos; con
+/// mandos sigue valiendo el botón A (o X en el izquierdo).
 ///
-/// Por qué el botón A y no el gatillo: el gatillo ya sirve para agarrar los órganos y para
-/// pulsar los botones del menú. Midiendo con el gatillo, cada medida movería el órgano.
+/// El pellizco es también el gesto de agarrar: mientras se mide, los objetos que se pueden
+/// agarrar dejan de responder (ver BlockGrab), y al dejar de medir vuelven como estaban.
+/// Sin eso, cada punto agarraría y movería el órgano.
 ///
 /// <para><b>Cada medida es hija de su órgano.</b> Lo pidió el profesor: al trasladar o girar
 /// el modelo, las medidas tienen que acompañarlo y mantener su sitio sobre él. Antes los
@@ -62,8 +63,9 @@ public class MeasureTool : MonoBehaviour
     }
 
     [Header("Mandos")]
-    [Tooltip("Rayos de los mandos y de las manos. Se usa el primero que apunte a algo.")]
-    [SerializeField] private XRRayInteractor[] rays = new XRRayInteractor[0];
+    [Tooltip("Alcance del rayo del mando, en metros. El rayo sale del anclaje del mando " +
+             "que pulsa el botón (ver ControllerPointer).")]
+    [SerializeField] private float maxDistance = 10f;
 
     [Tooltip("Botón que clava un punto. A en el mando derecho, X en el izquierdo.")]
     [SerializeField] private OVRInput.Button placeButton = OVRInput.Button.One;
@@ -105,6 +107,8 @@ public class MeasureTool : MonoBehaviour
     private Measurement _pending;
     private Transform _camera;
     private Transform _hand;
+    private readonly HandPinch _pinch = new HandPinch();
+    private readonly List<GameObject> _blockedGrab = new List<GameObject>();
     private string _message;
 
     // La ayuda solo se enseña hasta el primer punto: después ya se sabe usar y el texto
@@ -119,15 +123,19 @@ public class MeasureTool : MonoBehaviour
         Refresh();
     }
 
+    // Si la herramienta se apaga midiendo, el agarre no puede quedarse bloqueado.
+    private void OnDisable()
+    {
+        Stop();
+    }
+
     private void Update()
     {
         if (!measuring) return;
 
-        bool pressed = OVRInput.GetDown(placeButton, OVRInput.Controller.RTouch)
-                       || OVRInput.GetDown(placeButton, OVRInput.Controller.LTouch)
-                       || OVRInput.GetDown(placeButton);
-
-        if (pressed) TryPlace();
+        if (_pinch.TryGetPinched(out Ray ray, out Transform origin)
+            || ControllerPointer.TryGetPressed(placeButton, out ray, out origin))
+            TryPlace(ray, origin);
     }
 
     private void LateUpdate()
@@ -146,6 +154,7 @@ public class MeasureTool : MonoBehaviour
     public void Toggle()
     {
         measuring = !measuring;
+        BlockGrab(measuring);
 
         // Apagar la regla deja de clavar puntos, pero no borra lo medido: las medidas son
         // parte del modelo hasta que alguien pulse "Borrar".
@@ -177,37 +186,29 @@ public class MeasureTool : MonoBehaviour
     }
 
     /// <summary>
-    /// Clava un punto donde apunte el usuario. Se prueban todos los rayos y vale el primero
-    /// que tenga algo delante: así da igual con qué mano se apunte, y da igual que el rig
-    /// tenga rayos de mando y de mano a la vez.
+    /// Clava un punto donde apunte el mando que pulsó el botón: así da igual con qué mano
+    /// se apunte.
     /// </summary>
-    private void TryPlace()
+    private void TryPlace(Ray ray, Transform origin)
     {
-        RaycastHit hit = default;
-        XRRayInteractor used = null;
+        _hand = origin;
 
-        foreach (var ray in rays)
-        {
-            if (ray == null || !ray.isActiveAndEnabled) continue;
+        // Lo primero que toca el rayo, sin contar los triggers (igual que el rayo de XRI).
+        bool touched = Physics.Raycast(ray, out RaycastHit hit, maxDistance,
+                                       Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
 
-            // Apuntando a un panel no se clava nada en 3D: es la regla 2D la que mide sobre
-            // las imágenes, y un punto 3D detrás del panel sería un error del usuario.
-            if (ray.TryGetCurrentUIRaycastResult(out var ui) && ui.gameObject != null) return;
+        // Apuntando a un panel no se clava nada en 3D: es la regla 2D la que mide sobre
+        // las imágenes, y un punto 3D detrás del panel sería un error del usuario.
+        if (ControllerPointer.HitsPanel(ray, touched ? hit.distance : maxDistance)) return;
 
-            if (!ray.TryGetCurrent3DRaycastHit(out hit)) continue;
-            used = ray;
-            break;
-        }
-
-        if (used == null) { Say("Apunta a un órgano"); return; }
-        _hand = used.transform;
+        if (!touched) { Say("Apunta a un órgano"); return; }
 
         OrganScale organ;
         if (IsIgnored(hit.collider) || IsVolumeSurface(hit.collider))
         {
             // El rayo choca primero con la caja que envuelve el volumen. Se mira si, siguiendo
             // el mismo rayo, más adentro está el plano de corte.
-            if (!TryHitCut(used, out hit)) { Say("Activa el corte para medir el volumen"); return; }
+            if (!TryHitCut(ray, out hit)) { Say("Activa el corte para medir el volumen"); return; }
             organ = VolumeOrgan();
             if (organ == null) { Say("Activa el corte para medir el volumen"); return; }
         }
@@ -350,14 +351,13 @@ public class MeasureTool : MonoBehaviour
     }
 
     /// <summary>Busca el plano de corte a lo largo del rayo, aunque haya algo delante.</summary>
-    private bool TryHitCut(XRRayInteractor ray, out RaycastHit cut)
+    private bool TryHitCut(Ray ray, out RaycastHit cut)
     {
         cut = default;
-        Transform origin = ray.rayOriginTransform != null ? ray.rayOriginTransform : ray.transform;
         float best = float.MaxValue;
         bool found = false;
 
-        foreach (var h in Physics.RaycastAll(origin.position, origin.forward, ray.maxRaycastDistance,
+        foreach (var h in Physics.RaycastAll(ray, maxDistance,
                                              Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
         {
             if (!IsVolumeSurface(h.collider) || !h.collider.enabled) continue;
@@ -373,6 +373,43 @@ public class MeasureTool : MonoBehaviour
             if (organ != null && organ.root != null && organ.root == volumeRoot) return organ;
         }
         return null;
+    }
+
+    /// <summary>
+    /// Mientras se mide, apaga el agarre de Meta de todo lo agarrable (órganos, volumen, plano
+    /// de corte): el pellizco que clava un punto no debe agarrar nada. Al dejar de medir se
+    /// encienden solo los que estaban encendidos, para no deshacer el "Fijar".
+    /// </summary>
+    private void BlockGrab(bool block)
+    {
+        if (!block)
+        {
+            foreach (var go in _blockedGrab)
+            {
+                if (go != null) go.SetActive(true);
+            }
+            _blockedGrab.Clear();
+            return;
+        }
+
+        foreach (var grabbable in FindObjectsOfType<Oculus.Interaction.Grabbable>(true))
+        {
+            foreach (Transform child in grabbable.transform)
+            {
+                if (!child.gameObject.activeSelf || !HasPointable(child)) continue;
+                child.gameObject.SetActive(false);
+                _blockedGrab.Add(child.gameObject);
+            }
+        }
+    }
+
+    private static bool HasPointable(Transform root)
+    {
+        foreach (var behaviour in root.GetComponentsInChildren<MonoBehaviour>(true))
+        {
+            if (behaviour is Oculus.Interaction.IPointable) return true;
+        }
+        return false;
     }
 
     private bool IsIgnored(Collider collider)
@@ -402,7 +439,7 @@ public class MeasureTool : MonoBehaviour
             label.text = !measuring ? string.Empty
                        : !string.IsNullOrEmpty(_message) ? _message
                        : _pending != null ? "Ahora el segundo punto"
-                       : "Pulsa A sobre un órgano";
+                       : "Pellizca sobre un órgano";
         }
 
         Highlight();
@@ -423,13 +460,7 @@ public class MeasureTool : MonoBehaviour
             return;
         }
 
-        if (_hand == null)
-        {
-            foreach (var ray in rays)
-            {
-                if (ray != null && ray.isActiveAndEnabled) { _hand = ray.transform; break; }
-            }
-        }
+        if (_hand == null) _hand = ControllerPointer.Anchor(true);
 
         if (_hand != null) labelRoot.position = _hand.position + Vector3.up * 0.08f + _hand.forward * 0.06f;
     }

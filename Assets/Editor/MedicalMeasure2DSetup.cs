@@ -105,10 +105,15 @@ public static class MedicalMeasure2DSetup
             if (Branch(ray.transform).ToUpperInvariant().Contains("ORPHAN")) continue;   // rama muerta del rig
             rays.Add(ray);
         }
+        // Desde el paso a Meta la regla ya no usa los rayos de XRI (ver ControllerPointer):
+        // el campo "rays" ya no existe y no hay nada que asignar.
         var rayList = so.FindProperty("rays");
-        rayList.arraySize = rays.Count;
-        for (int i = 0; i < rays.Count; i++) rayList.GetArrayElementAtIndex(i).objectReferenceValue = rays[i];
-        sb.AppendLine("rayos: " + rays.Count);
+        if (rayList != null)
+        {
+            rayList.arraySize = rays.Count;
+            for (int i = 0; i < rays.Count; i++) rayList.GetArrayElementAtIndex(i).objectReferenceValue = rays[i];
+            sb.AppendLine("rayos: " + rays.Count);
+        }
 
         so.FindProperty("toggleButton").objectReferenceValue = measure;
         so.FindProperty("measuring").boolValue = false;
