@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INMERSIA · Video de apertura</title>
+<link rel="stylesheet" href="../node_modules/@fontsource-variable/inter/index.css">
+<style>
+  :root {
+    --bg: #05070A; --text: #F0F2F5; --text2: #A8B1BC; --accent: #4C8DFF; --accent2: #7FB2FF; --amber: #FFB547;
+    --glass: rgba(10, 14, 21, 0.74); --rim: rgba(127, 178, 255, 0.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #000; color: var(--text); font-family: 'Inter Variable', 'Inter', 'Liberation Sans', sans-serif; overflow: hidden; height: 100%; }
+  #viewport { position: absolute; inset: 0; display: grid; place-items: center; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); transform-origin: 0 0; flex: none; }
+  #cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+  #gl { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+  .layer { position: absolute; inset: 0; pointer-events: none; }
+
+  /* ---------- texto ---------- */
+  .block { position: absolute; display: flex; flex-direction: column; gap: 6px; }
+  .line { will-change: transform, opacity; }
+  .kicker { font-size: 22px; font-weight: 640; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent2); margin-bottom: 18px;
+            text-shadow: 0 0 18px rgba(76, 141, 255, 0.45); }
+  .h1 { font-size: 78px; font-weight: 660; letter-spacing: -0.025em; line-height: 1.07; color: var(--text); white-space: nowrap; }
+  .h2 { font-size: 64px; font-weight: 650; letter-spacing: -0.022em; line-height: 1.08; color: var(--text); white-space: nowrap; }
+  .q  { font-size: 86px; font-weight: 680; letter-spacing: -0.028em; line-height: 1.06; color: var(--text); white-space: nowrap; }
+  .xl { font-size: 118px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.0; white-space: nowrap; }
+  .dim { color: var(--text2); }
+  .sub { font-size: 30px; font-weight: 460; color: var(--text2); margin-top: 22px; letter-spacing: -0.005em; }
+  .acc { color: var(--accent); }
+  .big { font-size: 176px; font-weight: 720; letter-spacing: -0.045em; line-height: 0.98; color: var(--accent); font-variant-numeric: tabular-nums;
+         text-shadow: 0 0 40px rgba(76, 141, 255, 0.55); }
+
+  /* palabras que entran una por una; <b> se subraya con brillo, <s> se tacha */
+  .w { display: inline-block; }
+  .hl, .st { position: relative; display: inline-block; }
+  .hl > i, .st > i { position: absolute; left: -0.04em; right: -0.04em; transform-origin: 0 50%; transform: scaleX(0); border-radius: 0.04em; }
+  .hl { color: var(--accent); text-shadow: 0 0 26px rgba(76, 141, 255, 0.55); }
+  .hl > i { bottom: -0.03em; height: 0.075em; background: var(--accent); box-shadow: 0 0 22px rgba(76, 141, 255, 0.9); }
+  .st > i { top: 53%; height: 0.075em; background: var(--text); }
+
+  /* ---------- vidrio oscuro con borde de luz, como los paneles del visor ---------- */
+  .glass {
+    position: absolute; background: var(--glass); border: 1px solid var(--rim); border-radius: 30px;
+    box-shadow: 0 0 0 1px rgba(76, 141, 255, 0.05), 0 0 60px rgba(76, 141, 255, 0.16), 0 34px 90px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(22px) saturate(1.15); opacity: 0;
+  }
+  .panel-head { display: flex; justify-content: space-between; align-items: baseline; padding: 26px 30px 18px; }
+  .panel-title { font-size: 30px; font-weight: 650; letter-spacing: -0.01em; }
+  .panel-meta { font-size: 18px; font-weight: 560; letter-spacing: 0.14em; color: var(--text2); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+  .section { font-size: 16px; font-weight: 640; letter-spacing: 0.2em; color: var(--text2); padding: 4px 30px 10px; }
+  canvas.ct { display: block; border-radius: 18px; background: #000; }
+
+  #ctCard { left: 1040px; top: 170px; width: 680px; height: 760px; }
+  #ctCard canvas { margin: 0 40px; }
+  #ctCard .scan { position: absolute; left: 40px; width: 600px; height: 3px; top: 0; background: linear-gradient(90deg, transparent, #7FB2FF, transparent);
+                  box-shadow: 0 0 18px #4C8DFF; opacity: 0; }
+
+  #axCard { left: 1340px; top: 220px; width: 520px; height: 640px; }
+  #axCard canvas { margin: 0 30px; }
+
+  #triCard { left: 1130px; top: 470px; width: 720px; height: 450px; }
+  #triRow { display: flex; gap: 14px; padding: 0 26px; align-items: flex-end; }
+  .tri { display: flex; flex-direction: column; gap: 10px; }
+  .tri span { font-size: 15px; font-weight: 640; letter-spacing: 0.18em; color: var(--text2); }
+
+  /* etiquetas de los órganos, como las del visor: nombre y volumen medido */
+  #lines { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: visible; }
+  .otag { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 10px 20px; border-radius: 999px; font-size: 24px; font-weight: 640;
+          background: rgba(14, 19, 27, 0.84); border: 1px solid rgba(255, 255, 255, 0.14); box-shadow: 0 0 30px rgba(76, 141, 255, 0.18);
+          transform-origin: 50% 100%; opacity: 0; font-variant-numeric: tabular-nums; }
+  .otag em { font-style: normal; font-weight: 560; color: var(--accent2); }
+  .otag i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 10px; vertical-align: 1px; }
+
+  /* regla 3D: la distancia medida, sobre la línea */
+  #rLabel { position: absolute; left: 0; top: 0; white-space: nowrap; padding: 12px 24px; border-radius: 999px; text-align: center;
+            background: rgba(14, 19, 27, 0.86); border: 1px solid rgba(127, 178, 255, 0.5); box-shadow: 0 0 34px rgba(76, 141, 255, 0.3);
+            transform-origin: 50% 100%; opacity: 0; font-variant-numeric: tabular-nums; }
+  #rLabel small { display: block; font-size: 14px; font-weight: 680; letter-spacing: 0.2em; color: var(--accent2); }
+  #rLabel b { display: block; font-size: 34px; font-weight: 660; letter-spacing: -0.01em; }
+
+  /* avances del prototipo */
+  #recap { left: 1330px; top: 300px; width: 540px; padding-bottom: 20px; }
+  .ritem { display: flex; align-items: center; gap: 18px; padding: 11px 30px; font-size: 27px; font-weight: 560; letter-spacing: -0.005em; opacity: 0; }
+  .ritem i { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent);
+             box-shadow: 0 0 20px rgba(76, 141, 255, 0.7); font-style: normal; font-size: 19px; font-weight: 800; color: #fff; transform: scale(0); }
+
+  /* marca */
+  #brand { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; }
+  #brandPre { font-size: 26px; font-weight: 620; letter-spacing: 0.32em; text-transform: uppercase; color: var(--text2); margin-bottom: 40px; }
+  #brandRow { display: flex; align-items: center; gap: 44px; }
+  #mark { width: 132px; height: 132px; overflow: visible; filter: drop-shadow(0 0 18px rgba(76, 141, 255, 0.8)); }
+  #brandName { font-size: 150px; font-weight: 600; letter-spacing: 0.1em; margin-right: -0.1em; line-height: 1; white-space: nowrap;
+               text-shadow: 0 0 40px rgba(127, 178, 255, 0.35); }
+  #brandName span { display: inline-block; }
+  #brandSub { font-size: 38px; font-weight: 520; letter-spacing: 0.03em; color: var(--accent); margin-top: 30px; text-shadow: 0 0 22px rgba(76, 141, 255, 0.6); }
+  #brandTeam { font-size: 22px; font-weight: 620; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text2); margin-top: 72px; }
+  #streak { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; transform-origin: 50% 50%;
+            background: linear-gradient(90deg, transparent, rgba(127,178,255,0.9) 35%, #fff 50%, rgba(127,178,255,0.9) 65%, transparent);
+            box-shadow: 0 0 30px #4C8DFF; opacity: 0; }
+
+  #dim { position: absolute; inset: 0; background: var(--bg); opacity: 0; }
+  #tag { position: absolute; left: 56px; bottom: 44px; display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 600;
+         letter-spacing: 0.16em; text-transform: uppercase; color: var(--text2); opacity: 0; }
+  #tag::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  #tag.real { color: #7FB0FF; }
+  #pinch { position: absolute; left: 0; top: 0; width: 160px; height: 160px; margin: -80px 0 0 -80px; opacity: 0; overflow: visible;
+           filter: drop-shadow(0 0 10px rgba(76, 141, 255, 0.8)); }
+  #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0;
+           background: radial-gradient(ellipse at 50% 50%, rgba(220, 235, 255, 0.95), rgba(76, 141, 255, 0.35) 45%, rgba(0, 0, 0, 0) 75%); mix-blend-mode: screen; }
+  #vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 55% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
+
+  /* ---------- controles de la vista previa ---------- */
+  #controls { position: fixed; left: 0; right: 0; bottom: 0; display: flex; gap: 12px; align-items: center; padding: 10px 16px;
+              background: rgba(13,15,18,0.9); font: 14px 'Inter Variable', sans-serif; color: #ccd; }
+  #controls button { background: #4C8DFF; color: white; border: 0; border-radius: 8px; padding: 6px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  #controls input { flex: 1; }
+  #controls output { font-variant-numeric: tabular-nums; min-width: 64px; }
+  body.capture #controls { display: none; }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; color: #A8B1BC; font-size: 18px; }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <div id="cam">
+      <canvas id="gl" width="1920" height="1080"></canvas>
+
+      <div class="layer" id="ui">
+        <!-- 1 · pantalla con los cortes -->
+        <div class="glass" id="ctCard">
+          <div class="panel-head"><div class="panel-title">Tomografía</div><div class="panel-meta" id="ctCount">Corte 001 / 267</div></div>
+          <div class="section">AXIAL</div>
+          <canvas class="ct" id="ctCanvas" width="600" height="600"></canvas>
+          <div class="scan" id="ctScan"></div>
+        </div>
+
+        <!-- corte axial que sigue al plano -->
+        <div class="glass" id="axCard">
+          <div class="panel-head"><div class="panel-title" id="axTitle">Axial</div><div class="panel-meta" id="axCount">Corte 060 / 267</div></div>
+          <div class="section">TAC + SEGMENTACIÓN</div>
+          <canvas class="ct" id="axCanvas" width="460" height="460"></canvas>
+        </div>
+
+        <!-- tres planos -->
+        <div class="glass" id="triCard">
+          <div class="panel-head"><div class="panel-title">Tres planos</div><div class="panel-meta" id="triMeta"></div></div>
+          <div id="triRow">
+            <div class="tri"><span>AXIAL</span><canvas class="ct" id="triA" width="300" height="300"></canvas></div>
+            <div class="tri"><span>CORONAL</span><canvas class="ct" id="triC" width="172" height="300"></canvas></div>
+            <div class="tri"><span>SAGITAL</span><canvas class="ct" id="triS" width="172" height="300"></canvas></div>
+          </div>
+        </div>
+
+        <div id="dim"></div>
+
+        <!-- líneas que unen cada etiqueta con su órgano o su marca -->
+        <svg id="lines" viewBox="0 0 1920 1080"></svg>
+        <div id="otags">
+          <div class="otag" data-organ="higado"><i style="background:#DE6240"></i>Hígado <em>· <span>1665</span> mL</em></div>
+          <div class="otag" data-organ="estomago"><i style="background:#B46BD0"></i>Estómago <em>· <span>436</span> mL</em></div>
+          <div class="otag" data-organ="pancreas"><i style="background:#EE93BC"></i>Páncreas <em>· <span>67</span> mL</em></div>
+          <div class="otag" data-organ="vesicula"><i style="background:#53B3E6"></i>Vesícula <em>· <span>12</span> mL</em></div>
+        </div>
+
+        <!-- regla 3D -->
+        <div id="rLabel"><small>REGLA 3D</small><b><span>0</span> cm</b></div>
+
+        <!-- avances del prototipo -->
+        <div class="glass" id="recap">
+          <div class="panel-head"><div class="panel-title">Avances del prototipo</div></div>
+          <div class="ritem"><i>✓</i>Tomografía y segmentación</div>
+          <div class="ritem"><i>✓</i>Órganos 3D con su volumen</div>
+          <div class="ritem"><i>✓</i>Plano de corte y tres planos</div>
+          <div class="ritem"><i>✓</i>Reglas 2D y 3D</div>
+          <div class="ritem"><i>✓</i>Manos y mandos, a tamaño real</div>
+        </div>
+
+        <svg id="pinch" viewBox="-80 -80 160 160">
+          <circle id="pinchRing" r="46" fill="rgba(76,141,255,0.10)" stroke="#4C8DFF" stroke-width="3"/>
+          <circle id="pinchA" r="9" fill="#F0F2F5"/>
+          <circle id="pinchB" r="9" fill="#F0F2F5"/>
+        </svg>
+
+        <!-- marca: cortes que forman un volumen -->
+        <div id="brand">
+          <div id="streak"></div>
+          <div id="brandPre">Te presentamos</div>
+          <div id="brandRow">
+            <svg id="mark" viewBox="-1.1 -1.1 2.2 2.2">
+              <defs><linearGradient id="markGrad" x1="0" y1="-1" x2="0" y2="1" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#8DB8FF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient></defs>
+              <g id="markBars" fill="url(#markGrad)"></g>
+            </svg>
+            <div id="brandName"></div>
+          </div>
+          <div id="brandSub"></div>
+          <div id="brandTeam"></div>
+        </div>
+
+        <div id="text"></div>
+        <div id="tag"></div>
+      </div>
+    </div>
+    <div id="vignette"></div>
+    <div id="flash"></div>
+  </div>
+</div>
+<div id="controls">
+  <button id="play">Reproducir</button>
+  <input id="scrub" type="range" min="0" max="60" step="0.0333" value="0">
+  <output id="time">0.00 s</output>
+</div>
+<div id="loading">Cargando datos del TAC…</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "../node_modules/three/build/three.module.js",
+  "three/addons/": "../node_modules/three/examples/jsm/"
+} }
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
