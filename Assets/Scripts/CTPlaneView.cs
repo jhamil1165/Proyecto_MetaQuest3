@@ -148,6 +148,17 @@ public class CTPlaneView : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>
+    /// Avanza o retrocede cortes como si se moviera el deslizador (avisa a los oyentes, así
+    /// que los otros planos y la regla 2D se enteran). Lo usan los comandos de voz.
+    /// </summary>
+    public void Step(int delta)
+    {
+        int target = Mathf.Clamp(_slice + delta, 0, Mathf.Max(0, sliceCount - 1));
+        if (slider != null) slider.value = target;
+        else OnSliderChanged(target);
+    }
+
     private void OnSliderChanged(float value)
     {
         _slice = Mathf.RoundToInt(value);

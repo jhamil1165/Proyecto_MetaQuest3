@@ -112,6 +112,22 @@ public class OrganSystemsPanel : MonoBehaviour
     /// empieza de cero hace falta lo contrario, y un botón que sólo apagase lo ya apagado no
     /// serviría de nada. El texto del botón dice en cada momento lo que va a hacer.
     /// </summary>
+    /// <summary>
+    /// Enciende o apaga un órgano por su nombre ("Hígado"), sin importar tildes ni
+    /// mayúsculas. Devuelve false si no hay una fila con ese nombre. Lo usan los comandos de voz.
+    /// </summary>
+    public bool SetVisible(string label, bool on)
+    {
+        string wanted = VoiceCommands.Normalize(label);
+        foreach (var row in rows)
+        {
+            if (row.toggle == null || VoiceCommands.Normalize(row.label) != wanted) continue;
+            row.toggle.isOn = on;
+            return true;
+        }
+        return false;
+    }
+
     public void ToggleAll()
     {
         bool anyVisible = false;

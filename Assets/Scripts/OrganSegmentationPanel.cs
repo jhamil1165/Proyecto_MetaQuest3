@@ -77,6 +77,19 @@ public class OrganSegmentationPanel : MonoBehaviour
         }
     }
 
+    /// <summary>Elige un órgano por su nombre. Devuelve false si no está. Para los comandos de voz.</summary>
+    public bool SelectByLabel(string label)
+    {
+        string wanted = VoiceCommands.Normalize(label);
+        for (int i = 0; i < organs.Count; i++)
+        {
+            if (VoiceCommands.Normalize(organs[i].label) != wanted) continue;
+            Select(i);
+            return true;
+        }
+        return false;
+    }
+
     public void Select(int index)
     {
         _selected = index;
